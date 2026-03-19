@@ -155,6 +155,66 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 #modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:200}
 #modal-overlay.open{display:flex}
 #modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+#modal-overlay.wide #modal-box{max-width:860px}
+
+/* IMPORT / DRAG & DROP */
+#drop-overlay{position:absolute;inset:0;background:rgba(15,5,204,0.12);border:3px dashed var(--blue);border-radius:12px;display:none;align-items:center;justify-content:center;z-index:40;pointer-events:none;backdrop-filter:blur(4px)}
+#drop-overlay.active{display:flex}
+.drop-content{text-align:center;padding:40px}
+.drop-content svg{width:56px;height:56px;color:var(--blue);margin-bottom:12px}
+.drop-content h3{font-size:18px;font-weight:700;color:var(--white);margin-bottom:4px}
+.drop-content p{font-size:13px;color:var(--muted)}
+
+.import-upload-zone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;margin:12px 0}
+.import-upload-zone:hover{border-color:var(--blue);background:rgba(61,116,244,0.05)}
+.import-upload-zone svg{width:40px;height:40px;color:var(--muted);margin-bottom:8px}
+.import-upload-zone h4{font-size:14px;font-weight:700;color:var(--white);margin-bottom:4px}
+.import-upload-zone p{font-size:12px;color:var(--muted)}
+
+/* Mapping table */
+.mapping-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+.mapping-table th{text-align:left;padding:8px 10px;background:rgba(255,255,255,0.03);font-weight:700;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
+.mapping-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.mapping-table select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;cursor:pointer;width:100%}
+.mapping-table select:focus{outline:none;border-color:var(--blue)}
+.mapping-table .sample-data{color:var(--muted);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapping-table .col-header{font-weight:700;color:var(--white)}
+.mapping-table .mapped{color:var(--green)}
+.mapping-table .unmapped{color:var(--muted);font-style:italic}
+.mapping-status{display:flex;align-items:center;gap:6px;font-size:12px;margin:8px 0}
+.mapping-status .ok{color:var(--green)}
+.mapping-status .warn{color:var(--yellow)}
+.mapping-status .err{color:var(--red)}
+
+/* Import preview table */
+.import-preview-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.import-preview-table th{text-align:left;padding:6px 8px;background:rgba(61,116,244,0.08);font-weight:700;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border)}
+.import-preview-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.import-preview-table tr.row-ok td:first-child{border-left:3px solid var(--green)}
+.import-preview-table tr.row-warn td:first-child{border-left:3px solid var(--yellow)}
+.import-preview-table tr.row-err td:first-child{border-left:3px solid var(--red)}
+.import-preview-table .cell-missing{color:var(--yellow);font-style:italic}
+.import-preview-table .cell-dup{color:var(--red);font-weight:700}
+
+.import-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.import-summary-card{border-radius:8px;padding:10px;text-align:center}
+.import-summary-card .num{font-size:20px;font-weight:800}
+.import-summary-card .lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+
+/* Upload button next to input */
+#upload-btn{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+#upload-btn:hover{background:rgba(61,116,244,0.1);border-color:rgba(61,116,244,0.3);color:var(--blue)}
+#upload-btn svg{width:18px;height:18px}
+
+/* Step indicator */
+.import-steps{display:flex;align-items:center;gap:0;margin-bottom:16px}
+.import-step{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px}
+.import-step.active{color:var(--blue)}
+.import-step.done{color:var(--green)}
+.import-step .step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid var(--border);font-weight:800}
+.import-step.active .step-num{border-color:var(--blue);background:rgba(61,116,244,0.15);color:var(--blue)}
+.import-step.done .step-num{border-color:var(--green);background:rgba(52,211,153,0.15);color:var(--green)}
+.import-step-line{width:24px;height:2px;background:var(--border);margin:0 4px}
 
 /* Status bar */
 #statusbar{grid-column:1/-1;background:var(--surface);border-top:1px solid var(--border);padding:0 20px;display:flex;align-items:center;font-size:11px;color:var(--muted);height:28px}
@@ -204,6 +264,7 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(61,116,244,0.25);border-radius:2px}
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="app" style="grid-template-rows:52px 1fr 28px">
@@ -249,10 +310,21 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
   <!-- MAIN -->
   <div id="main">
     <div id="chat-area"></div>
+    <div id="drop-overlay">
+      <div class="drop-content">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <h3>Drop your file here</h3>
+        <p>CSV, Excel (.xlsx), or TSV files supported</p>
+      </div>
+    </div>
     <div id="detail-overlay" onclick="closeDetail()"></div>
     <div id="detail-panel"></div>
     <div id="input-area">
       <div id="input-wrap">
+        <button id="upload-btn" onclick="document.getElementById('file-input').click()" title="Import data from file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <input id="file-input" type="file" accept=".csv,.tsv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(this.files[0])">
         <input id="prompt-input" type="text" placeholder="Ask me anything about your products..." autocomplete="off">
         <button id="send-btn" onclick="handleSend()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
@@ -841,6 +913,11 @@ function parseCommand(input) {
   let delm = n.match(/^(delete|remove|get\s*rid\s*of|trash)\s+(the\s+)?(product\s+)?(.+)/i);
   if (delm) return { type:'delete', query: delm[4].trim(), raw };
 
+  // Import data
+  if (/^(import|upload|load|onboard|ingest)\s*(data|products?|catalog|file|csv|excel|xlsx|spreadsheet)?/i.test(n)) return { type:'import', raw };
+  if (/^(i have|i.?ve got|here.?s|got)\s*(a\s*)?(file|csv|excel|spreadsheet|data)/i.test(n)) return { type:'import', raw };
+  if (/^(download|get|give me)\s*(a\s*)?(sample|example|template)\s*(file|csv|excel|spreadsheet)?/i.test(n)) return { type:'download_template', raw };
+
   // Create product
   if (/^(create|add|new|make)\s+(a\s+)?(new\s+)?(product|item)/i.test(n)) return { type:'create_product', raw };
 
@@ -1023,6 +1100,8 @@ async function executeCommand(input) {
     case 'price_change': execPriceChange(cmd.direction, cmd.target, cmd.percent); break;
     case 'bulk_select': execBulkSelect(cmd.query); break;
     case 'delete': execDelete(cmd.query); break;
+    case 'import': execImport(); break;
+    case 'download_template': execDownloadTemplate(); break;
     case 'create_product': execCreateProduct(); break;
     case 'export': execExport(); break;
     case 'export_target': execExportTarget(cmd.target); break;
@@ -1307,15 +1386,21 @@ function execHelp() {
         <li>"History for SHOE-001" — view change log</li>
         <li>"Add related ELEC-003 to ELEC-004" — create relationship</li>
       </ul>
-      <p style="margin:8px 0"><strong style="color:var(--green)">Reports & Export</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--green)">Import & Export</strong></p>
+      <ul style="margin-left:16px;color:var(--muted)">
+        <li>"Import data" — upload CSV or Excel file</li>
+        <li>"Download template" — get a ready-made CSV template</li>
+        <li>"Export" — download catalog as CSV</li>
+        <li>Or just <strong>drag & drop</strong> a file onto the chat!</li>
+      </ul>
+      <p style="margin:8px 0"><strong style="color:var(--green)">Reports</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
         <li>"Data quality report" — completeness analysis</li>
         <li>"Overview" — catalog summary</li>
-        <li>"Export" — download catalog as CSV</li>
       </ul>
     </div>
     <p style="font-size:13px;color:var(--muted)">You can also click products in tables to see full details, or use the sidebar to browse by category and label.</p>`,
-    ['Show all products', 'Data quality report', 'Find duplicates', 'Export']
+    ['Show all products', 'Import data', 'Data quality report', 'Export']
   );
 }
 
@@ -2212,6 +2297,451 @@ function handleCatClick(catId) {
 function handleLabelClick(labelId) {
   const lbl = labelObj(labelId);
   if (lbl) { document.getElementById('prompt-input').value = `Show products labeled "${lbl.name}"`; handleSend(); }
+}
+
+// ============ IMPORT / DATA ONBOARDING ============
+
+const IMPORT_FIELDS = [
+  { key: 'name', label: 'Product Name', required: true, aliases: ['product name','title','product','product title','item name','item'] },
+  { key: 'sku', label: 'SKU', required: true, aliases: ['sku','sku code','product code','item code','article number','article no','art no','item number','item no','code','id','product id'] },
+  { key: 'brand', label: 'Brand', required: false, aliases: ['brand','brand name','manufacturer','vendor','make'] },
+  { key: 'price', label: 'Price', required: false, aliases: ['price','unit price','retail price','cost','msrp','amount','rrp','selling price'] },
+  { key: 'description', label: 'Description', required: false, aliases: ['description','desc','product description','details','long description','body','text','about'] },
+  { key: 'category', label: 'Category', required: false, aliases: ['category','product category','cat','department','type','product type','group','classification'] },
+  { key: 'status', label: 'Status', required: false, aliases: ['status','state','active','published','availability'] },
+  { key: 'weight', label: 'Weight', required: false, aliases: ['weight','weight (kg)','weight kg','mass','net weight'] },
+  { key: 'material', label: 'Material', required: false, aliases: ['material','materials','fabric','composition','made of'] },
+  { key: 'color', label: 'Color', required: false, aliases: ['color','colour','colors','colours'] },
+  { key: 'ean', label: 'EAN/Barcode', required: false, aliases: ['ean','barcode','upc','gtin','ean13','isbn'] },
+];
+
+let importState = { rawData: null, headers: null, mapping: {}, fileName: '' };
+
+// Drag & drop on main area
+const mainEl = document.getElementById('main');
+mainEl.addEventListener('dragover', e => { e.preventDefault(); document.getElementById('drop-overlay').classList.add('active'); });
+mainEl.addEventListener('dragleave', e => {
+  if (!mainEl.contains(e.relatedTarget)) document.getElementById('drop-overlay').classList.remove('active');
+});
+mainEl.addEventListener('drop', e => {
+  e.preventDefault();
+  document.getElementById('drop-overlay').classList.remove('active');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileSelect(file);
+});
+
+function handleFileSelect(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['csv','tsv','xlsx','xls'].includes(ext)) {
+    addSystem(`<p style="color:var(--red)">⚠️ Unsupported file type: <strong>.${esc(ext)}</strong></p><p style="font-size:13px;color:var(--muted)">Please use CSV, TSV, or Excel (.xlsx) files.</p>`, ['Download template']);
+    return;
+  }
+  importState.fileName = file.name;
+  addUser(`📎 Uploaded: ${file.name}`);
+  showTyping();
+
+  if (ext === 'csv' || ext === 'tsv') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target.result;
+      parseCSV(text, ext === 'tsv' ? '\t' : null);
+    };
+    reader.readAsText(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        processRawData(data);
+      } catch (err) {
+        hideTyping();
+        addSystem(`<p style="color:var(--red)">⚠️ Failed to read Excel file.</p><p style="font-size:13px;color:var(--muted)">${esc(err.message)}</p>`, ['Download template', 'Help']);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function parseCSV(text, forceSep) {
+  // Smart separator detection
+  const firstLine = text.split('\n')[0];
+  let sep = forceSep || (firstLine.split('\t').length > firstLine.split(',').length ? '\t' : ',');
+
+  const rows = [];
+  let current = '', inQuotes = false, row = [], i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQuotes && text[i+1] === '"') { current += '"'; i += 2; continue; }
+      inQuotes = !inQuotes; i++; continue;
+    }
+    if (ch === sep && !inQuotes) { row.push(current.trim()); current = ''; i++; continue; }
+    if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      row.push(current.trim()); if (row.some(c => c !== '')) rows.push(row); row = []; current = '';
+      if (ch === '\r' && text[i+1] === '\n') i++;
+      i++; continue;
+    }
+    current += ch; i++;
+  }
+  if (current || row.length) { row.push(current.trim()); if (row.some(c => c !== '')) rows.push(row); }
+  processRawData(rows);
+}
+
+function processRawData(data) {
+  hideTyping();
+  if (!data || data.length < 2) {
+    addSystem(`<p style="color:var(--yellow)">⚠️ The file appears to be empty or has only headers.</p><p style="font-size:13px;color:var(--muted)">I need at least a header row and one data row.</p>`, ['Download template']);
+    return;
+  }
+
+  importState.headers = data[0].map(h => String(h).trim());
+  importState.rawData = data.slice(1).filter(row => row.some(c => c !== '' && c != null));
+
+  // Auto-map columns
+  importState.mapping = {};
+  importState.headers.forEach((header, idx) => {
+    const hLower = header.toLowerCase().trim();
+    for (const field of IMPORT_FIELDS) {
+      if (field.aliases.some(a => a === hLower || hLower.includes(a) || a.includes(hLower))) {
+        if (!Object.values(importState.mapping).includes(field.key)) {
+          importState.mapping[idx] = field.key;
+          break;
+        }
+      }
+    }
+  });
+
+  showMappingStep();
+}
+
+function showMappingStep() {
+  const h = importState.headers;
+  const data = importState.rawData;
+  const mapped = Object.values(importState.mapping);
+  const requiredMapped = IMPORT_FIELDS.filter(f => f.required).every(f => mapped.includes(f.key));
+
+  // Build status indicators
+  const totalCols = h.length;
+  const mappedCols = Object.keys(importState.mapping).length;
+  const nameField = mapped.includes('name');
+  const skuField = mapped.includes('sku');
+
+  let statusHtml = '<div style="margin:8px 0">';
+  statusHtml += `<div class="mapping-status"><span class="${mappedCols > 0 ? 'ok' : 'err'}">●</span> ${mappedCols} of ${totalCols} columns mapped</div>`;
+  statusHtml += `<div class="mapping-status"><span class="${nameField ? 'ok' : 'err'}">●</span> Product Name: ${nameField ? 'Mapped ✓' : 'Required — not mapped'}</div>`;
+  statusHtml += `<div class="mapping-status"><span class="${skuField ? 'ok' : 'err'}">●</span> SKU: ${skuField ? 'Mapped ✓' : 'Required — not mapped'}</div>`;
+  statusHtml += '</div>';
+
+  // Build mapping table
+  let tableHtml = '<table class="mapping-table"><thead><tr><th>Your Column</th><th>Sample Data</th><th>Maps To</th></tr></thead><tbody>';
+  h.forEach((header, idx) => {
+    const sample1 = data[0] ? String(data[0][idx] || '') : '';
+    const sample2 = data[1] ? String(data[1][idx] || '') : '';
+    const sampleText = sample1 + (sample2 ? ', ' + sample2 : '');
+    const currentMapping = importState.mapping[idx] || '';
+    const fieldObj = IMPORT_FIELDS.find(f => f.key === currentMapping);
+
+    let options = '<option value="">— Skip this column —</option>';
+    IMPORT_FIELDS.forEach(f => {
+      const sel = currentMapping === f.key ? 'selected' : '';
+      const used = !sel && mapped.includes(f.key) ? 'disabled' : '';
+      options += `<option value="${f.key}" ${sel} ${used}>${f.label}${f.required ? ' *' : ''}</option>`;
+    });
+
+    const mappedClass = currentMapping ? 'mapped' : 'unmapped';
+    tableHtml += `<tr>
+      <td class="col-header">${esc(header)}</td>
+      <td class="sample-data" title="${esc(sampleText)}">${esc(sampleText.substring(0, 50))}</td>
+      <td><select onchange="updateMapping(${idx}, this.value)" class="${mappedClass}">${options}</select></td>
+    </tr>`;
+  });
+  tableHtml += '</tbody></table>';
+
+  // Steps indicator
+  const stepsHtml = `<div class="import-steps">
+    <div class="import-step active"><span class="step-num">1</span> Map Columns</div>
+    <div class="import-step-line"></div>
+    <div class="import-step"><span class="step-num">2</span> Preview</div>
+    <div class="import-step-line"></div>
+    <div class="import-step"><span class="step-num">3</span> Import</div>
+  </div>`;
+
+  const html = `
+    ${stepsHtml}
+    <div style="margin-bottom:12px">
+      <p style="font-weight:700;font-size:15px;margin-bottom:2px">📎 ${esc(importState.fileName)}</p>
+      <p style="font-size:12px;color:var(--muted)">${data.length} row${data.length !== 1 ? 's' : ''} detected · ${totalCols} columns</p>
+    </div>
+    <p style="font-size:13px;color:var(--text);margin-bottom:8px">${pick(["I've auto-mapped what I could. Please review and adjust:","Here's what I detected. Fix any mappings that look wrong:","I matched your columns to PIM fields. Double-check these:"])}</p>
+    ${statusHtml}
+    ${tableHtml}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn btn-cancel" onclick="closeModal(); addSystem('<p>Import cancelled.</p>', smartSuggestions())">Cancel</button>
+      <button class="btn btn-confirm" id="import-next-btn" onclick="showImportPreview()" ${!requiredMapped ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>Next: Preview →</button>
+    </div>
+  `;
+
+  document.getElementById('modal-overlay').classList.add('wide');
+  openModal(html);
+}
+
+function updateMapping(colIdx, fieldKey) {
+  // Remove any other column mapped to this field
+  if (fieldKey) {
+    for (const [k, v] of Object.entries(importState.mapping)) {
+      if (v === fieldKey && parseInt(k) !== colIdx) delete importState.mapping[k];
+    }
+    importState.mapping[colIdx] = fieldKey;
+  } else {
+    delete importState.mapping[colIdx];
+  }
+  // Re-render mapping step
+  showMappingStep();
+}
+
+function showImportPreview() {
+  const data = importState.rawData;
+  const mapping = importState.mapping;
+  const reverseMap = {};
+  for (const [colIdx, fieldKey] of Object.entries(mapping)) {
+    reverseMap[fieldKey] = parseInt(colIdx);
+  }
+
+  // Build preview data
+  const preview = [];
+  let warnings = 0, errors = 0, duplicates = 0, ready = 0;
+  data.forEach((row, rowIdx) => {
+    const item = {};
+    for (const field of IMPORT_FIELDS) {
+      if (reverseMap[field.key] !== undefined) {
+        item[field.key] = String(row[reverseMap[field.key]] || '').trim();
+      }
+    }
+    // Validation
+    let status = 'ok';
+    const issues = [];
+    if (!item.name) { status = 'err'; issues.push('Missing product name'); }
+    if (!item.sku) { status = 'err'; issues.push('Missing SKU'); }
+    if (item.sku && DB.products.some(p => p.sku.toLowerCase() === item.sku.toLowerCase())) {
+      status = status === 'err' ? 'err' : 'warn'; issues.push('SKU already exists — will update'); duplicates++;
+    }
+    if (!item.price && !item.description) { if (status === 'ok') status = 'warn'; issues.push('Incomplete data'); warnings++; }
+    if (status === 'err') errors++;
+    if (status === 'ok') ready++;
+    preview.push({ ...item, _status: status, _issues: issues, _rowIdx: rowIdx });
+  });
+
+  // Summary cards
+  const summaryHtml = `<div class="import-summary">
+    <div class="import-summary-card" style="background:rgba(61,116,244,0.1);border:1px solid rgba(61,116,244,0.2)">
+      <div class="num" style="color:var(--blue)">${data.length}</div><div class="lbl" style="color:var(--muted)">Total Rows</div>
+    </div>
+    <div class="import-summary-card" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2)">
+      <div class="num" style="color:var(--green)">${ready}</div><div class="lbl" style="color:var(--muted)">Ready</div>
+    </div>
+    <div class="import-summary-card" style="background:rgba(251,231,77,0.1);border:1px solid rgba(251,231,77,0.2)">
+      <div class="num" style="color:var(--yellow)">${warnings + duplicates}</div><div class="lbl" style="color:var(--muted)">Warnings</div>
+    </div>
+    <div class="import-summary-card" style="background:rgba(235,72,94,0.1);border:1px solid rgba(235,72,94,0.2)">
+      <div class="num" style="color:var(--red)">${errors}</div><div class="lbl" style="color:var(--muted)">Errors</div>
+    </div>
+  </div>`;
+
+  // Preview table (show first 15 rows)
+  const mappedFields = IMPORT_FIELDS.filter(f => reverseMap[f.key] !== undefined);
+  let tableHtml = '<div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px"><table class="import-preview-table"><thead><tr><th>#</th>';
+  mappedFields.forEach(f => { tableHtml += `<th>${f.label}</th>`; });
+  tableHtml += '<th>Status</th></tr></thead><tbody>';
+  preview.slice(0, 15).forEach((item, i) => {
+    tableHtml += `<tr class="row-${item._status}"><td style="color:var(--muted)">${i + 1}</td>`;
+    mappedFields.forEach(f => {
+      const val = item[f.key] || '';
+      if (!val && f.required) tableHtml += `<td class="cell-missing">Missing</td>`;
+      else if (f.key === 'sku' && item._issues.some(iss => iss.includes('exists'))) tableHtml += `<td class="cell-dup">${esc(val)} ↻</td>`;
+      else tableHtml += `<td>${esc(String(val).substring(0, 40))}</td>`;
+    });
+    const statusColor = item._status === 'ok' ? 'var(--green)' : item._status === 'warn' ? 'var(--yellow)' : 'var(--red)';
+    const statusIcon = item._status === 'ok' ? '✓' : item._status === 'warn' ? '⚠' : '✕';
+    tableHtml += `<td style="color:${statusColor};font-weight:700" title="${esc(item._issues.join(', '))}">${statusIcon}</td></tr>`;
+  });
+  if (preview.length > 15) tableHtml += `<tr><td colspan="${mappedFields.length + 2}" style="text-align:center;color:var(--muted);font-style:italic">… and ${preview.length - 15} more rows</td></tr>`;
+  tableHtml += '</tbody></table></div>';
+
+  // Steps indicator
+  const stepsHtml = `<div class="import-steps">
+    <div class="import-step done"><span class="step-num">✓</span> Map Columns</div>
+    <div class="import-step-line"></div>
+    <div class="import-step active"><span class="step-num">2</span> Preview</div>
+    <div class="import-step-line"></div>
+    <div class="import-step"><span class="step-num">3</span> Import</div>
+  </div>`;
+
+  const validCount = preview.filter(p => p._status !== 'err').length;
+  const html = `
+    ${stepsHtml}
+    <p style="font-weight:700;font-size:15px;margin-bottom:4px">Review import data</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">${pick(["Here's what will happen. Review carefully:","Take a look — nothing is imported yet:","Preview below. I'll only import once you confirm:"])}</p>
+    ${summaryHtml}
+    ${duplicates > 0 ? `<p style="font-size:12px;color:var(--yellow);margin-bottom:8px">↻ <strong>${duplicates}</strong> product${duplicates>1?'s':''} with matching SKUs will be <strong>updated</strong>, not duplicated.</p>` : ''}
+    ${errors > 0 ? `<p style="font-size:12px;color:var(--red);margin-bottom:8px">✕ <strong>${errors}</strong> row${errors>1?'s':''} have errors and will be <strong>skipped</strong>.</p>` : ''}
+    ${tableHtml}
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px;align-items:center">
+      <button class="btn btn-cancel" onclick="showMappingStep()" style="font-size:11px">← Back to Mapping</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-cancel" onclick="closeModal(); addSystem('<p>Import cancelled. No changes made.</p>', smartSuggestions())">Cancel</button>
+        <button class="btn btn-confirm" onclick="executeImport()" ${validCount === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}">Import ${validCount} product${validCount!==1?'s':''} →</button>
+      </div>
+    </div>
+  `;
+
+  // Store preview for execution
+  importState.preview = preview;
+  openModal(html);
+}
+
+function executeImport() {
+  const preview = importState.preview;
+  const valid = preview.filter(p => p._status !== 'err');
+  let created = 0, updated = 0;
+
+  valid.forEach(item => {
+    const existingIdx = DB.products.findIndex(p => p.sku.toLowerCase() === (item.sku || '').toLowerCase());
+
+    // Resolve category
+    let catId = 'cat-elec'; // default
+    if (item.category) {
+      const found = DB.categories.find(c => c.name.toLowerCase().includes(item.category.toLowerCase()));
+      if (found) catId = found.id;
+    }
+
+    // Resolve status
+    let status = 'draft';
+    if (item.status) {
+      const s = item.status.toLowerCase();
+      if (['active','published','live','yes','true','1'].includes(s)) status = 'active';
+      else if (['archived','inactive','discontinued','no','false','0'].includes(s)) status = 'archived';
+    }
+
+    const price = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, '')) || 0;
+    const weight = item.weight ? parseFloat(String(item.weight).replace(/[^0-9.]/g, '')) : null;
+
+    if (existingIdx >= 0) {
+      // Update existing
+      const p = DB.products[existingIdx];
+      if (item.name) p.name = item.name;
+      if (item.brand) p.brand = item.brand;
+      if (price > 0) p.price = price;
+      if (item.description) p.description = item.description;
+      if (item.category) p.category = catId;
+      if (item.material) p.material = item.material;
+      if (item.color) p.color = item.color;
+      if (weight) p.weight = weight;
+      if (item.ean) p.ean = item.ean;
+      addHistory(p.id, 'update', 'Updated via file import');
+      updated++;
+    } else {
+      // Create new
+      const newId = 'prod_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+      const product = {
+        id: newId,
+        sku: item.sku || ('IMP-' + String(created + 1).padStart(3, '0')),
+        name: item.name || 'Unnamed Product',
+        brand: item.brand || '',
+        price: price,
+        description: item.description || '',
+        category: catId,
+        status: status,
+        weight: weight,
+        material: item.material || '',
+        color: item.color || '',
+        ean: item.ean || '',
+        labels: [],
+        created: new Date().toISOString(),
+        updated: new Date().toISOString()
+      };
+      DB.products.push(product);
+      addHistory(newId, 'created', 'Imported from ' + importState.fileName);
+      created++;
+    }
+  });
+
+  const skipped = preview.length - valid.length;
+  closeModal();
+  document.getElementById('modal-overlay').classList.remove('wide');
+  render();
+
+  // Success message
+  addSystem(
+    `<div style="text-align:center;padding:10px 0">
+      <div style="font-size:40px;margin-bottom:8px">✅</div>
+      <p style="font-size:16px;font-weight:800;color:var(--green);margin-bottom:4px">Import Complete!</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">${esc(importState.fileName)}</p>
+    </div>
+    <div class="import-summary">
+      <div class="import-summary-card" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2)">
+        <div class="num" style="color:var(--green)">${created}</div><div class="lbl" style="color:var(--muted)">Created</div>
+      </div>
+      <div class="import-summary-card" style="background:rgba(61,116,244,0.1);border:1px solid rgba(61,116,244,0.2)">
+        <div class="num" style="color:var(--blue)">${updated}</div><div class="lbl" style="color:var(--muted)">Updated</div>
+      </div>
+      <div class="import-summary-card" style="background:rgba(235,72,94,0.1);border:1px solid rgba(235,72,94,0.2)">
+        <div class="num" style="color:var(--red)">${skipped}</div><div class="lbl" style="color:var(--muted)">Skipped</div>
+      </div>
+      <div class="import-summary-card" style="background:rgba(167,139,255,0.1);border:1px solid rgba(167,139,255,0.2)">
+        <div class="num" style="color:var(--purple)">${DB.products.length}</div><div class="lbl" style="color:var(--muted)">Total Now</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px">All changes are logged in the audit trail. ${created > 0 ? 'New products were added as <strong>drafts</strong> — review and publish when ready.' : ''}</p>`,
+    ['Show all products', 'Data quality report', 'Show draft products']
+  );
+
+  // Reset file input
+  document.getElementById('file-input').value = '';
+  importState = { rawData: null, headers: null, mapping: {}, fileName: '' };
+}
+
+function addHistory(productId, action, detail) {
+  if (!DB.history[productId]) DB.history[productId] = [];
+  DB.history[productId].push({ action, detail, user: 'You', time: new Date().toISOString() });
+}
+
+function execImport() {
+  addSystem(
+    `<p>${pick(["Let's import some data!","Ready to bring in products!","Sure — I can import from files or you can drag & drop."])}</p>
+    <div class="import-upload-zone" onclick="document.getElementById('file-input').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <h4>Click here to select a file</h4>
+      <p>CSV, TSV, or Excel (.xlsx) — or just drag & drop anywhere</p>
+    </div>
+    <p style="font-size:12px;color:var(--muted)">You can also drag and drop a file directly onto the chat area, or click the <strong>↑ upload button</strong> next to the input field.</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px">💡 Need a template? Say <strong>"download template"</strong> to get a ready-made CSV.</p>`,
+    ['Download template', 'Show all products']
+  );
+}
+
+function execDownloadTemplate() {
+  const headers = ['SKU','Product Name','Brand','Price','Description','Category','Status','Weight','Material','Color','EAN'];
+  const sample = [
+    ['SAMPLE-001','Example Product','Brand Name','29.99','A great product description','Electronics','draft','0.5','Aluminum','Black','1234567890123'],
+    ['SAMPLE-002','Another Product','Other Brand','49.99','Another description','Clothing','active','0.3','Cotton','Blue','9876543210987']
+  ];
+  const csv = [headers, ...sample].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'pim-import-template.csv'; a.click();
+  URL.revokeObjectURL(url);
+
+  addSystem(
+    `<p style="color:var(--green);font-weight:700">✓ Template downloaded!</p>
+    <p style="font-size:13px;color:var(--muted);margin-top:6px">The CSV template includes these columns:</p>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin:8px 0">${headers.map(h => `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:rgba(61,116,244,0.1);color:#8BAAFF">${h}</span>`).join('')}</div>
+    <p style="font-size:12px;color:var(--muted)">Fill in your data, then drag the file here or say <strong>"import data"</strong>. Only <strong>SKU</strong> and <strong>Product Name</strong> are required — I'll handle the rest.</p>`,
+    ['Import data', 'Show all products']
+  );
 }
 
 // ============ NEW CHAT ============
