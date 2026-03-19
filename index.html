@@ -500,7 +500,28 @@ function renderSidebar() {
 // ============ CHAT ============
 const chatArea = document.getElementById('chat-area');
 
+// ============ CONVERSATION ENGINE ============
+const convo = {
+  lastAction: null,        // last command type executed
+  lastProducts: [],        // last products shown/discussed
+  lastProduct: null,       // single product in focus
+  lastQuery: '',           // last raw input
+  pendingConfirm: null,    // action awaiting confirmation
+  pendingChoice: null,     // disambiguation awaiting choice
+  history: [],             // last 20 exchanges for context
+  mood: 'neutral',         // user mood tracking
+
+  push(role, text) {
+    this.history.push({ role, text, time: Date.now() });
+    if (this.history.length > 20) this.history.shift();
+  },
+  recentContext() {
+    return this.history.slice(-6).map(h => `${h.role}: ${h.text}`).join('\n');
+  }
+};
+
 function addUser(text) {
+  convo.push('user', text);
   chatArea.innerHTML += `<div class="msg user"><div class="bubble">${esc(text)}</div><div class="time">${fmtTime(new Date().toISOString())}</div></div>`;
   chatArea.scrollTop = chatArea.scrollHeight;
 }
@@ -512,6 +533,9 @@ function addSystem(html, suggestions) {
   }
   chatArea.innerHTML += `<div class="msg system"><div class="bubble">${html}${s}</div><div class="time">${fmtTime(new Date().toISOString())}</div></div>`;
   chatArea.scrollTop = chatArea.scrollHeight;
+  // Store a simplified version in convo history
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  convo.push('assistant', tmp.textContent.substring(0, 200));
 }
 
 function showTyping() {
@@ -545,10 +569,33 @@ function productTableHtml(products, title) {
   return h;
 }
 
+function productCardHtml(p) {
+  const q = completeness(p);
+  const lbls = p.labels.map(l => labelHtml(l, false)).join(' ') || '<span style="color:var(--muted)">None</span>';
+  const catName = DB.categories.find(c => c.id === p.category)?.name || '—';
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:8px 0;cursor:pointer" onclick="openDetail('${p.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+      <div><div style="font-weight:700;font-size:15px">${esc(p.name)}</div><div class="sku">${esc(p.sku)}</div></div>
+      <span class="status-badge status-${p.status}">${p.status}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:13px">
+      <div><span style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">Brand</span><br>${esc(p.brand)}</div>
+      <div><span style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">Price</span><br>${fmtPrice(p.price)}</div>
+      <div><span style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">Category</span><br>${esc(catName)}</div>
+    </div>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+      <div class="quality-bar" style="width:80px;flex-shrink:0"><div class="quality-fill ${qClass(q)}" style="width:${q}%"></div></div>
+      <span style="font-size:11px;color:var(--muted)">${q}% complete</span>
+      <span style="margin-left:auto">${lbls}</span>
+    </div>
+  </div>`;
+}
+
 // ============ DETAIL PANEL ============
 function openDetail(productId) {
   const p = DB.products.find(x => x.id === productId);
   if (!p) return;
+  convo.lastProduct = p;
   const q = completeness(p);
   const panel = document.getElementById('detail-panel');
   const lbls = p.labels.map(l => labelHtml(l, true, p.id)).join('') || '<span style="color:var(--muted);font-size:12px">No labels</span>';
@@ -633,105 +680,181 @@ function parseCommand(input) {
   const n = input.trim().toLowerCase();
   const raw = input.trim();
 
-  // Greetings
-  if (/^(hey|hi|hello|hei|yo|sup|good\s*(morning|afternoon|evening)|what'?s?\s*up)/i.test(n)) return { type:'greeting', raw };
-  if (/^(thanks?|thank\s*you|thx|cheers)/i.test(n)) return { type:'thanks', raw };
-  if (/^(help|what can you do|\?)/i.test(n)) return { type:'help', raw };
+  // ============ CONVERSATIONAL / FOLLOW-UP HANDLERS ============
+
+  // Confirmations for pending actions
+  if (convo.pendingConfirm && /^(yes|yeah|yep|sure|ok|okay|do it|go ahead|confirm|proceed|absolutely|please|yea|ja|aye)/i.test(n)) {
+    return { type:'confirm_pending', raw };
+  }
+  if (convo.pendingConfirm && /^(no|nah|nope|cancel|never\s*mind|forget\s*it|don't|stop|abort)/i.test(n)) {
+    return { type:'cancel_pending', raw };
+  }
+
+  // Numbered or positional choice for disambiguation
+  if (convo.pendingChoice && /^(\d+|first|second|third|fourth|fifth|last|the\s*(first|second|third|last)\s*one)/i.test(n)) {
+    const idx = parseChoiceIndex(n);
+    return { type:'resolve_choice', index: idx, raw };
+  }
+  // "that one" / "this one" when a single product was last mentioned
+  if (/^(that\s*one|this\s*one|the\s*one|it)\s*$/i.test(n) && convo.lastProduct) {
+    return { type:'detail', query: convo.lastProduct.sku, raw };
+  }
+
+  // Follow-up references: "what about shoes?", "and electronics?", "how about Nike?"
+  let followup = n.match(/^(what\s*about|how\s*about|and\s*|also\s*|now\s*show\s*|now\s*)(the\s*)?(.+?)\??$/i);
+  if (followup && convo.lastAction) {
+    const ref = followup[3].trim();
+    // Re-run last action type with new target
+    if (['show_category','show_label','filter_status','search'].includes(convo.lastAction)) {
+      return reinterpretFollowup(ref, raw);
+    }
+  }
+
+  // "Tell me more" / "more details" / "expand" — show detail on last product
+  if (/^(tell\s*me\s*more|more\s*(details?|info)|expand|elaborate|details?)\s*$/i.test(n) && convo.lastProduct) {
+    return { type:'detail', query: convo.lastProduct.sku, raw };
+  }
+
+  // "Edit it" / "edit that" / "change it" with implicit product
+  if (/^(edit|update|change|modify)\s*(it|that|this|them)?\s*$/i.test(n) && convo.lastProduct) {
+    return { type:'edit', query: convo.lastProduct.sku, raw };
+  }
+
+  // "Delete it" with implicit product
+  if (/^(delete|remove)\s*(it|that|this)\s*$/i.test(n) && convo.lastProduct) {
+    return { type:'delete', query: convo.lastProduct.sku, raw };
+  }
+
+  // "Enrich it" with implicit product
+  if (/^(enrich|improve|suggest)\s*(it|that|this)?\s*$/i.test(n) && convo.lastProduct) {
+    return { type:'enrich', target: convo.lastProduct.sku, raw };
+  }
+
+  // "Publish it" with implicit product
+  if (/^(publish|activate)\s*(it|that|this)?\s*$/i.test(n) && convo.lastProduct) {
+    return { type:'publish', target: convo.lastProduct.sku, raw };
+  }
+
+  // Emotional / conversational responses
+  if (/^(this is (great|awesome|cool|nice|amazing)|love it|brilliant|perfect|wow|neat|impressive)/i.test(n)) return { type:'positive_feedback', raw };
+  if (/^(this (sucks|is broken|doesn't work|is wrong)|ugh|damn|wtf|what the|broken|bug)/i.test(n)) return { type:'negative_feedback', raw };
+  if (/^(i'?m?\s*(confused|lost|stuck)|i\s*don'?t\s*(understand|get|know)|what\s*(now|next|should i do))/i.test(n)) return { type:'confused', raw };
+  if (/^(what\s*happened|what\s*did\s*(you|that)\s*do|what\s*changed|undo|go\s*back)/i.test(n)) return { type:'what_happened', raw };
+
+  // ============ STANDARD COMMANDS ============
+
+  // Greetings — expanded
+  if (/^(hey|hi|hello|hei|yo|sup|good\s*(morning|afternoon|evening)|what'?s?\s*up|howdy|hiya|g'?day|greetings)/i.test(n)) return { type:'greeting', raw };
+  if (/^(thanks?|thank\s*you|thx|cheers|ta|much\s*appreciated|tyvm)/i.test(n)) return { type:'thanks', raw };
+  if (/^(help|what can you do|\?|capabilities|features|commands?|help\s*me\s*(get\s*started)?)/i.test(n)) return { type:'help', raw };
+  if (/^(bye|goodbye|see\s*you|cya|later|gotta\s*go|signing\s*off)/i.test(n)) return { type:'goodbye', raw };
+
+  // Natural questions about the catalog
+  if (/^(how\s*many|count|total)\s*(products?|items?)/i.test(n)) return { type:'overview', raw };
+  if (/^(what('?s| is| are)\s*(the|my|our)\s*(best|worst|top|lowest)\s*(quality|rated|scoring|complete))/i.test(n)) return { type:'quality', raw };
+  if (/^(any|are there)\s*(incomplete|missing|empty|draft|problems?|issues?)/i.test(n)) return { type:'quality', raw };
+  if (/^(what\s*(do i|should i|can i)\s*(do|work on|fix|improve)\s*(next|first|now)?)/i.test(n)) return { type:'suggest_next', raw };
+  if (/^(show\s*me\s*everything|everything|all|give\s*me\s*everything)/i.test(n)) return { type:'show_all', raw };
+  if (/^(how'?s?\s*(my|the|our)?\s*(data\s*)?quality)/i.test(n)) return { type:'quality', raw };
 
   // Show by category (must come before show_all to avoid false match)
-  let cm = n.match(/^(show|list|find|get)\s*(all\s*)?(products?\s*)?(in|from|under)\s+(.+)/i);
-  if (cm) return { type:'show_category', category: cm[5].trim(), raw };
+  let cm = n.match(/^(show|list|find|get|browse|see)\s*(me\s*)?(all\s*)?(the\s*)?(products?\s*)?(in|from|under|for)\s+(.+)/i);
+  if (cm) return { type:'show_category', category: cm[7].trim(), raw };
 
   // Show by label
-  let lm = n.match(/^(show|list|find|get)\s*(all\s*)?(products?\s*)?(with|labeled?|tagged?)\s+['"]?(.+?)['"]?\s*$/i);
-  if (lm) return { type:'show_label', label: lm[5].trim(), raw };
+  let lm = n.match(/^(show|list|find|get)\s*(me\s*)?(all\s*)?(products?\s*)?(with|labeled?|tagged?)\s+['"]?(.+?)['"]?\s*$/i);
+  if (lm) return { type:'show_label', label: lm[6].trim(), raw };
 
   // Filter by status
-  if (/^(show|list|find)\s*(all\s*)?(draft|active|archived)\s*(products?)?/i.test(n)) {
+  if (/^(show|list|find|get)\s*(me\s*)?(all\s*)?(the\s*)?(draft|active|archived)\s*(products?|ones?)?/i.test(n)) {
     const st = n.match(/(draft|active|archived)/i)[1];
     return { type:'filter_status', status: st, raw };
   }
 
   // Show / list all products
-  if (/^(show|list|display|get|find)\s*(all\s*)?(products?|items?|catalog)/i.test(n)) return { type:'show_all', raw };
+  if (/^(show|list|display|get|find|see|browse)\s*(me\s*)?(all\s*)?(the\s*)?(products?|items?|catalog|everything|inventory)/i.test(n)) return { type:'show_all', raw };
 
-  // Duplicates (must come before search to catch "find duplicates")
-  if (/^(find\s*)?duplicates?$|^duplicate\s*(check|scan|detection)/i.test(n)) return { type:'duplicates', raw };
+  // Duplicates (must come before search)
+  if (/^(find\s*)?duplicates?$|^duplicate\s*(check|scan|detection)|any\s*duplicates?/i.test(n)) return { type:'duplicates', raw };
 
   // Export (before search)
   if (/^export\s*(all|csv|catalog|products?)?$/i.test(n)) return { type:'export', raw };
 
-  // Compare (before search)
-  let cpm2 = n.match(/^compare\s+(.+?)\s+(and|vs|with|,)\s+(.+)/i);
+  // Compare
+  let cpm2 = n.match(/^compare\s+(.+?)\s+(and|vs|with|,|to)\s+(.+)/i);
   if (cpm2) return { type:'compare', a: cpm2[1].trim(), b: cpm2[3].trim(), raw };
 
   // Search
-  if (/^(search|find|look\s*for)\s+/i.test(n)) {
-    const q = n.replace(/^(search|find|look\s*for)\s+/i, '').replace(/^(for\s+)?/i, '');
+  if (/^(search|find|look\s*for|where\s*is|locate)\s+/i.test(n)) {
+    const q = n.replace(/^(search|find|look\s*for|where\s*is|locate)\s+/i, '').replace(/^(for\s+)?/i, '');
     return { type:'search', query: q, raw };
   }
 
   // Product detail
-  let dm = n.match(/^(show|view|open|details?|info)\s+(for\s+)?(.+)/i);
+  let dm = n.match(/^(show|view|open|details?|info|tell\s*me\s*about|what\s*is|describe)\s+(for\s+|about\s+)?(.+)/i);
   if (dm) return { type:'detail', query: dm[3].trim(), raw };
 
   // Data quality
-  if (/data\s*quality|completeness|quality\s*(report|score|overview)?/i.test(n)) return { type:'quality', raw };
+  if (/data\s*quality|completeness|quality\s*(report|score|overview)?|how.*(complete|good|clean)/i.test(n)) return { type:'quality', raw };
 
   // Status overview
-  if (/^(status|overview|dashboard|how.*(catalog|data|products?))/i.test(n)) return { type:'overview', raw };
+  if (/^(status|overview|dashboard|summary|how.*(catalog|data|products?|things|doing|going))/i.test(n)) return { type:'overview', raw };
 
-  // Add label
-  let alm = n.match(/^(add|assign|tag|apply)\s+label\s+['"](.+?)['"]\s+to\s+(.+)/i);
+  // Add label — more natural patterns
+  let alm = n.match(/^(add|assign|tag|apply|put)\s+(the\s+)?label\s+['"](.+?)['"]\s+(to|on)\s+(.+)/i);
   if (!alm) alm = n.match(/^label\s+(.+?)\s+(?:as|with)\s+['"](.+?)['"]/i);
+  if (!alm) alm = n.match(/^tag\s+(.+?)\s+(?:as|with)\s+['"](.+?)['"]/i);
   if (alm) {
-    const labelName = alm[2]; const target = alm[3] || alm[1];
+    const labelName = alm[3] || alm[2]; const target = alm[5] || alm[3] || alm[1];
     return { type:'add_label', label: labelName, target: target.trim(), raw };
   }
 
   // Remove label
-  let rlm = n.match(/^remove\s+label\s+['"](.+?)['"]\s+from\s+(.+)/i);
-  if (rlm) return { type:'remove_label', label: rlm[1], target: rlm[2].trim(), raw };
+  let rlm = n.match(/^remove\s+(the\s+)?label\s+['"](.+?)['"]\s+from\s+(.+)/i);
+  if (rlm) return { type:'remove_label', label: rlm[2], target: rlm[3].trim(), raw };
 
   // Create label
-  let clm = n.match(/^create\s+label\s+['"](.+?)['"](\s+(.+))?/i);
-  if (clm) return { type:'create_label', name: clm[1], color: clm[3] || null, raw };
+  let clm = n.match(/^create\s+(a\s+)?(new\s+)?label\s+['"](.+?)['"](\s+(.+))?/i);
+  if (clm) return { type:'create_label', name: clm[3], color: clm[5] || null, raw };
 
   // Edit / update product
-  let em = n.match(/^(edit|update|change|set|modify)\s+(the\s+)?(.+)/i);
+  let em = n.match(/^(edit|update|change|set|modify|fix)\s+(the\s+)?(.+)/i);
   if (em) return { type:'edit', query: em[3].trim(), raw };
 
   // Bulk operations
   if (/^(select|bulk)\s+/i.test(n)) return { type:'bulk_select', query: n.replace(/^(select|bulk)\s+/i,''), raw };
 
-  // Increase/decrease price
-  let pm = n.match(/(increase|decrease|raise|lower|reduce)\s+price\s*(of|for|on)?\s*(.*?)\s*by\s+(\d+)\s*%/i);
-  if (pm) return { type:'price_change', direction: pm[1], target: pm[3], percent: parseInt(pm[4]), raw };
+  // Increase/decrease price — more patterns
+  let pm = n.match(/(increase|decrease|raise|lower|reduce|bump|drop)\s+(the\s+)?price\s*(of|for|on)?\s*(.*?)\s*by\s+(\d+)\s*%/i);
+  if (pm) return { type:'price_change', direction: pm[1], target: pm[4], percent: parseInt(pm[5]), raw };
+  // "make shoes 10% more expensive"
+  let pm2 = n.match(/make\s+(.+?)\s+(\d+)%\s*(more\s*expensive|cheaper)/i);
+  if (pm2) return { type:'price_change', direction: pm2[3].includes('cheaper') ? 'decrease' : 'increase', target: pm2[1], percent: parseInt(pm2[2]), raw };
 
   // Delete
-  let delm = n.match(/^(delete|remove)\s+(product\s+)?(.+)/i);
-  if (delm) return { type:'delete', query: delm[3].trim(), raw };
+  let delm = n.match(/^(delete|remove|get\s*rid\s*of|trash)\s+(the\s+)?(product\s+)?(.+)/i);
+  if (delm) return { type:'delete', query: delm[4].trim(), raw };
 
   // Create product
-  if (/^(create|add|new)\s+(a\s+)?(product|item)/i.test(n)) return { type:'create_product', raw };
+  if (/^(create|add|new|make)\s+(a\s+)?(new\s+)?(product|item)/i.test(n)) return { type:'create_product', raw };
 
   // Export target
   let exm = n.match(/^export\s+(.*)/i);
   if (exm) return { type:'export_target', target: exm[1], raw };
 
   // Enrich
-  let enm = n.match(/^(enrich|suggest|improve|ai\s*enrich)\s+(.*)/i);
+  let enm = n.match(/^(enrich|suggest|improve|ai\s*enrich|optimize)\s+(.*)/i);
   if (enm) return { type:'enrich', target: enm[2].trim(), raw };
   if (/^enrich\s*all/i.test(n)) return { type:'enrich_all', raw };
 
   // Publish / unpublish
-  let pubm = n.match(/^(publish|activate|go\s*live)\s+(.*)/i);
+  let pubm = n.match(/^(publish|activate|go\s*live|make\s*active)\s+(.*)/i);
   if (pubm) return { type:'publish', target: pubm[2].trim(), raw };
-  let unpubm = n.match(/^(unpublish|deactivate|archive)\s+(.*)/i);
+  let unpubm = n.match(/^(unpublish|deactivate|archive|retire)\s+(.*)/i);
   if (unpubm) return { type:'unpublish', target: unpubm[2].trim(), raw };
 
   // History
-  let hm = n.match(/^(history|changelog|changes|log)\s*(for|of)?\s*(.*)/i);
+  let hm = n.match(/^(history|changelog|changes|log|audit)\s*(for|of)?\s*(.*)/i);
   if (hm && hm[3]) return { type:'history', target: hm[3].trim(), raw };
 
   // Relationships
@@ -750,8 +873,63 @@ function parseCommand(input) {
   let clnm = n.match(/^(clone|copy|duplicate)\s+(product\s+)?(.+)/i);
   if (clnm) return { type:'clone', target: clnm[3].trim(), raw };
 
-  // Fallback search
-  return { type:'search', query: n, raw };
+  // ============ SMART FALLBACK ============
+  // Try to detect intent from natural phrasing before falling back to search
+  return smartFallback(n, raw);
+}
+
+// ============ CONVERSATIONAL HELPERS ============
+
+function parseChoiceIndex(text) {
+  const words = { first:0, second:1, third:2, fourth:3, fifth:4, last:-1 };
+  for (const [word, idx] of Object.entries(words)) {
+    if (text.includes(word)) return idx;
+  }
+  const num = parseInt(text.match(/\d+/)?.[0]);
+  return num ? num - 1 : 0;
+}
+
+function reinterpretFollowup(ref, raw) {
+  // Try as category
+  const cat = DB.categories.find(c => c.name.toLowerCase().includes(ref));
+  if (cat) return { type:'show_category', category: ref, raw };
+  // Try as label
+  const lbl = DB.labels.find(l => l.name.toLowerCase().includes(ref));
+  if (lbl) return { type:'show_label', label: ref, raw };
+  // Try as status
+  if (['active','draft','archived'].includes(ref)) return { type:'filter_status', status: ref, raw };
+  // Fall back to search
+  return { type:'search', query: ref, raw };
+}
+
+function smartFallback(n, raw) {
+  // Check if input matches a category name
+  const cat = DB.categories.find(c => c.name.toLowerCase() === n || c.name.toLowerCase().includes(n));
+  if (cat) return { type:'show_category', category: n, raw };
+
+  // Check if input matches a label name
+  const lbl = DB.labels.find(l => l.name.toLowerCase() === n || l.name.toLowerCase().includes(n));
+  if (lbl) return { type:'show_label', label: n, raw };
+
+  // Check if input matches a brand
+  const brand = DB.products.find(p => p.brand.toLowerCase() === n);
+  if (brand) return { type:'search', query: n, raw };
+
+  // Check if input looks like a SKU
+  if (/^[A-Z]{2,}-\d{3}/i.test(n)) return { type:'detail', query: n, raw };
+
+  // Check if input is a product name (fuzzy)
+  const exactProduct = DB.products.find(p => p.name.toLowerCase().includes(n));
+  if (exactProduct && n.length > 3) return { type:'detail', query: n, raw };
+
+  // Check for question patterns
+  if (/\?$/.test(n)) {
+    if (/how\s*much|price|cost/i.test(n)) return { type:'search', query: n.replace(/[?]/g,'').trim(), raw };
+    if (/where|which\s*category/i.test(n)) return { type:'search', query: n.replace(/[?]/g,'').trim(), raw };
+  }
+
+  // Ultimate fallback: search, but with a friendly message
+  return { type:'fuzzy_search', query: n, raw };
 }
 
 // ============ FIND PRODUCTS ============
@@ -793,12 +971,34 @@ function findByTarget(target) {
 // ============ COMMAND EXECUTION ============
 async function executeCommand(input) {
   addUser(input);
+  convo.lastQuery = input;
   const cmd = parseCommand(input);
+
+  // Vary typing delay for naturalness
+  const thinkTime = ['greeting','thanks','positive_feedback','negative_feedback','goodbye'].includes(cmd.type)
+    ? 200 + Math.random() * 300
+    : 400 + Math.random() * 600;
   showTyping();
-  await delay(400 + Math.random() * 500);
+  await delay(thinkTime);
   hideTyping();
 
+  // Track action for follow-ups
+  convo.lastAction = cmd.type;
+
   switch (cmd.type) {
+    // Conversational
+    case 'confirm_pending': execConfirmPending(); break;
+    case 'cancel_pending': execCancelPending(); break;
+    case 'resolve_choice': execResolveChoice(cmd.index); break;
+    case 'positive_feedback': execPositiveFeedback(); break;
+    case 'negative_feedback': execNegativeFeedback(); break;
+    case 'confused': execConfused(); break;
+    case 'what_happened': execWhatHappened(); break;
+    case 'goodbye': execGoodbye(); break;
+    case 'suggest_next': execSuggestNext(); break;
+    case 'fuzzy_search': execFuzzySearch(cmd.query); break;
+
+    // Standard
     case 'greeting': execGreeting(); break;
     case 'thanks': execThanks(); break;
     case 'help': execHelp(); break;
@@ -831,11 +1031,170 @@ async function executeCommand(input) {
     case 'add_relationship': execAddRelationship(cmd.relType, cmd.from, cmd.to); break;
     case 'move_category': execMoveCategory(cmd.target, cmd.category); break;
     case 'clone': execClone(cmd.target); break;
-    default: execSearch(cmd.query || cmd.raw);
+    default: execFuzzySearch(cmd.query || cmd.raw);
   }
 }
 
 // ============ COMMAND HANDLERS ============
+
+// ============ CONVERSATIONAL HANDLERS ============
+
+function execConfirmPending() {
+  if (!convo.pendingConfirm) {
+    addSystem(`<p>Hmm, I don't have anything pending to confirm. What would you like to do?</p>`, smartSuggestions());
+    return;
+  }
+  const action = convo.pendingConfirm;
+  convo.pendingConfirm = null;
+  if (typeof action === 'function') action();
+}
+
+function execCancelPending() {
+  convo.pendingConfirm = null;
+  convo.pendingChoice = null;
+  addSystem(`<p>${pick(["No worries, cancelled!","Got it — cancelled.","Done, nothing was changed.","Alright, I've scrapped that."])} What else can I help with?</p>`, smartSuggestions());
+}
+
+function execResolveChoice(index) {
+  if (!convo.pendingChoice || !convo.pendingChoice.length) {
+    addSystem(`<p>I don't have a list to pick from right now. Could you be more specific?</p>`, smartSuggestions());
+    return;
+  }
+  const items = convo.pendingChoice;
+  const idx = index === -1 ? items.length - 1 : Math.min(index, items.length - 1);
+  const chosen = items[idx];
+  convo.pendingChoice = null;
+  if (chosen) {
+    convo.lastProduct = chosen;
+    execDetailForProduct(chosen);
+  }
+}
+
+function execPositiveFeedback() {
+  const responses = [
+    "Glad you like it! 😊 I'm here whenever you need me.",
+    "Thanks! That means a lot. What else can I do for you?",
+    "Awesome, happy to help! Want to keep working on the catalog?",
+    "Great to hear! Let me know what you'd like to tackle next."
+  ];
+  addSystem(`<p>${pick(responses)}</p>`, smartSuggestions());
+}
+
+function execNegativeFeedback() {
+  addSystem(
+    `<p>I'm sorry about that. Let me know what went wrong and I'll try to fix it, or try rephrasing your request. Here are some things I can definitely help with:</p>`,
+    ['Help', 'Show all products', 'Overview', 'Data quality report']
+  );
+}
+
+function execConfused() {
+  const lastAct = convo.lastAction;
+  let context = '';
+  if (convo.lastProduct) {
+    context = `<p style="margin-top:6px;font-size:13px;color:var(--muted)">You were just looking at <strong style="color:var(--white)">${esc(convo.lastProduct.name)}</strong>. You can say things like "edit it", "enrich it", or "tell me more".</p>`;
+  }
+  addSystem(
+    `<p>No problem — let me help you out. You can talk to me naturally about your products. ${pick(["Here are some things you can try:","Here's what I'd suggest:","Let's start simple:"])}</p>${context}`,
+    ['Help', 'Show all products', 'What should I work on next?', 'Overview']
+  );
+}
+
+function execWhatHappened() {
+  const recent = convo.history.filter(h => h.role === 'assistant').slice(-3);
+  if (!recent.length) {
+    addSystem(`<p>Nothing has happened yet — we just started! What would you like to do?</p>`, smartSuggestions());
+    return;
+  }
+  addSystem(
+    `<p>Here's a quick recap of our recent activity:</p>
+    <ul style="margin:8px 0 8px 16px;font-size:13px;color:var(--muted)">${recent.map(h => `<li>${esc(h.text.substring(0, 120))}${h.text.length > 120 ? '...' : ''}</li>`).join('')}</ul>
+    <p style="font-size:13px;color:var(--muted)">All changes are tracked in the audit log (click the 📋 icon in the bottom-left).</p>`,
+    ['Overview', 'Show all products']
+  );
+}
+
+function execGoodbye() {
+  const responses = [
+    "See you later! Your catalog will be here when you get back. 👋",
+    "Goodbye! Everything's saved. Come back anytime.",
+    "Take care! Your product data is in good hands. 👋",
+    "Bye for now! I'll keep an eye on your catalog. 🫡"
+  ];
+  addSystem(`<p>${pick(responses)}</p>`, []);
+}
+
+function execSuggestNext() {
+  const drafts = DB.products.filter(p => p.status === 'draft');
+  const lowQuality = DB.products.filter(p => completeness(p) < 50);
+  const noLabels = DB.products.filter(p => !p.labels.length);
+  const suggestions = [];
+  let html = `<p>${pick(["Here's what I'd focus on:","Let me look at your catalog...","Good question! Here's my assessment:"])}</p><ul style="margin:10px 0 10px 16px;font-size:13px">`;
+
+  if (drafts.length) {
+    html += `<li style="margin:4px 0"><strong style="color:var(--yellow)">${drafts.length} draft products</strong> need review before publishing</li>`;
+    suggestions.push('Show draft products');
+  }
+  if (lowQuality.length) {
+    html += `<li style="margin:4px 0"><strong style="color:var(--red)">${lowQuality.length} products</strong> have low data quality (under 50%)</li>`;
+    suggestions.push('Data quality report');
+  }
+  if (noLabels.length > 3) {
+    html += `<li style="margin:4px 0"><strong style="color:var(--muted)">${noLabels.length} products</strong> have no labels — consider organizing them for campaigns</li>`;
+    suggestions.push('Show all products');
+  }
+  if (!drafts.length && !lowQuality.length) {
+    html += `<li style="margin:4px 0;color:var(--green)">Your catalog is in great shape! Maybe check for duplicates or explore relationships.</li>`;
+    suggestions.push('Find duplicates');
+  }
+  html += '</ul>';
+  addSystem(html, suggestions.length ? suggestions : smartSuggestions());
+}
+
+function execFuzzySearch(query) {
+  const results = findProducts(query);
+  if (results.length === 1) {
+    convo.lastProduct = results[0];
+    convo.lastProducts = results;
+    addSystem(
+      `<p>${pick(["I think you're looking for this:","Found this — is this what you meant?","Here's what I found:"])}</p>${productCardHtml(results[0])}`,
+      [`Edit ${results[0].sku}`, `Enrich ${results[0].sku}`, 'Show all products', `History for ${results[0].sku}`]
+    );
+  } else if (results.length > 1) {
+    convo.lastProducts = results;
+    convo.pendingChoice = results.slice(0, 10);
+    addSystem(
+      `<p>I found ${results.length} products that might match "<strong>${esc(query)}</strong>". ${pick(["Did you mean one of these?","Which one are you looking for?","Here's what came up:"])}</p>${productTableHtml(results)}`,
+      results.slice(0, 3).map(p => `Show ${p.sku}`)
+    );
+  } else {
+    // No results — be helpful
+    addSystem(
+      `<p>I couldn't find anything matching "<strong>${esc(query)}</strong>". ${pick([
+        "Could you try rephrasing?",
+        "Maybe check the spelling or try a different term?",
+        "Want me to search differently?"
+      ])}</p>
+      <p style="margin-top:6px;font-size:13px;color:var(--muted)">💡 Tip: You can search by product name, SKU, brand, or description. Or just say "show all products" to browse.</p>`,
+      ['Show all products', 'Help', 'Overview']
+    );
+  }
+}
+
+function smartSuggestions() {
+  // Context-aware suggestions based on what's been happening
+  const suggestions = [];
+  if (convo.lastProduct) {
+    suggestions.push(`Edit ${convo.lastProduct.sku}`, `Enrich ${convo.lastProduct.sku}`);
+  }
+  const drafts = DB.products.filter(p => p.status === 'draft');
+  if (drafts.length) suggestions.push('Show draft products');
+  if (!suggestions.length || suggestions.length < 3) {
+    suggestions.push('Show all products', 'Data quality report', 'Overview');
+  }
+  return suggestions.slice(0, 4);
+}
+
+// ============ STANDARD COMMAND HANDLERS ============
 
 function execGreeting() {
   const hour = new Date().getHours();
@@ -847,9 +1206,23 @@ function execGreeting() {
     avgQ: Math.round(DB.products.reduce((s,p) => s + completeness(p), 0) / DB.products.length)
   };
 
+  // Vary the greeting based on context
+  const isReturning = convo.history.length > 2;
+  const greetingMsg = isReturning
+    ? pick([
+        `${greeting}! Welcome back.`,
+        `Hey again! 👋`,
+        `${greeting}! Ready to pick up where we left off?`
+      ])
+    : pick([
+        `${greeting}! 👋 I'm your AI product catalog assistant.`,
+        `${greeting}! Welcome to Agentic PIM.`,
+        `${greeting}! I'm here to help you manage your product catalog.`
+      ]);
+
   addSystem(
-    `<p><strong>${greeting}!</strong> Welcome to Agentic PIM. I'm here to help you manage your product catalog.</p>
-    <p style="margin-top:8px">Here's a quick snapshot of your catalog:</p>
+    `<p><strong>${greetingMsg}</strong></p>
+    <p style="margin-top:8px">${pick(["Here's a quick snapshot:","Here's where things stand:","Your catalog at a glance:"])}</p>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0">
       <div style="background:rgba(61,116,244,0.1);border:1px solid rgba(61,116,244,0.2);border-radius:8px;padding:10px;text-align:center">
         <div style="font-size:22px;font-weight:800;color:var(--blue)">${stats.total}</div><div style="font-size:10px;color:var(--muted)">Total Products</div>
@@ -864,16 +1237,25 @@ function execGreeting() {
         <div style="font-size:22px;font-weight:800;color:var(--purple)">${stats.avgQ}%</div><div style="font-size:10px;color:var(--muted)">Avg Quality</div>
       </div>
     </div>
-    <p style="color:var(--muted);font-size:13px">What would you like to do? Here are some suggestions:</p>`,
-    ['Show all products', 'Data quality report', 'Find duplicates', 'Enrich all', 'Export', 'Help']
+    <p style="color:var(--muted);font-size:13px">${pick([
+      "What would you like to work on?",
+      "What can I help you with?",
+      "Where should we start?",
+      "What's on your agenda today?"
+    ])}</p>`,
+    ['Show all products', 'What should I work on next?', 'Data quality report', 'Help']
   );
 }
 
 function execThanks() {
-  addSystem(
-    `<p>${pick(["You're welcome!","Happy to help!","Anytime!","Glad I could help!"])} Let me know if there's anything else you need.</p>`,
-    ['Show all products', 'Data quality report', 'Overview']
-  );
+  const responses = [
+    "You're welcome! Happy to help. 😊",
+    "Anytime! That's what I'm here for.",
+    "Glad I could help! What's next?",
+    "No problem at all! Let me know if you need anything else.",
+    "My pleasure! Keep the questions coming."
+  ];
+  addSystem(`<p>${pick(responses)}</p>`, smartSuggestions());
 }
 
 function execHelp() {
@@ -932,17 +1314,30 @@ function execHelp() {
 }
 
 function execShowAll() {
+  convo.lastProducts = DB.products;
   addSystem(
-    `<p>Here's your full product catalog:</p>${productTableHtml(DB.products, 'All Products')}`,
-    ['Show draft products', 'Data quality report', 'Show products in Electronics']
+    `<p>${pick(["Here's your full catalog:","Here are all your products:","Showing everything — ${DB.products.length} products:"])}</p>${productTableHtml(DB.products, 'All Products')}
+    <p style="margin-top:8px;font-size:12px;color:var(--muted)">💡 Click any product for details, or filter by saying "show draft products" or "show products in Electronics"</p>`,
+    ['Show draft products', 'Data quality report', 'What should I work on next?', 'Find duplicates']
   );
 }
 
 function execFilterStatus(status) {
   const products = DB.products.filter(p => p.status === status);
+  convo.lastProducts = products;
+  const commentary = status === 'draft'
+    ? (products.length > 3 ? `That's quite a few drafts — want me to help enrich or publish some?` : `Not too many drafts. Looking good!`)
+    : status === 'active'
+    ? `These are live and ready to go.`
+    : `These have been archived.`;
   addSystem(
-    `<p>Found <strong>${products.length}</strong> products with status <span class="status-badge status-${status}">${status}</span>:</p>${productTableHtml(products)}`,
-    status === 'draft' ? ['Show active products', 'Edit first draft product'] : ['Show draft products', 'Data quality report']
+    `<p>Found <strong>${products.length}</strong> ${status} product${products.length !== 1 ? 's' : ''}:</p>${productTableHtml(products)}
+    <p style="margin-top:6px;font-size:13px;color:var(--muted)">${commentary}</p>`,
+    status === 'draft'
+      ? ['Enrich all', 'Show active products', 'What should I work on next?']
+      : status === 'active'
+      ? ['Show draft products', 'Export', 'Data quality report']
+      : ['Show active products', 'Show draft products']
   );
 }
 
@@ -978,20 +1373,24 @@ function execShowLabel(labelName) {
 
 function execSearch(query) {
   const results = findProducts(query);
+  convo.lastProducts = results;
   if (results.length === 1) {
+    convo.lastProduct = results[0];
     execDetailForProduct(results[0]);
     return;
   }
   if (results.length === 0) {
     addSystem(
-      `<p>No products found matching "<strong>${esc(query)}</strong>". Try a different search term or browse by category.</p>`,
-      ['Show all products', 'Show products in Electronics', 'Show products in Shoes']
+      `<p>${pick(["Hmm, nothing came up for","No results for","I couldn't find anything matching"])} "<strong>${esc(query)}</strong>". ${pick(["Try a different term?","Want to browse by category instead?","Let me know if you want to try something else."])}</p>`,
+      ['Show all products', 'Show products in Electronics', 'Show products in Shoes', 'Help']
     );
     return;
   }
+  convo.pendingChoice = results.slice(0, 10);
   addSystem(
-    `<p>Found <strong>${results.length}</strong> products matching "<strong>${esc(query)}</strong>":</p>${productTableHtml(results, 'Search Results')}`,
-    [`Show products in Electronics`, `Data quality report`]
+    `<p>${pick(["Here's what I found:","Found ${results.length} matches:","${results.length} products match your search:"])}</p>${productTableHtml(results, 'Search Results')}
+    <p style="margin-top:6px;font-size:12px;color:var(--muted)">💡 Click a product for details, or say "the first one" to select.</p>`,
+    results.slice(0, 3).map(p => `Show ${p.sku}`)
   );
 }
 
@@ -1000,13 +1399,21 @@ function execDetail(query) {
   const product = DB.products.find(p => p.sku.toLowerCase() === q || p.name.toLowerCase().includes(q));
   if (!product) {
     const results = findProducts(q);
-    if (results.length) {
-      addSystem(`<p>I found multiple matches. Which one did you mean?</p>${productTableHtml(results)}`, []);
+    if (results.length > 1) {
+      convo.pendingChoice = results;
+      convo.lastProducts = results;
+      addSystem(`<p>${pick(["I found a few matches — which one?","Multiple products match. Which did you mean?","A few options here:"])}</p>${productTableHtml(results)}`,
+        results.slice(0,3).map(p => `Show ${p.sku}`)
+      );
+    } else if (results.length === 1) {
+      convo.lastProduct = results[0];
+      execDetailForProduct(results[0]);
     } else {
-      addSystem(`<p>Couldn't find a product matching "<strong>${esc(query)}</strong>".</p>`, ['Show all products']);
+      addSystem(`<p>Couldn't find "<strong>${esc(query)}</strong>". ${pick(["Check the SKU or name?","Want to search differently?","Maybe try browsing?"])}</p>`, ['Show all products']);
     }
     return;
   }
+  convo.lastProduct = product;
   execDetailForProduct(product);
 }
 
@@ -1819,12 +2226,21 @@ render();
 
 // Welcome message on load
 setTimeout(() => {
+  const hour = new Date().getHours();
+  const timeGreet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const drafts = DB.products.filter(p => p.status === 'draft').length;
+  const lowQ = DB.products.filter(p => completeness(p) < 50).length;
+  let proactiveHint = '';
+  if (drafts > 0) proactiveHint = `<p style="margin-top:8px;font-size:13px;color:var(--yellow)">📋 You have <strong>${drafts} draft product${drafts>1?'s':''}</strong> that might need attention.</p>`;
+  if (lowQ > 0) proactiveHint += `<p style="margin-top:4px;font-size:13px;color:var(--orange)">⚠️ <strong>${lowQ} product${lowQ>1?'s':''}</strong> have low data quality — I can help enrich them.</p>`;
+
   addSystem(
-    `<p><strong>Welcome to Agentic PIM</strong></p>
-    <p style="margin-top:6px;color:var(--muted)">I'm your AI-powered product information assistant. I can help you browse, edit, organize, and analyze your product catalog — all through natural conversation.</p>
-    <p style="margin-top:8px;color:var(--muted)">Your catalog has been loaded with <strong style="color:var(--white)">${DB.products.length} products</strong> across <strong style="color:var(--white)">${DB.categories.filter(c=>!c.parent).length} categories</strong>.</p>
-    <p style="margin-top:8px;font-size:13px;color:var(--muted)">Try one of these to get started:</p>`,
-    ['Show all products', 'Data quality report', 'Find duplicates', 'Export', 'Help']
+    `<p><strong>${timeGreet}! 👋</strong></p>
+    <p style="margin-top:6px;color:var(--muted)">I'm your AI product catalog assistant. Just talk to me naturally — ask questions, give instructions, or tell me what you need. I understand plain language.</p>
+    <p style="margin-top:8px;color:var(--muted)">Your catalog: <strong style="color:var(--white)">${DB.products.length} products</strong> across <strong style="color:var(--white)">${DB.categories.filter(c=>!c.parent).length} categories</strong>.</p>
+    ${proactiveHint}
+    <p style="margin-top:10px;font-size:13px;color:var(--muted)">What would you like to do? Just type naturally, or try one of these:</p>`,
+    ['Show me everything', 'What should I work on?', 'How\'s my data quality?', 'Help me get started']
   );
 }, 300);
 </script>
