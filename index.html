@@ -25,6 +25,8 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--white)}
 .logo svg{width:24px;height:24px}
 .env-badge{font-size:10px;background:rgba(236,103,43,0.15);color:var(--orange);padding:2px 10px;border-radius:100px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+#new-chat-btn{display:flex;align-items:center;gap:6px;background:rgba(61,116,244,0.12);border:1px solid rgba(61,116,244,0.3);color:#8BAAFF;font-size:12px;font-weight:600;padding:6px 14px;border-radius:100px;cursor:pointer;transition:all 0.15s;font-family:'Montserrat',sans-serif}
+#new-chat-btn:hover{background:rgba(61,116,244,0.25);border-color:rgba(61,116,244,0.5);color:var(--white)}
 .header-stats{margin-left:auto;display:flex;gap:16px;font-size:12px;color:var(--muted)}
 .header-stats .val{font-weight:700;color:var(--white)}
 
@@ -212,6 +214,10 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
       Agentic PIM
     </div>
     <span class="env-badge">Prototype</span>
+    <button id="new-chat-btn" onclick="startNewChat()" title="Start a new conversation">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      New Chat
+    </button>
     <div class="header-stats">
       <span>Products: <span class="val" id="stat-products">0</span></span>
       <span>Categories: <span class="val" id="stat-categories">0</span></span>
@@ -2206,6 +2212,45 @@ function handleCatClick(catId) {
 function handleLabelClick(labelId) {
   const lbl = labelObj(labelId);
   if (lbl) { document.getElementById('prompt-input').value = `Show products labeled "${lbl.name}"`; handleSend(); }
+}
+
+// ============ NEW CHAT ============
+function startNewChat() {
+  // Reset conversation state
+  convo.lastAction = null;
+  convo.lastProducts = [];
+  convo.lastProduct = null;
+  convo.lastQuery = '';
+  convo.pendingConfirm = null;
+  convo.pendingChoice = null;
+  convo.history = [];
+  convo.mood = 'neutral';
+
+  // Clear chat area
+  const chatArea = document.getElementById('chat-area');
+  chatArea.innerHTML = '';
+
+  // Show fresh welcome
+  const hour = new Date().getHours();
+  const timeGreet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const drafts = DB.products.filter(p => p.status === 'draft').length;
+  const lowQ = DB.products.filter(p => completeness(p) < 50).length;
+  let proactiveHint = '';
+  if (drafts > 0) proactiveHint = `<p style="margin-top:8px;font-size:13px;color:var(--yellow)">📋 You have <strong>${drafts} draft product${drafts>1?'s':''}</strong> that might need attention.</p>`;
+  if (lowQ > 0) proactiveHint += `<p style="margin-top:4px;font-size:13px;color:var(--orange)">⚠️ <strong>${lowQ} product${lowQ>1?'s':''}</strong> have low data quality — I can help enrich them.</p>`;
+
+  setTimeout(() => {
+    addSystem(
+      `<p><strong>${timeGreet}! 👋 Fresh start.</strong></p>
+      <p style="margin-top:6px;color:var(--muted)">Chat cleared. Your catalog data is untouched — <strong style="color:var(--white)">${DB.products.length} products</strong> across <strong style="color:var(--white)">${DB.categories.filter(c=>!c.parent).length} categories</strong>.</p>
+      ${proactiveHint}
+      <p style="margin-top:10px;font-size:13px;color:var(--muted)">What would you like to do?</p>`,
+      ['Show me everything', 'What should I work on?', 'How\'s my data quality?', 'Help']
+    );
+  }, 150);
+
+  // Focus the input
+  document.getElementById('prompt-input').focus();
 }
 
 // ============ SEND HANDLER ============
