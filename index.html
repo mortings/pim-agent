@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bluestone PIM — The Agentic PIM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --electric-blue: #0F05CC;
+      --sky-blue: #3D74F4;
+      --data-navy: #0C2E4E;
+      --code-orange: #EC672B;
+      --citrine: #FBE74D;
+      --byte-berry: #EB485E;
+      --white: #ffffff;
+      --glass: rgba(255,255,255,0.05);
+      --glass-border: rgba(255,255,255,0.1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #050D1F;
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 60px;
+      background: rgba(5,13,31,0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      transition: background 0.3s;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.3px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-ghost:hover { border-color: var(--sky-blue); color: var(--sky-blue); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--sky-blue), var(--electric-blue));
+      border: none;
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 0 20px rgba(61,116,244,0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 32px rgba(61,116,244,0.55);
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 40px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(61,116,244,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(61,116,244,0.07) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridDrift 20s linear infinite;
+    }
+
+    @keyframes gridDrift {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(60px); }
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(15,5,204,0.5), transparent 70%);
+      top: -200px; left: -150px;
+    }
+
+    .orb-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(235,72,94,0.25), transparent 70%);
+      bottom: -100px; right: -100px;
+    }
+
+    .orb-3 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(61,116,244,0.2), transparent 70%);
+      top: 50%; left: 55%;
+      transform: translate(-50%,-50%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(61,116,244,0.12);
+      border: 1px solid rgba(61,116,244,0.3);
+      border-radius: 100px;
+      padding: 6px 16px 6px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #8BAAFF;
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .badge-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--sky-blue), var(--electric-blue));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 7vw, 88px);
+      font-weight: 900;
+      line-height: 1.0;
+      letter-spacing: -2px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #5E9BFF 0%, #A78BFF 50%, var(--byte-berry) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      font-weight: 400;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.6);
+      max-width: 620px;
+      margin: 0 auto 44px;
+      position: relative;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 80px;
+      position: relative;
+    }
+
+    .btn-hero {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-hero-primary {
+      background: linear-gradient(135deg, var(--sky-blue), var(--electric-blue));
+      color: var(--white);
+      border: none;
+      box-shadow: 0 0 40px rgba(61,116,244,0.4);
+    }
+
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 60px rgba(61,116,244,0.6);
+    }
+
+    .btn-hero-secondary {
+      background: var(--glass);
+      color: var(--white);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-hero-secondary:hover {
+      background: rgba(255,255,255,0.09);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 1px;
+      position: relative;
+      background: var(--glass-border);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .stat-item {
+      flex: 1;
+      padding: 28px 40px;
+      background: rgba(255,255,255,0.025);
+      text-align: center;
+    }
+
+    .stat-item + .stat-item { border-left: 1px solid var(--glass-border); }
+
+    .stat-num {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--sky-blue), #A78BFF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      margin-top: 4px;
+    }
+
+    /* SECTIONS */
+    .section { padding: 100px 60px; max-width: 1280px; margin: 0 auto; }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--sky-blue);
+      margin-bottom: 16px;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 20px; height: 2px;
+      background: var(--sky-blue);
+      border-radius: 2px;
+    }
+
+    .section-title {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 17px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+      max-width: 540px;
+    }
+
+    /* AGENTS */
+    .agents-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 56px;
+      gap: 40px;
+    }
+
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .agent-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .agent-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(61,116,244,0.4);
+    }
+
+    .agent-card.featured {
+      grid-column: span 2;
+      background: linear-gradient(135deg, rgba(15,5,204,0.16), rgba(61,116,244,0.1));
+      border-color: rgba(61,116,244,0.28);
+    }
+
+    .agent-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .ai-blue  { background: rgba(61,116,244,0.18); }
+    .ai-purple{ background: rgba(167,139,255,0.18); }
+    .ai-orange{ background: rgba(236,103,43,0.18); }
+    .ai-green { background: rgba(52,211,153,0.18); }
+    .ai-pink  { background: rgba(235,72,94,0.18); }
+
+    .agent-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: rgba(61,116,244,0.14);
+      color: #8BAAFF;
+      border: 1px solid rgba(61,116,244,0.24);
+      margin-bottom: 14px;
+    }
+
+    .agent-name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .agent-card.featured .agent-name { font-size: 24px; }
+
+    .agent-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.52);
+      line-height: 1.65;
+    }
+
+    .agent-card.featured .agent-desc { font-size: 15px; }
+
+    .agent-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #34D399;
+      margin-top: 20px;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #34D399;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .agent-terminal {
+      margin-top: 22px;
+      background: rgba(0,0,0,0.38);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      line-height: 1.9;
+    }
+
+    .t-prompt { color: var(--sky-blue); }
+    .t-cmd    { color: rgba(255,255,255,0.78); }
+    .t-ok     { color: #34D399; }
+    .t-dim    { color: rgba(255,255,255,0.28); font-style: italic; }
+
+    /* HOW IT WORKS */
+    .how-section {
+      padding: 100px 60px;
+      background: linear-gradient(180deg, transparent, rgba(15,5,204,0.07), transparent);
+    }
+
+    .how-inner { max-width: 1280px; margin: 0 auto; }
+
+    .how-header { text-align: center; margin-bottom: 72px; }
+
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      position: relative;
+    }
+
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      top: 32px; left: 12.5%; right: 12.5%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--sky-blue), var(--electric-blue), var(--byte-berry), transparent);
+    }
+
+    .how-step { text-align: center; padding: 0 24px; }
+
+    .step-num {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--electric-blue), var(--sky-blue));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 auto 24px;
+      box-shadow: 0 0 28px rgba(61,116,244,0.4);
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .step-desc  { font-size: 13px; color: rgba(255,255,255,0.48); line-height: 1.65; }
+
+    /* FEATURES */
+    .features-section { padding: 80px 60px; max-width: 1280px; margin: 0 auto; }
+
+    .feature-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      padding: 60px 0;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .feature-row:last-child { border-bottom: none; }
+    .feature-row.rev .feature-visual { order: -1; }
+
+    .feature-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--code-orange);
+      margin-bottom: 14px;
+    }
+
+    .feature-title {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 18px;
+    }
+
+    .feature-body {
+      font-size: 15px;
+      color: rgba(255,255,255,0.52);
+      line-height: 1.75;
+      margin-bottom: 28px;
+    }
+
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--glass-border);
+      color: rgba(255,255,255,0.6);
+      background: var(--glass);
+    }
+
+    /* Mockup cards */
+    .mockup-card {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 28px;
+    }
+
+    .mockup-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dr { background: var(--byte-berry); }
+    .dy { background: var(--citrine); }
+    .dg { background: #34D399; }
+
+    .m-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); margin-left: 8px; }
+
+    .p-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .p-lbl  { font-size: 12px; color: rgba(255,255,255,0.45); width: 130px; flex-shrink: 0; }
+    .p-bar  { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 100px; overflow: hidden; }
+    .p-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--sky-blue), #A78BFF); }
+    .p-val  { font-size: 12px; font-weight: 700; width: 36px; text-align: right; }
+
+    .score-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 10px; }
+
+    .score-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .s-val {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--sky-blue), #A78BFF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .s-lbl { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+
+    .ch-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .ch-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+    }
+
+    .ch-left { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; }
+
+    .ch-ico {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .b-live    { background: rgba(52,211,153,0.13); color: #34D399; }
+    .b-syncing { background: rgba(61,116,244,0.13); color: #8BAAFF; }
+    .b-pending { background: rgba(251,231,77,0.13); color: var(--citrine); }
+
+    /* PROOF */
+    .proof-section {
+      padding: 80px 60px;
+      background: rgba(255,255,255,0.012);
+      border-top: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .proof-inner { max-width: 1280px; margin: 0 auto; }
+
+    .proof-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.28);
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    .logo-strip {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      margin-bottom: 72px;
+    }
+
+    .brand-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: -0.5px;
+      transition: color 0.2s;
+    }
+
+    .brand-logo:hover { color: rgba(255,255,255,0.45); }
+
+    .testimonials { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+
+    .t-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 30px;
+      transition: transform 0.3s;
+    }
+
+    .t-card:hover { transform: translateY(-3px); }
+
+    .t-stars { color: var(--citrine); font-size: 14px; letter-spacing: 2px; margin-bottom: 16px; }
+
+    .t-quote {
+      font-size: 15px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 24px;
+    }
+
+    .t-author { display: flex; align-items: center; gap: 12px; }
+
+    .t-av {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+
+    .t-name { font-size: 14px; font-weight: 700; }
+    .t-role { font-size: 12px; color: rgba(255,255,255,0.38); }
+
+    /* CTA */
+    .cta-section {
+      padding: 120px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, rgba(15,5,204,0.32), transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(236,103,43,0.1);
+      border: 1px solid rgba(236,103,43,0.28);
+      color: var(--code-orange);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .cta-title {
+      font-size: clamp(38px, 5vw, 64px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 22px;
+      position: relative;
+    }
+
+    .cta-sub {
+      font-size: 18px;
+      color: rgba(255,255,255,0.48);
+      max-width: 520px;
+      margin: 0 auto 48px;
+      line-height: 1.65;
+      position: relative;
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    .btn-orange {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 18px 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--code-orange), #FF8555);
+      color: var(--white);
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 0 40px rgba(236,103,43,0.32);
+    }
+
+    .btn-orange:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 60px rgba(236,103,43,0.52);
+    }
+
+    .btn-outline {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 18px 40px;
+      border-radius: 12px;
+      background: var(--glass);
+      color: var(--white);
+      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .btn-outline:hover { background: rgba(255,255,255,0.08); }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--glass-border);
+      padding: 56px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.55);
+    }
+
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,0.22); }
+
+    .mach-tags { display: flex; gap: 6px; }
+
+    .mach-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--glass-border);
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* SCROLL ANIM */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .fade-up.visible { opacity: 1; transform: none; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #050D1F; }
+    ::-webkit-scrollbar-thumb { background: rgba(61,116,244,0.35); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a class="nav-logo" href="#">
+    <svg width="32" height="32" viewBox="0 0 34 34" fill="none">
+      <polygon points="17,3 31,29 3,29" fill="url(#lg1)"/>
+      <defs>
+        <linearGradient id="lg1" x1="3" y1="3" x2="31" y2="29">
+          <stop offset="0%" stop-color="#3D74F4"/>
+          <stop offset="100%" stop-color="#0F05CC"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <span class="nav-logo-text">Bluestone PIM</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#product">Product</a></li>
+    <li><a href="#ai-agents">AI Agents</a></li>
+    <li><a href="#product">Solutions</a></li>
+    <li><a href="#customers">Customers</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn-ghost">Log in</button>
+    <button class="btn-primary">Book a Demo →</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-badge">
+    <span class="badge-dot">✦</span>
+    Introducing the Agentic PIM Era
+  </div>
+
+  <h1>
+    Product Intelligence<br/>
+    <span class="gradient-text">Powered by AI Agents</span>
+  </h1>
+
+  <p class="hero-sub">
+    Bluestone PIM doesn't just store your product data — it thinks, enriches,
+    translates, and distributes it autonomously. The world's first truly Agentic PIM.
+  </p>
+
+  <div class="hero-ctas">
+    <a href="#" class="btn-hero btn-hero-primary">Start for free →</a>
+    <a href="#" class="btn-hero btn-hero-secondary">▶&nbsp; Watch 2-min demo</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">+45%</div>
+      <div class="stat-label">Faster time-to-market</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">+75%</div>
+      <div class="stat-label">Product data quality</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">+61%</div>
+      <div class="stat-label">Customer experience</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">500+</div>
+      <div class="stat-label">Enterprise customers</div>
+    </div>
+  </div>
+</section>
+
+<!-- AI AGENTS -->
+<section class="section fade-up" id="ai-agents">
+  <div class="agents-header">
+    <div>
+      <span class="section-label">AI Agents Suite</span>
+      <h2 class="section-title">Five agents.<br/>One intelligent PIM.</h2>
+    </div>
+    <p class="section-sub">
+      Each agent is purpose-built to automate a critical part of your product content
+      lifecycle — running 24/7 without human intervention.
+    </p>
+  </div>
+
+  <div class="agents-grid">
+
+    <div class="agent-card featured">
+      <div class="agent-icon ai-blue">🤖</div>
+      <span class="agent-tag">Core Agent</span>
+      <div class="agent-name">AI Agent — Your Autonomous PIM Brain</div>
+      <p class="agent-desc">
+        Orchestrates all AI tasks across your catalog. Detects gaps, triggers enrichment,
+        routes to specialist agents, and keeps governance rules intact — zero clicks required.
+      </p>
+      <div class="agent-terminal">
+        <div><span class="t-prompt">agent&gt; </span><span class="t-cmd">scan_catalog --scope=all --mode=agentic</span></div>
+        <div><span class="t-ok">✓ 12,847 SKUs analyzed · 843 gaps detected</span></div>
+        <div><span class="t-dim">→ Routing to AI Enrich (621) · AI Linguist (222)…</span></div>
+        <div><span class="t-ok">✓ All tasks queued · ETA 4 min 12 sec</span></div>
+      </div>
+      <div class="agent-status"><span class="status-dot"></span>Running autonomously</div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-icon ai-purple">✨</div>
+      <span class="agent-tag">Enrichment</span>
+      <div class="agent-name">AI Enrich</div>
+      <p class="agent-desc">Auto-generates and scores product descriptions, attributes, and metadata at scale.</p>
+      <div class="agent-status"><span class="status-dot"></span>Active · 621 tasks</div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-icon ai-orange">🌐</div>
+      <span class="agent-tag">Translation</span>
+      <div class="agent-name">AI Linguist</div>
+      <p class="agent-desc">Localizes product content into 40+ languages with brand voice and compliance baked in.</p>
+      <div class="agent-status"><span class="status-dot"></span>Active · 222 tasks</div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-icon ai-green">📊</div>
+      <span class="agent-tag">Analytics</span>
+      <div class="agent-name">AI Analyst</div>
+      <p class="agent-desc">Surfaces data quality insights and predicts the revenue impact of content improvements.</p>
+      <div class="agent-status"><span class="status-dot"></span>Active · Monitoring</div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-icon ai-pink">🎨</div>
+      <span class="agent-tag">Templates</span>
+      <div class="agent-name">AI Templates</div>
+      <p class="agent-desc">Generates channel-ready templates optimized for each marketplace and storefront.</p>
+      <div class="agent-status"><span class="status-dot"></span>Active · 89 templates</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-inner">
+    <div class="how-header fade-up">
+      <span class="section-label" style="justify-content:center;display:flex">How It Works</span>
+      <h2 class="section-title" style="text-align:center">From raw data to<br/>revenue in 4 steps</h2>
+    </div>
+    <div class="how-steps fade-up">
+      <div class="how-step">
+        <div class="step-num">1</div>
+        <div class="step-title">Ingest</div>
+        <p class="step-desc">Connect any source — ERP, supplier feeds, spreadsheets — via API or built-in connectors.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">2</div>
+        <div class="step-title">Govern</div>
+        <p class="step-desc">AI Agents detect gaps, enforce rules, and score every attribute automatically.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">3</div>
+        <div class="step-title">Enrich</div>
+        <p class="step-desc">Generate descriptions, translations, and rich media — zero manual effort required.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">4</div>
+        <div class="step-title">Distribute</div>
+        <p class="step-desc">Push to every channel simultaneously — web, print, marketplace, D2C — always in sync.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE ROWS -->
+<div class="features-section" id="product">
+
+  <div class="feature-row fade-up">
+    <div class="feature-copy">
+      <div class="feature-label">AI-Powered Quality</div>
+      <h3 class="feature-title">Complete data quality, automatically maintained</h3>
+      <p class="feature-body">AI Analyst scores every product attribute in real time. No manual audits, no spreadsheets. Just consistently high-quality data — at any scale.</p>
+      <div class="pills">
+        <span class="pill">Completeness scoring</span>
+        <span class="pill">Attribute validation</span>
+        <span class="pill">Anomaly detection</span>
+        <span class="pill">Governance rules</span>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="mockup-card">
+        <div class="mockup-header">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <span class="m-title">Data Quality Dashboard</span>
+        </div>
+        <div class="p-row"><span class="p-lbl">Title completeness</span><div class="p-bar"><div class="p-fill" style="width:98%"></div></div><span class="p-val">98%</span></div>
+        <div class="p-row"><span class="p-lbl">Descriptions</span><div class="p-bar"><div class="p-fill" style="width:91%"></div></div><span class="p-val">91%</span></div>
+        <div class="p-row"><span class="p-lbl">Images</span><div class="p-bar"><div class="p-fill" style="width:87%"></div></div><span class="p-val">87%</span></div>
+        <div class="p-row"><span class="p-lbl">Translations (DE)</span><div class="p-bar"><div class="p-fill" style="width:100%"></div></div><span class="p-val">100%</span></div>
+        <div class="score-grid">
+          <div class="score-box"><div class="s-val">94</div><div class="s-lbl">Overall Score</div></div>
+          <div class="score-box"><div class="s-val">12K</div><div class="s-lbl">SKUs Active</div></div>
+          <div class="score-box"><div class="s-val">↑6</div><div class="s-lbl">vs last week</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-row rev fade-up">
+    <div class="feature-copy">
+      <div class="feature-label">Omnichannel Syndication</div>
+      <h3 class="feature-title">One source of truth. Every channel, always live.</h3>
+      <p class="feature-body">Push perfectly formatted product data to any channel — automatically adapted to each platform's requirements. Update once, everywhere updates in seconds.</p>
+      <div class="pills">
+        <span class="pill">50+ channel connectors</span>
+        <span class="pill">Real-time sync</span>
+        <span class="pill">Format transformation</span>
+        <span class="pill">Digital Product Passport</span>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="mockup-card">
+        <div class="mockup-header">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <span class="m-title">Channel Syndication</span>
+        </div>
+        <div class="ch-list">
+          <div class="ch-item">
+            <div class="ch-left"><div class="ch-ico" style="background:rgba(255,155,0,0.14)">🛒</div>Amazon Marketplace</div>
+            <span class="badge b-live">Live</span>
+          </div>
+          <div class="ch-item">
+            <div class="ch-left"><div class="ch-ico" style="background:rgba(61,116,244,0.14)">🌐</div>Main Webshop</div>
+            <span class="badge b-live">Live</span>
+          </div>
+          <div class="ch-item">
+            <div class="ch-left"><div class="ch-ico" style="background:rgba(52,211,153,0.14)">📱</div>Google Shopping</div>
+            <span class="badge b-syncing">Syncing…</span>
+          </div>
+          <div class="ch-item">
+            <div class="ch-left"><div class="ch-ico" style="background:rgba(235,72,94,0.14)">🏬</div>Retail Partners (14)</div>
+            <span class="badge b-live">Live</span>
+          </div>
+          <div class="ch-item">
+            <div class="ch-left"><div class="ch-ico" style="background:rgba(251,231,77,0.14)">📄</div>Print Catalog 2026</div>
+            <span class="badge b-pending">Queued</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PROOF -->
+<div class="proof-section fade-up" id="customers">
+  <div class="proof-inner">
+    <p class="proof-label">Trusted by leading enterprises worldwide</p>
+    <div class="logo-strip">
+      <span class="brand-logo">Elkjøp</span>
+      <span class="brand-logo">Thule</span>
+      <span class="brand-logo">Power</span>
+      <span class="brand-logo">Schibsted</span>
+      <span class="brand-logo">Clas Ohlson</span>
+      <span class="brand-logo">Lindab</span>
+    </div>
+    <div class="testimonials">
+      <div class="t-card">
+        <div class="t-stars">★★★★★</div>
+        <p class="t-quote">"The AI Agents cut our time-to-market in half. What used to take three weeks now happens overnight — automatically."</p>
+        <div class="t-author">
+          <div class="t-av" style="background:linear-gradient(135deg,#3D74F4,#0F05CC)">AS</div>
+          <div><div class="t-name">Anna Svensson</div><div class="t-role">Head of E-commerce · Thule Group</div></div>
+        </div>
+      </div>
+      <div class="t-card">
+        <div class="t-stars">★★★★★</div>
+        <p class="t-quote">"Bluestone PIM is the only PIM that actually understands agentic workflows. We run 40 markets from one platform — zero manual translation."</p>
+        <div class="t-author">
+          <div class="t-av" style="background:linear-gradient(135deg,#EB485E,#EC672B)">MK</div>
+          <div><div class="t-name">Marcus Karlsen</div><div class="t-role">CTO · Elkjøp Nordic</div></div>
+        </div>
+      </div>
+      <div class="t-card">
+        <div class="t-stars">★★★★★</div>
+        <p class="t-quote">"Product data quality went from 62% to 97% in 6 weeks. ROI was visible within the first month. This is the future of PIM."</p>
+        <div class="t-author">
+          <div class="t-av" style="background:linear-gradient(135deg,#A78BFF,#3D74F4)">LB</div>
+          <div><div class="t-name">Lena Berg</div><div class="t-role">VP Product · Clas Ohlson</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section fade-up" id="pricing">
+  <div class="cta-badge">🚀 Now Generally Available</div>
+  <h2 class="cta-title">
+    Ready to make your PIM<br/>
+    <span class="gradient-text">think for itself?</span>
+  </h2>
+  <p class="cta-sub">
+    Join 500+ enterprises who've moved from manual PIM to Agentic PIM.
+    Get live in 14 days.
+  </p>
+  <div class="cta-actions">
+    <button class="btn-orange">Book a Demo →</button>
+    <button class="btn-outline">Explore pricing</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <svg width="22" height="22" viewBox="0 0 34 34" fill="none">
+      <polygon points="17,3 31,29 3,29" fill="url(#lg2)"/>
+      <defs>
+        <linearGradient id="lg2" x1="3" y1="3" x2="31" y2="29">
+          <stop offset="0%" stop-color="#3D74F4" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#0F05CC" stop-opacity="0.55"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    Bluestone PIM
+  </div>
+  <div class="footer-copy">© 2026 Bluestone PIM AS · Oslo, Norway</div>
+  <div class="mach-tags">
+    <span class="mach-tag">MACH</span>
+    <span class="mach-tag">API-first</span>
+    <span class="mach-tag">Cloud-native</span>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').style.background =
+      scrollY > 40 ? 'rgba(5,13,31,0.94)' : 'rgba(5,13,31,0.75)';
+  });
+</script>
+</body>
+</html>
