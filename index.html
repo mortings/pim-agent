@@ -42,8 +42,9 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 [data-theme="light"] #prompt-input{color:#111827}
 [data-theme="light"] .data-search{color:#111827}
 [data-theme="light"] .toast{color:#111827}
-#new-chat-btn{display:flex;align-items:center;gap:6px;background:rgba(61,116,244,0.12);border:1px solid rgba(61,116,244,0.3);color:#8BAAFF;font-size:12px;font-weight:600;padding:6px 14px;border-radius:100px;cursor:pointer;transition:all 0.15s;font-family:'Montserrat',sans-serif}
-#new-chat-btn:hover{background:rgba(61,116,244,0.25);border-color:rgba(61,116,244,0.5);color:var(--white)}
+#new-chat-btn{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+#new-chat-btn:hover{background:rgba(61,116,244,0.1);border-color:rgba(61,116,244,0.3);color:var(--blue)}
+#new-chat-btn svg{width:18px;height:18px}
 .header-stats{margin-left:auto;display:flex;gap:16px;font-size:12px;color:var(--muted)}
 .header-stats .val{font-weight:700;color:var(--white)}
 
@@ -418,10 +419,6 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         Data
       </button>
     </div>
-    <button id="new-chat-btn" onclick="startNewChat()" title="Start a new conversation">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      New Chat
-    </button>
     <div class="header-stats">
       <span>Products: <span class="val" id="stat-products">0</span></span>
       <span>Categories: <span class="val" id="stat-categories">0</span></span>
@@ -536,6 +533,9 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
     <div id="detail-panel"></div>
     <div id="input-area">
       <div id="input-wrap">
+        <button id="new-chat-btn" onclick="startNewChat()" title="New chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
         <button id="upload-btn" onclick="document.getElementById('file-input').click()" title="Import data from file">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
@@ -2979,7 +2979,6 @@ function setMode(mode) {
   const inputArea = document.getElementById('input-area');
   const dropOverlay = document.getElementById('drop-overlay');
   const dataView = document.getElementById('data-view');
-  const newChatBtn = document.getElementById('new-chat-btn');
   const welcomeScreen = document.getElementById('welcome-screen');
 
   if (mode === 'data') {
@@ -2992,7 +2991,6 @@ function setMode(mode) {
     inputArea.classList.add('hidden');
     dropOverlay.classList.add('hidden');
     dataView.classList.add('active');
-    newChatBtn.style.display = 'none';
     renderDataGrid();
     document.getElementById('status-text').textContent = 'Data View — click any cell to edit · changes are tracked';
   } else {
@@ -3000,7 +2998,6 @@ function setMode(mode) {
     inputArea.classList.remove('hidden');
     dropOverlay.classList.remove('hidden');
     dataView.classList.remove('active');
-    newChatBtn.style.display = '';
     document.getElementById('status-text').textContent = 'PIM Agent ready — all systems operational';
   }
 }
