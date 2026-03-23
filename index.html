@@ -2494,6 +2494,9 @@ function execDuplicates() {
   addSystem(html, ['Show all products', `Compare ${found[0]?.product.sku} and ${found[0]?.duplicates[0]?.sku}`]);
 }
 
+// Store pending enrichment data by ID (avoids JSON-in-HTML issues)
+const pendingEnrichments = {};
+
 function execEnrich(target) {
   const t = target.replace(/^(product|item)\s+/i, '');
   const product = DB.products.find(p => p.sku.toLowerCase() === t.toLowerCase() || p.name.toLowerCase().includes(t.toLowerCase()));
@@ -2505,7 +2508,9 @@ function execEnrich(target) {
     return;
   }
 
-  const previewId = 'chg_' + Date.now();
+  const previewId = 'enrich_' + Date.now();
+  pendingEnrichments[previewId] = { productId: product.id, suggestions };
+
   let html = `<div class="change-preview" id="${previewId}">
     <div class="change-preview-hdr">✨ AI Enrichment Suggestions for ${esc(product.name)}</div>
     <div class="change-preview-body">
@@ -2518,22 +2523,26 @@ function execEnrich(target) {
     </div>
     <div class="change-actions">
       <button class="btn btn-cancel" onclick="dismissChange('${previewId}')">Dismiss</button>
-      <button class="btn btn-confirm" onclick="confirmEnrich('${previewId}','${product.id}',${JSON.stringify(JSON.stringify(suggestions))})">Apply Suggestions</button>
+      <button class="btn btn-confirm" onclick="applyEnrichment('${previewId}')">Apply Suggestions</button>
     </div>
   </div>`;
   addSystem(html, []);
 }
 
-window.confirmEnrich = function(previewId, productId, suggestionsJson) {
-  const p = DB.products.find(x => x.id === productId);
-  const suggestions = JSON.parse(suggestionsJson);
-  Object.assign(p, suggestions);
+window.applyEnrichment = function(previewId) {
+  const data = pendingEnrichments[previewId];
+  if (!data) return;
+  const p = DB.products.find(x => x.id === data.productId);
+  if (!p) return;
+  Object.assign(p, data.suggestions);
   p.updated = new Date().toISOString();
-  addHistory(productId, 'enrich', `AI enriched: ${Object.keys(suggestions).join(', ')}`);
+  addHistory(data.productId, 'enrich', `AI enriched: ${Object.keys(data.suggestions).join(', ')}`);
   const el = document.getElementById(previewId);
   if (el) el.outerHTML = `<div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:var(--radius);padding:12px;margin:8px 0">
     <p style="color:var(--green);font-weight:700">✓ ${esc(p.name)} enriched — quality now ${completeness(p)}%</p></div>`;
-  addAudit('update', `AI enriched ${p.sku}: ${Object.keys(suggestions).join(', ')}`);
+  addAudit('update', `AI enriched ${p.sku}: ${Object.keys(data.suggestions).join(', ')}`);
+  render();
+  delete pendingEnrichments[previewId];
 };
 
 function execEnrichAll() {
@@ -2559,6 +2568,13 @@ function execEnrichAll() {
   </div>`, []);
 }
 
+window.dismissChange = function(previewId) {
+  const el = document.getElementById(previewId);
+  if (el) el.outerHTML = `<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin:8px 0">
+    <p style="color:var(--muted);font-size:13px">Dismissed.</p></div>`;
+  delete pendingEnrichments[previewId];
+};
+
 window.confirmEnrichAll = function(previewId) {
   let count = 0;
   DB.products.forEach(p => {
@@ -2573,6 +2589,7 @@ window.confirmEnrichAll = function(previewId) {
   const el = document.getElementById(previewId);
   if (el) el.outerHTML = `<div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:var(--radius);padding:12px;margin:8px 0">
     <p style="color:var(--green);font-weight:700">✓ ${count} products enriched. Average quality now ${Math.round(DB.products.reduce((s,p)=>s+completeness(p),0)/DB.products.length)}%</p></div>`;
+  render();
   addAudit('bulk', `AI enriched ${count} products`);
 };
 
