@@ -350,6 +350,22 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 .changes-bar .changes-count{font-size:18px;font-weight:800;color:var(--yellow)}
 .changes-bar .changes-list{flex:1;font-size:11px;color:var(--muted);max-width:500px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* Column picker dropdown */
+.col-picker-wrap{position:relative}
+.col-picker-btn{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all 0.15s;display:flex;align-items:center;gap:4px}
+.col-picker-btn:hover{background:rgba(61,116,244,0.08);color:var(--blue);border-color:rgba(61,116,244,0.3)}
+.col-picker-btn svg{width:14px;height:14px}
+.col-picker-drop{position:absolute;top:100%;right:0;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 0;min-width:220px;box-shadow:0 10px 30px rgba(0,0,0,0.4);z-index:60;display:none;max-height:400px;overflow-y:auto}
+.col-picker-drop.open{display:block}
+.col-picker-drop .cp-title{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:6px 14px}
+.col-picker-drop .cp-item{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;transition:background 0.1s}
+.col-picker-drop .cp-item:hover{background:rgba(255,255,255,0.04)}
+.col-picker-drop .cp-item input{accent-color:var(--blue);cursor:pointer;width:14px;height:14px}
+.col-picker-drop .cp-item .system-tag{font-size:9px;color:var(--muted);background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:100px;margin-left:auto}
+.col-picker-drop .cp-divider{height:1px;background:var(--border);margin:4px 0}
+.col-picker-drop .cp-action{display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;transition:background 0.1s}
+.col-picker-drop .cp-action:hover{background:rgba(61,116,244,0.08)}
+
 /* Settings button */
 #settings-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;margin-left:8px}
 #settings-btn:hover{background:rgba(61,116,244,0.1);border-color:rgba(61,116,244,0.3);color:var(--blue)}
@@ -500,6 +516,13 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
           <button class="data-filter-btn" data-filter="archived" onclick="setDataFilter('archived')">Archived</button>
         </div>
         <div class="data-toolbar-right">
+          <div class="col-picker-wrap">
+            <button class="col-picker-btn" onclick="toggleColPicker()" title="Choose columns">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              Columns
+            </button>
+            <div class="col-picker-drop" id="col-picker-drop"></div>
+          </div>
           <span class="data-count" id="data-count">0 products</span>
         </div>
       </div>
@@ -591,7 +614,22 @@ const DB = {
   history: {},
   relationships: [],
   pendingChanges: null,
-  selectedProducts: []
+  selectedProducts: [],
+
+  // ===== CENTRAL ATTRIBUTE REGISTRY =====
+  attributes: [
+    { key:'sku',         label:'SKU',            type:'text',     core:true,  system:true,  showInGrid:true,  showInDetail:true,  editable:false, completeness:false },
+    { key:'name',        label:'Product Name',   type:'text',     core:true,  system:true,  showInGrid:true,  showInDetail:true,  editable:true,  completeness:true },
+    { key:'brand',       label:'Brand',          type:'text',     core:true,  system:false, showInGrid:true,  showInDetail:true,  editable:true,  completeness:true },
+    { key:'category',    label:'Category',       type:'category', core:true,  system:true,  showInGrid:true,  showInDetail:true,  editable:false, completeness:true },
+    { key:'price',       label:'Price',          type:'number',   core:true,  system:false, showInGrid:true,  showInDetail:true,  editable:true,  completeness:true },
+    { key:'status',      label:'Status',         type:'select',   core:true,  system:true,  showInGrid:true,  showInDetail:true,  editable:true,  completeness:false, options:['active','draft','archived'] },
+    { key:'description', label:'Description',    type:'textarea', core:true,  system:false, showInGrid:false, showInDetail:true,  editable:true,  completeness:true },
+    { key:'weight',      label:'Weight',         type:'text',     core:false, system:false, showInGrid:false, showInDetail:true,  editable:true,  completeness:true },
+    { key:'material',    label:'Material',       type:'text',     core:false, system:false, showInGrid:false, showInDetail:true,  editable:true,  completeness:true },
+    { key:'color',       label:'Color',          type:'text',     core:false, system:false, showInGrid:false, showInDetail:true,  editable:true,  completeness:true },
+    { key:'ean',         label:'EAN/Barcode',    type:'text',     core:false, system:false, showInGrid:false, showInDetail:true,  editable:true,  completeness:true },
+  ]
 };
 
 // Seed products
@@ -735,11 +773,44 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function completeness(p) {
-  const fields = ['name','description','price','brand','category','weight','material','ean'];
-  return Math.round(fields.filter(f => p[f] && String(p[f]).trim()).length / fields.length * 100);
+  const fields = DB.attributes.filter(a => a.completeness).map(a => a.key);
+  return fields.length ? Math.round(fields.filter(f => p[f] && String(p[f]).trim()).length / fields.length * 100) : 100;
 }
 
 function qClass(s) { return s >= 75 ? 'q-high' : s >= 50 ? 'q-med' : 'q-low'; }
+
+// Attribute helpers
+function getGridAttrs() { return DB.attributes.filter(a => a.showInGrid); }
+function getDetailAttrs() { return DB.attributes.filter(a => a.showInDetail && a.key !== 'name' && a.key !== 'sku' && a.key !== 'status'); }
+function getEditableAttrs() { return DB.attributes.filter(a => a.editable); }
+function attrByKey(key) { return DB.attributes.find(a => a.key === key); }
+function addCustomAttribute(key, label, type) {
+  if (DB.attributes.find(a => a.key === key)) return false;
+  DB.attributes.push({ key, label, type: type || 'text', core: false, system: false, showInGrid: false, showInDetail: true, editable: true, completeness: false });
+  // Ensure all products have this field
+  DB.products.forEach(p => { if (!(key in p)) p[key] = ''; });
+  return true;
+}
+function removeAttribute(key) {
+  const attr = attrByKey(key);
+  if (!attr || attr.system) return false;
+  DB.attributes = DB.attributes.filter(a => a.key !== key);
+  return true;
+}
+function toggleAttrGrid(key, show) {
+  const attr = attrByKey(key);
+  if (attr) attr.showInGrid = show;
+}
+function toggleAttrDetail(key, show) {
+  const attr = attrByKey(key);
+  if (attr) attr.showInDetail = show;
+}
+function formatAttrValue(p, attr) {
+  if (attr.key === 'price') return p.price ? fmtPrice(p.price) : '—';
+  if (attr.key === 'category') return catName(p.category);
+  if (attr.key === 'status') return `<span class="status-badge status-${p.status}">${p.status}</span>`;
+  return esc(p[attr.key] || '') || '—';
+}
 
 function catName(catId) { const c = DB.categories.find(c => c.id === catId); return c ? c.name : 'Uncategorized'; }
 function catChildren(parentId) { return DB.categories.filter(c => c.parent === parentId); }
@@ -974,13 +1045,10 @@ function openDetail(productId) {
       <div class="quality-bar"><div class="quality-fill ${qClass(q)}" style="width:${q}%"></div></div>
     </div>
     <div class="detail-section">
-      <div class="detail-section-title">Core Attributes</div>
-      <div class="detail-field"><span class="lbl">Brand</span><span class="val">${esc(p.brand) || '—'}</span></div>
-      <div class="detail-field"><span class="lbl">Price</span><span class="val">${fmtPrice(p.price)}</span></div>
-      <div class="detail-field"><span class="lbl">Category</span><span class="val">${esc(catName(p.category))}</span></div>
-      <div class="detail-field"><span class="lbl">Weight</span><span class="val">${esc(p.weight) || '—'}</span></div>
-      <div class="detail-field"><span class="lbl">Material</span><span class="val">${esc(p.material) || '—'}</span></div>
-      <div class="detail-field"><span class="lbl">EAN</span><span class="val">${esc(p.ean) || '—'}</span></div>
+      <div class="detail-section-title">Attributes</div>
+      ${getDetailAttrs().filter(a => a.key !== 'description').map(a =>
+        `<div class="detail-field"><span class="lbl">${esc(a.label)}</span><span class="val">${formatAttrValue(p, a)}</span></div>`
+      ).join('')}
     </div>
     <div class="detail-section">
       <div class="detail-section-title">Labels</div>
@@ -1037,7 +1105,12 @@ function removeLabelPrompt(productId, labelId) {
 }
 
 // ============ MODAL ============
-function openModal(html) { document.getElementById('modal-box').innerHTML = html; document.getElementById('modal-overlay').classList.add('open'); }
+function openModal(html, wide) {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.toggle('wide', !!wide);
+  document.getElementById('modal-box').innerHTML = html;
+  overlay.classList.add('open');
+}
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
 // ============ AUDIT ============
@@ -1137,6 +1210,16 @@ function parseCommand(input) {
   // Add relationship
   let arm = n.match(/^(add|create)\s+(related|cross.?sell|upsell|accessory|outfit)\s+(.+?)\s+to\s+(.+)/i);
   if (arm) return { type:'add_relationship', relType: arm[2].replace(/\s/g,'-'), from: arm[4].trim(), to: arm[3].trim(), raw };
+
+  // ============ ATTRIBUTE MANAGEMENT ============
+  if (/^(show|list)\s*(all\s*)?(attributes?|fields?|columns?)$/i.test(n)) return { type:'list_attributes', raw };
+  if (/^(manage|configure)\s*(attributes?|fields?|columns?)$/i.test(n)) return { type:'manage_attributes', raw };
+  let attrAdd = n.match(/^(add|create|new)\s+(attribute|field|column)\s+[""']?(.+?)[""']?\s*$/i);
+  if (attrAdd) return { type:'add_attribute', name: attrAdd[3].trim(), raw };
+  let attrRemove = n.match(/^(remove|delete)\s+(attribute|field|column)\s+[""']?(.+?)[""']?\s*$/i);
+  if (attrRemove) return { type:'remove_attribute', name: attrRemove[3].trim(), raw };
+  let attrShow = n.match(/^(show|hide)\s+(attribute|field|column)\s+[""']?(.+?)[""']?\s*(in\s+(grid|detail|table))?\s*$/i);
+  if (attrShow) return { type:'toggle_attribute', action: attrShow[1].toLowerCase(), name: attrShow[3].trim(), where: attrShow[5] || 'grid', raw };
 
   // ============ SMART NATURAL LANGUAGE QUERIES ============
   // These catch rich attribute/property queries before simpler patterns
@@ -1718,6 +1801,11 @@ async function executeCommand(input) {
     case 'add_label': execAddLabel(cmd.label, cmd.target); break;
     case 'remove_label': execRemoveLabel(cmd.label, cmd.target); break;
     case 'create_label': execCreateLabel(cmd.name, cmd.color); break;
+    case 'add_attribute': execAddAttribute(cmd.name); break;
+    case 'remove_attribute': execRemoveAttribute(cmd.name); break;
+    case 'toggle_attribute': execToggleAttribute(cmd.action, cmd.name, cmd.where); break;
+    case 'manage_attributes': openManageAttributes(); break;
+    case 'list_attributes': execListAttributes(); break;
     case 'edit': execEdit(cmd.query); break;
     case 'price_change': execPriceChange(cmd.direction, cmd.target, cmd.percent); break;
     case 'bulk_select': execBulkSelect(cmd.query); break;
@@ -2336,6 +2424,81 @@ function execCreateLabel(name, color) {
   );
 }
 
+// ============ ATTRIBUTE MANAGEMENT COMMANDS ============
+function execAddAttribute(name) {
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  if (attrByKey(key)) {
+    addSystem(`<p>Attribute "<strong>${esc(name)}</strong>" already exists (key: <code>${key}</code>).</p>`, ['Show attributes', 'Manage attributes']);
+    return;
+  }
+  addCustomAttribute(key, name, 'text');
+  render();
+  if (currentMode === 'data') renderDataGrid();
+  addAudit('update', `Added attribute: ${name}`);
+  addSystem(
+    `<p style="color:var(--green);font-weight:700">✅ Added attribute "<strong>${esc(name)}</strong>"</p>
+    <p style="font-size:13px;color:var(--muted);margin-top:6px">Key: <code>${key}</code> · Type: text · Visible in detail panel</p>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px">You can configure visibility and type via "manage attributes".</p>`,
+    ['Show attributes', `Show column ${name} in grid`, 'Manage attributes']
+  );
+}
+
+function execRemoveAttribute(name) {
+  const attr = DB.attributes.find(a => a.label.toLowerCase() === name.toLowerCase() || a.key === name.toLowerCase());
+  if (!attr) {
+    addSystem(`<p>Attribute "<strong>${esc(name)}</strong>" not found.</p>`, ['Show attributes']);
+    return;
+  }
+  if (attr.system) {
+    addSystem(`<p>⚠️ "<strong>${esc(attr.label)}</strong>" is a system attribute and cannot be removed.</p>`, ['Show attributes']);
+    return;
+  }
+  removeAttribute(attr.key);
+  render();
+  if (currentMode === 'data') renderDataGrid();
+  addAudit('update', `Removed attribute: ${attr.label}`);
+  addSystem(
+    `<p style="color:var(--green);font-weight:700">✅ Removed attribute "<strong>${esc(attr.label)}</strong>"</p>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px">Data is preserved on products but the field is now hidden.</p>`,
+    ['Show attributes', 'Manage attributes']
+  );
+}
+
+function execToggleAttribute(action, name, where) {
+  const attr = DB.attributes.find(a => a.label.toLowerCase() === name.toLowerCase() || a.key === name.toLowerCase());
+  if (!attr) {
+    addSystem(`<p>Attribute "<strong>${esc(name)}</strong>" not found.</p>`, ['Show attributes']);
+    return;
+  }
+  const show = action === 'show';
+  if (where === 'grid') { attr.showInGrid = show; }
+  else if (where === 'detail') { attr.showInDetail = show; }
+  else { attr.showInGrid = show; }
+  if (currentMode === 'data') renderDataGrid();
+  addSystem(
+    `<p style="color:var(--green);font-weight:700">✅ ${show ? 'Showing' : 'Hiding'} "<strong>${esc(attr.label)}</strong>" in ${where === 'detail' ? 'detail panel' : 'data grid'}</p>`,
+    ['Show attributes', 'Switch to data view']
+  );
+}
+
+function execListAttributes() {
+  let html = '<p style="font-weight:700;margin-bottom:10px">Product Attributes</p>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted)">ATTRIBUTE</th><th style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted)">TYPE</th><th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted)">GRID</th><th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted)">DETAIL</th><th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted)">QUALITY</th></tr></thead><tbody>';
+  DB.attributes.forEach(a => {
+    const badge = a.system ? '<span style="font-size:9px;color:var(--muted);background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:100px;margin-left:6px">system</span>' :
+                  !a.core ? '<span style="font-size:9px;color:var(--purple);background:rgba(167,139,255,0.12);padding:1px 6px;border-radius:100px;margin-left:6px">custom</span>' : '';
+    html += `<tr><td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03);font-weight:600">${esc(a.label)}${badge}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--muted)">${a.type}</td>
+      <td style="text-align:center;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03)">${a.showInGrid ? '✅' : '—'}</td>
+      <td style="text-align:center;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03)">${a.showInDetail ? '✅' : '—'}</td>
+      <td style="text-align:center;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03)">${a.completeness ? '✅' : '—'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += `<p style="font-size:12px;color:var(--muted);margin-top:8px">${DB.attributes.length} total attributes · ${DB.attributes.filter(a=>a.showInGrid).length} in grid · ${DB.attributes.filter(a=>a.completeness).length} in quality score</p>`;
+  addSystem(html, ['Manage attributes', 'Add attribute "Season"', 'Show column Color in grid']);
+}
+
 function execEdit(query) {
   const q = query.replace(/^(product|item|the)\s+/i, '').replace(/\s*(price|name|description|status|brand|weight|material|ean)\s+/i, '');
   const product = DB.products.find(p => p.sku.toLowerCase() === q.toLowerCase() || p.name.toLowerCase().includes(q.toLowerCase()));
@@ -2349,27 +2512,30 @@ function execEdit(query) {
     return;
   }
 
-  // Show edit modal
+  // Build edit modal dynamically from attribute registry
+  const editAttrs = getEditableAttrs();
+  const inputStyle = 'width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:\'Montserrat\',sans-serif;font-size:13px;margin-top:4px';
+  const labelStyle = 'font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase';
+
+  let fieldsHtml = editAttrs.map(attr => {
+    const val = product[attr.key] ?? '';
+    if (attr.type === 'select') {
+      const opts = (attr.options || []).map(o => `<option value="${o}" ${val===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('');
+      return `<div><label style="${labelStyle}">${esc(attr.label)}</label><select id="edit-${attr.key}" style="${inputStyle}">${opts}</select></div>`;
+    }
+    if (attr.type === 'textarea') {
+      return `<div><label style="${labelStyle}">${esc(attr.label)}</label><textarea id="edit-${attr.key}" rows="3" style="${inputStyle};resize:vertical">${esc(String(val))}</textarea></div>`;
+    }
+    if (attr.type === 'number') {
+      return `<div><label style="${labelStyle}">${esc(attr.label)}</label><input id="edit-${attr.key}" type="number" step="0.01" value="${val}" style="${inputStyle}"></div>`;
+    }
+    return `<div><label style="${labelStyle}">${esc(attr.label)}</label><input id="edit-${attr.key}" value="${esc(String(val))}" style="${inputStyle}"></div>`;
+  }).join('');
+
   openModal(`
     <h3 style="font-size:16px;font-weight:800;margin-bottom:16px">Edit ${esc(product.name)}</h3>
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${esc(product.sku)}</div>
-    <div style="display:grid;gap:12px">
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Name</label><input id="edit-name" value="${esc(product.name)}" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Price</label><input id="edit-price" type="number" step="0.01" value="${product.price}" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Brand</label><input id="edit-brand" value="${esc(product.brand)}" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Status</label>
-        <select id="edit-status" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px">
-          <option value="active" ${product.status==='active'?'selected':''}>Active</option>
-          <option value="draft" ${product.status==='draft'?'selected':''}>Draft</option>
-          <option value="archived" ${product.status==='archived'?'selected':''}>Archived</option>
-        </select></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Description</label><textarea id="edit-desc" rows="3" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px;resize:vertical">${esc(product.description)}</textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Weight</label><input id="edit-weight" value="${esc(product.weight)}" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-        <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Material</label><input id="edit-material" value="${esc(product.material)}" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-      </div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">EAN</label><input id="edit-ean" value="${esc(product.ean)}" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-    </div>
+    <div style="display:grid;gap:12px">${fieldsHtml}</div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
       <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn btn-confirm" onclick="saveEdit('${product.id}')">Save Changes</button>
@@ -2381,16 +2547,17 @@ window.saveEdit = function(productId) {
   const p = DB.products.find(x => x.id === productId);
   if (!p) return;
   const changes = [];
-  const fields = {name:'edit-name',price:'edit-price',brand:'edit-brand',status:'edit-status',description:'edit-desc',weight:'edit-weight',material:'edit-material',ean:'edit-ean'};
   const newVals = {};
-  for (const [key, elId] of Object.entries(fields)) {
-    const val = document.getElementById(elId).value.trim();
-    const newVal = key === 'price' ? parseFloat(val) : val;
-    if (String(p[key]) !== String(newVal)) {
-      changes.push({ field: key, from: p[key], to: newVal });
-      newVals[key] = newVal;
+  getEditableAttrs().forEach(attr => {
+    const el = document.getElementById('edit-' + attr.key);
+    if (!el) return;
+    const val = el.value.trim();
+    const newVal = attr.type === 'number' ? parseFloat(val) : val;
+    if (String(p[attr.key]) !== String(newVal)) {
+      changes.push({ field: attr.label, from: p[attr.key], to: newVal });
+      newVals[attr.key] = newVal;
     }
-  }
+  });
   if (!changes.length) { closeModal(); addSystem('<p>No changes made.</p>', []); return; }
   closeModal();
 
@@ -2540,10 +2707,14 @@ window.saveNewProduct = function() {
 // ============ NEW PIM FEATURES ============
 
 function execExport() {
-  const headers = ['SKU','Name','Brand','Price','Status','Category','Description','Weight','Material','EAN','Labels'];
+  const exportAttrs = DB.attributes.filter(a => a.showInDetail || a.showInGrid);
+  const headers = [...exportAttrs.map(a => a.label), 'Labels'];
   const rows = DB.products.map(p => [
-    p.sku, p.name, p.brand, p.price, p.status, catName(p.category),
-    `"${(p.description||'').replace(/"/g,'""')}"`, p.weight, p.material, p.ean,
+    ...exportAttrs.map(a => {
+      if (a.key === 'category') return catName(p.category);
+      if (a.key === 'description') return `"${(p[a.key]||'').replace(/"/g,'""')}"`;
+      return p[a.key] ?? '';
+    }),
     p.labels.map(l => labelObj(l)?.name).filter(Boolean).join(';')
   ]);
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -3046,21 +3217,20 @@ function renderDataGrid() {
   const head = document.getElementById('data-grid-head');
   const body = document.getElementById('data-grid-body');
 
-  // Header
+  // Build columns dynamically from attribute registry
+  const gridAttrs = getGridAttrs();
   const cols = [
     { key: 'cb', label: '', nosort: true },
-    { key: 'sku', label: 'SKU' },
-    { key: 'name', label: 'Product Name' },
-    { key: 'brand', label: 'Brand' },
-    { key: 'category', label: 'Category' },
-    { key: 'price', label: 'Price' },
-    { key: 'status', label: 'Status' },
+    ...gridAttrs.map(a => ({ key: a.key, label: a.label, nosort: a.key === 'labels' })),
     { key: 'labels', label: 'Labels', nosort: true },
     { key: 'completeness', label: 'Quality' },
     { key: 'actions', label: '', nosort: true }
   ];
+  // Remove duplicate labels column if it's already in gridAttrs
+  const seen = new Set();
+  const uniqueCols = cols.filter(c => { if (seen.has(c.key)) return false; seen.add(c.key); return true; });
 
-  head.innerHTML = '<tr>' + cols.map(c => {
+  head.innerHTML = '<tr>' + uniqueCols.map(c => {
     if (c.key === 'cb') return `<th class="cb-cell"><input type="checkbox" id="header-cb" onchange="toggleSelectAll(this.checked)" ${selectedIds.size === products.length && products.length > 0 ? 'checked' : ''}></th>`;
     if (c.nosort) return `<th>${c.label}</th>`;
     const sorted = dataSort.key === c.key;
@@ -3071,9 +3241,8 @@ function renderDataGrid() {
   // Body
   body.innerHTML = products.map(p => {
     const sel = selectedIds.has(p.id);
-    const cat = DB.categories.find(c => c.id === p.category);
     const comp = completeness(p);
-    const qClass = comp >= 75 ? 'var(--green)' : comp >= 50 ? 'var(--yellow)' : 'var(--red)';
+    const qColor = comp >= 75 ? 'var(--green)' : comp >= 50 ? 'var(--yellow)' : 'var(--red)';
     const changes = pendingChanges[p.id];
     const rowClass = sel ? 'selected' : '';
 
@@ -3083,30 +3252,45 @@ function renderDataGrid() {
       return l ? `<span class="label-chip-sm" style="background:${l.color}22;color:${l.color}">${esc(l.name)}</span>` : '';
     }).join('');
 
-    // Get displayed values (showing pending changes if any)
-    const displayName = changes?.name ?? p.name;
-    const displayBrand = changes?.brand ?? p.brand ?? '';
-    const displayPrice = changes?.price ?? p.price;
-    const displayStatus = changes?.status ?? p.status;
-
-    const statusClass = `status-${displayStatus}`;
     const changedMark = changes ? ' style="border-left:3px solid var(--yellow)"' : '';
 
-    return `<tr class="${rowClass}"${changedMark}>
-      <td class="cb-cell"><input type="checkbox" ${sel ? 'checked' : ''} onchange="toggleSelect('${p.id}', this.checked)"></td>
-      <td class="sku-cell">${esc(p.sku)}</td>
-      <td class="name-cell" onclick="selectProduct('${p.id}')" title="Click to view details">${esc(displayName)}</td>
-      <td ondblclick="startEdit(this, '${p.id}', 'brand')">${esc(displayBrand)}</td>
-      <td>${cat ? esc(cat.name) : '—'}</td>
-      <td class="price-cell" ondblclick="startEdit(this, '${p.id}', 'price')">$${Number(displayPrice).toFixed(2)}</td>
-      <td ondblclick="startEditStatus(this, '${p.id}')"><span class="status-badge ${statusClass}">${displayStatus}</span></td>
-      <td><div class="label-chips">${labelHtml || '<span style="color:var(--muted);font-size:11px">—</span>'}</div></td>
-      <td><div class="quality-mini"><div class="quality-mini-fill" style="width:${comp}%;background:${qClass}"></div></div>${comp}%</td>
-      <td><div class="action-btns">
-        <button class="action-btn" onclick="selectProduct('${p.id}')" title="View details">👁</button>
-        <button class="action-btn danger" onclick="confirmDeleteSingle('${p.id}')" title="Delete">🗑</button>
-      </div></td>
-    </tr>`;
+    // Build cells dynamically
+    let cells = `<td class="cb-cell"><input type="checkbox" ${sel ? 'checked' : ''} onchange="toggleSelect('${p.id}', this.checked)"></td>`;
+
+    gridAttrs.forEach(attr => {
+      const val = changes?.[attr.key] ?? p[attr.key];
+      if (attr.key === 'name') {
+        cells += `<td class="name-cell" onclick="selectProduct('${p.id}')" title="Click to view details">${esc(val || '')}</td>`;
+      } else if (attr.key === 'sku') {
+        cells += `<td class="sku-cell">${esc(val || '')}</td>`;
+      } else if (attr.key === 'price') {
+        cells += `<td class="price-cell" ondblclick="startEdit(this, '${p.id}', 'price')">$${Number(val || 0).toFixed(2)}</td>`;
+      } else if (attr.key === 'status') {
+        const st = val || 'draft';
+        cells += `<td ondblclick="startEditStatus(this, '${p.id}')"><span class="status-badge status-${st}">${st}</span></td>`;
+      } else if (attr.key === 'category') {
+        const cat = DB.categories.find(c => c.id === val);
+        cells += `<td>${cat ? esc(cat.name) : '—'}</td>`;
+      } else {
+        // Generic editable text field
+        const isEditable = attr.editable;
+        cells += `<td${isEditable ? ` ondblclick="startEdit(this, '${p.id}', '${attr.key}')"` : ''}>${esc(String(val || '')) || '—'}</td>`;
+      }
+    });
+
+    // Labels column (always present unless already via attr)
+    if (!gridAttrs.find(a => a.key === 'labels')) {
+      cells += `<td><div class="label-chips">${labelHtml || '<span style="color:var(--muted);font-size:11px">—</span>'}</div></td>`;
+    }
+
+    // Quality & actions
+    cells += `<td><div class="quality-mini"><div class="quality-mini-fill" style="width:${comp}%;background:${qColor}"></div></div>${comp}%</td>`;
+    cells += `<td><div class="action-btns">
+      <button class="action-btn" onclick="selectProduct('${p.id}')" title="View details">👁</button>
+      <button class="action-btn danger" onclick="confirmDeleteSingle('${p.id}')" title="Delete">🗑</button>
+    </div></td>`;
+
+    return `<tr class="${rowClass}"${changedMark}>${cells}</tr>`;
   }).join('');
 
   // Update counts
@@ -3129,6 +3313,142 @@ function toggleSelect(id, checked) {
   if (checked) selectedIds.add(id); else selectedIds.delete(id);
   renderDataGrid();
 }
+
+// ============ COLUMN PICKER & ATTRIBUTE MANAGEMENT ============
+function toggleColPicker() {
+  const drop = document.getElementById('col-picker-drop');
+  if (drop.classList.contains('open')) { drop.classList.remove('open'); return; }
+  renderColPicker();
+  drop.classList.add('open');
+  // Close on outside click
+  setTimeout(() => {
+    const closer = (e) => { if (!drop.contains(e.target) && !e.target.closest('.col-picker-btn')) { drop.classList.remove('open'); document.removeEventListener('click', closer); }};
+    document.addEventListener('click', closer);
+  }, 10);
+}
+
+function renderColPicker() {
+  const drop = document.getElementById('col-picker-drop');
+  let html = '<div class="cp-title">Visible Columns</div>';
+  DB.attributes.forEach(attr => {
+    const checked = attr.showInGrid ? 'checked' : '';
+    const sysTag = attr.system ? '<span class="system-tag">system</span>' : '';
+    html += `<div class="cp-item"><input type="checkbox" ${checked} onchange="toggleAttrGrid('${attr.key}', this.checked); renderDataGrid()"><span>${esc(attr.label)}</span>${sysTag}</div>`;
+  });
+  html += '<div class="cp-divider"></div>';
+  html += '<div class="cp-action" onclick="openManageAttributes()">⚙️ Manage Attributes…</div>';
+  html += '<div class="cp-action" onclick="openAddAttribute()">+ Add Custom Attribute</div>';
+  drop.innerHTML = html;
+}
+
+function openAddAttribute() {
+  document.getElementById('col-picker-drop').classList.remove('open');
+  const inputStyle = 'width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:\'Montserrat\',sans-serif;font-size:13px;margin-top:4px';
+  const labelStyle = 'font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase';
+  openModal(`
+    <h3 style="font-size:16px;font-weight:800;margin-bottom:16px">Add Custom Attribute</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Create a new product attribute. It will be added to all products and available in the data grid, detail panel, and edit modal.</p>
+    <div style="display:grid;gap:12px">
+      <div><label style="${labelStyle}">Attribute Name</label><input id="new-attr-label" placeholder="e.g. Season, Size, Country of Origin…" style="${inputStyle}"></div>
+      <div><label style="${labelStyle}">Field Key</label><input id="new-attr-key" placeholder="Auto-generated from name" style="${inputStyle}"></div>
+      <div><label style="${labelStyle}">Type</label>
+        <select id="new-attr-type" style="${inputStyle}">
+          <option value="text">Text</option>
+          <option value="number">Number</option>
+          <option value="textarea">Long Text</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:16px;font-size:13px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="new-attr-grid" style="accent-color:var(--blue)"> Show in Grid</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="new-attr-completeness" style="accent-color:var(--blue)"> Include in Quality Score</label>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-confirm" onclick="doAddAttribute()">Add Attribute</button>
+    </div>
+  `);
+  // Auto-generate key from label
+  document.getElementById('new-attr-label').addEventListener('input', function() {
+    document.getElementById('new-attr-key').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  });
+}
+
+window.doAddAttribute = function() {
+  const label = document.getElementById('new-attr-label').value.trim();
+  const key = document.getElementById('new-attr-key').value.trim();
+  const type = document.getElementById('new-attr-type').value;
+  const showInGrid = document.getElementById('new-attr-grid').checked;
+  const completenessFlag = document.getElementById('new-attr-completeness').checked;
+
+  if (!label || !key) { showToast('⚠️ Name and key are required'); return; }
+  if (attrByKey(key)) { showToast('⚠️ Attribute key already exists'); return; }
+
+  DB.attributes.push({
+    key, label, type, core: false, system: false,
+    showInGrid, showInDetail: true, editable: true, completeness: completenessFlag
+  });
+  DB.products.forEach(p => { if (!(key in p)) p[key] = ''; });
+
+  closeModal();
+  addAudit('update', `Added attribute: ${label}`);
+  render();
+  if (currentMode === 'data') renderDataGrid();
+  showToast(`✅ Attribute "${label}" added to all products`);
+};
+
+function openManageAttributes() {
+  document.getElementById('col-picker-drop').classList.remove('open');
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:16px;font-weight:800">Manage Attributes</h3>
+      <button class="detail-close" onclick="closeModal()" style="position:static">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Configure which attributes appear in the grid, detail panel, and quality score. System attributes cannot be removed.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>
+        <th style="text-align:left;padding:8px;border-bottom:2px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Attribute</th>
+        <th style="text-align:center;padding:8px;border-bottom:2px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Grid</th>
+        <th style="text-align:center;padding:8px;border-bottom:2px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Detail</th>
+        <th style="text-align:center;padding:8px;border-bottom:2px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Quality</th>
+        <th style="text-align:center;padding:8px;border-bottom:2px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;width:60px"></th>
+      </tr></thead><tbody>`;
+
+  DB.attributes.forEach(attr => {
+    const sysTag = attr.system ? '<span style="font-size:9px;color:var(--muted);background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:100px;margin-left:6px">system</span>' : '';
+    const customTag = !attr.core && !attr.system ? '<span style="font-size:9px;color:var(--purple);background:rgba(167,139,255,0.12);padding:1px 6px;border-radius:100px;margin-left:6px">custom</span>' : '';
+    html += `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px;font-weight:600">${esc(attr.label)}${sysTag}${customTag}<div style="font-size:10px;color:var(--muted)">${attr.key} · ${attr.type}</div></td>
+      <td style="text-align:center;padding:8px"><input type="checkbox" ${attr.showInGrid?'checked':''} style="accent-color:var(--blue)" onchange="toggleAttrGrid('${attr.key}',this.checked)"></td>
+      <td style="text-align:center;padding:8px"><input type="checkbox" ${attr.showInDetail?'checked':''} style="accent-color:var(--blue)" onchange="toggleAttrDetail('${attr.key}',this.checked)"></td>
+      <td style="text-align:center;padding:8px"><input type="checkbox" ${attr.completeness?'checked':''} style="accent-color:var(--blue)" onchange="toggleAttrCompleteness('${attr.key}',this.checked)"></td>
+      <td style="text-align:center;padding:8px">${attr.system ? '' : `<button class="btn btn-danger" style="font-size:10px;padding:3px 8px" onclick="doRemoveAttribute('${attr.key}')">Remove</button>`}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px">
+      <button class="btn btn-confirm" onclick="openAddAttribute()" style="font-size:11px">+ Add Attribute</button>
+      <button class="btn btn-cancel" onclick="closeModal();if(currentMode==='data')renderDataGrid()">Done</button>
+    </div>`;
+  openModal(html, true);
+}
+
+window.toggleAttrCompleteness = function(key, val) {
+  const attr = attrByKey(key);
+  if (attr) attr.completeness = val;
+};
+
+window.doRemoveAttribute = function(key) {
+  const attr = attrByKey(key);
+  if (!attr || attr.system) return;
+  if (!confirm(`Remove attribute "${attr.label}"? Data in this field will be kept on products but hidden.`)) return;
+  removeAttribute(key);
+  addAudit('update', `Removed attribute: ${attr.label}`);
+  openManageAttributes(); // Re-render the modal
+  render();
+  showToast(`Attribute "${attr.label}" removed`);
+};
 
 function toggleSelectAll(checked) {
   const products = getFilteredProducts();
@@ -3944,6 +4264,17 @@ function openSettings() {
           <div style="font-size:20px;font-weight:800;color:var(--yellow)">${DB.relationships.length}</div>
           <div style="font-size:10px;color:var(--muted);font-weight:600">RELATIONSHIPS</div>
         </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Product Schema</div>
+      <div class="settings-row">
+        <div>
+          <div class="lbl">Attributes (${DB.attributes.length})</div>
+          <div class="desc">${DB.attributes.filter(a=>a.showInGrid).length} in grid · ${DB.attributes.filter(a=>!a.core&&!a.system).length} custom</div>
+        </div>
+        <button class="btn btn-confirm" style="font-size:11px;padding:5px 14px" onclick="closeModal();openManageAttributes()">Manage</button>
       </div>
     </div>
 
