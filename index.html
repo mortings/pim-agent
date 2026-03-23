@@ -572,21 +572,67 @@ seedProducts.forEach((p, i) => {
   ];
 });
 
-// Seed relationships (cross-sell, up-sell, related, accessory)
+// Seed relationships (cross-sell, up-sell, related, accessory, outfit/bundle)
 DB.relationships = [
-  { from: 'prod_001', to: 'prod_002', type: 'related' },
-  { from: 'prod_001', to: 'prod_004', type: 'accessory' },
-  { from: 'prod_002', to: 'prod_001', type: 'related' },
-  { from: 'prod_003', to: 'prod_004', type: 'related' },
-  { from: 'prod_005', to: 'prod_006', type: 'related' },
-  { from: 'prod_005', to: 'prod_001', type: 'cross-sell' },
-  { from: 'prod_009', to: 'prod_010', type: 'related' },
-  { from: 'prod_009', to: 'prod_011', type: 'related' },
-  { from: 'prod_009', to: 'prod_012', type: 'cross-sell' },
-  { from: 'prod_013', to: 'prod_014', type: 'related' },
-  { from: 'prod_013', to: 'prod_020', type: 'cross-sell' },
-  { from: 'prod_017', to: 'prod_019', type: 'cross-sell' },
-  { from: 'prod_018', to: 'prod_019', type: 'related' },
+  // Apple ecosystem — accessories & upsells
+  { from: 'prod_001', to: 'prod_004', type: 'accessory' },    // iPhone → AirPods Pro
+  { from: 'prod_001', to: 'prod_007', type: 'accessory' },    // iPhone → Apple Watch Ultra
+  { from: 'prod_001', to: 'prod_002', type: 'related' },      // iPhone → Galaxy S24 (alternative)
+  { from: 'prod_001', to: 'prod_005', type: 'cross-sell' },   // iPhone → MacBook Air
+  { from: 'prod_004', to: 'prod_001', type: 'accessory' },    // AirPods → iPhone
+  { from: 'prod_004', to: 'prod_005', type: 'cross-sell' },   // AirPods → MacBook Air
+  { from: 'prod_004', to: 'prod_003', type: 'related' },      // AirPods → Sony WH-1000XM5 (alternative)
+  { from: 'prod_005', to: 'prod_001', type: 'cross-sell' },   // MacBook → iPhone
+  { from: 'prod_005', to: 'prod_006', type: 'related' },      // MacBook Air → ThinkPad (alternative)
+  { from: 'prod_007', to: 'prod_001', type: 'accessory' },    // Apple Watch → iPhone
+  { from: 'prod_007', to: 'prod_022', type: 'cross-sell' },   // Apple Watch → Garmin Forerunner
+
+  // Samsung ecosystem
+  { from: 'prod_002', to: 'prod_008', type: 'accessory' },    // Galaxy S24 → Galaxy Buds3
+  { from: 'prod_002', to: 'prod_001', type: 'related' },      // Galaxy S24 → iPhone (alternative)
+  { from: 'prod_008', to: 'prod_002', type: 'accessory' },    // Galaxy Buds → Galaxy S24
+
+  // Audio alternatives
+  { from: 'prod_003', to: 'prod_004', type: 'related' },      // Sony WH → AirPods (alternative)
+  { from: 'prod_003', to: 'prod_008', type: 'related' },      // Sony WH → Galaxy Buds (alternative)
+
+  // Outfit combos — Shoes + Jackets + Shirts
+  { from: 'prod_009', to: 'prod_013', type: 'outfit' },       // Nike Air Max → North Face Thermoball
+  { from: 'prod_009', to: 'prod_015', type: 'outfit' },       // Nike Air Max → Uniqlo Cotton Tee
+  { from: 'prod_010', to: 'prod_014', type: 'outfit' },       // Adidas Ultraboost → Patagonia Down Sweater
+  { from: 'prod_010', to: 'prod_016', type: 'outfit' },       // Adidas Ultraboost → Ralph Lauren Oxford
+  { from: 'prod_013', to: 'prod_009', type: 'outfit' },       // North Face → Nike Air Max
+  { from: 'prod_013', to: 'prod_015', type: 'outfit' },       // North Face → Uniqlo Cotton Tee
+  { from: 'prod_014', to: 'prod_024', type: 'outfit' },       // Patagonia → Dr. Martens 1460
+  { from: 'prod_014', to: 'prod_016', type: 'outfit' },       // Patagonia → Ralph Lauren Oxford
+  { from: 'prod_015', to: 'prod_011', type: 'outfit' },       // Uniqlo Tee → New Balance 574
+  { from: 'prod_015', to: 'prod_013', type: 'outfit' },       // Uniqlo Tee → North Face
+  { from: 'prod_024', to: 'prod_014', type: 'outfit' },       // Dr. Martens → Patagonia
+  { from: 'prod_024', to: 'prod_016', type: 'outfit' },       // Dr. Martens → Ralph Lauren Oxford
+  { from: 'prod_011', to: 'prod_015', type: 'outfit' },       // New Balance → Uniqlo Tee
+  { from: 'prod_011', to: 'prod_013', type: 'outfit' },       // New Balance → North Face
+
+  // Running / Fitness bundle
+  { from: 'prod_012', to: 'prod_022', type: 'cross-sell' },   // Salomon Speedcross → Garmin Forerunner
+  { from: 'prod_012', to: 'prod_020', type: 'cross-sell' },   // Salomon Speedcross → Thule Capstone
+  { from: 'prod_022', to: 'prod_012', type: 'cross-sell' },   // Garmin → Salomon
+  { from: 'prod_022', to: 'prod_023', type: 'related' },      // Garmin → Theragun (recovery)
+  { from: 'prod_023', to: 'prod_022', type: 'related' },      // Theragun → Garmin
+
+  // Camping bundle
+  { from: 'prod_020', to: 'prod_021', type: 'related' },      // Thule backpack → Fjallraven tent
+  { from: 'prod_021', to: 'prod_020', type: 'related' },      // Fjallraven tent → Thule backpack
+  { from: 'prod_021', to: 'prod_013', type: 'cross-sell' },   // Fjallraven tent → North Face jacket
+
+  // Home & Living
+  { from: 'prod_017', to: 'prod_019', type: 'related' },      // IKEA Kallax → Muuto E27
+  { from: 'prod_018', to: 'prod_019', type: 'related' },      // HAY Chair → Muuto E27
+  { from: 'prod_019', to: 'prod_018', type: 'related' },      // Muuto E27 → HAY Chair
+
+  // Upsells
+  { from: 'prod_011', to: 'prod_010', type: 'upsell' },       // New Balance 574 ($89) → Adidas Ultraboost ($189)
+  { from: 'prod_009', to: 'prod_012', type: 'upsell' },       // Nike Air Max ($129) → Salomon Speedcross ($139)
+  { from: 'prod_006', to: 'prod_005', type: 'related' },      // ThinkPad → MacBook (alternative)
   { from: 'prod_022', to: 'prod_007', type: 'accessory' },
   { from: 'prod_020', to: 'prod_021', type: 'related' }
 ];
@@ -856,8 +902,18 @@ function openDetail(productId) {
       <div class="detail-desc">${p.description ? esc(p.description) : '<span style="color:var(--muted)">No description yet</span>'}</div>
     </div>
     <div class="detail-section">
-      <div class="detail-section-title">Relationships</div>
-      <div>${rels.length ? rels.map(r => `<div class="rel-chip" onclick="closeDetail();openDetail('${r.product.id}')"><span class="rel-type">${r.type}</span> ${esc(r.product.name)}</div>`).join('') : '<span style="font-size:12px;color:var(--muted)">No relationships</span>'}</div>
+      <div class="detail-section-title">Relationships (${rels.length})</div>
+      <div>${rels.length ? (() => {
+        const byType = {};
+        rels.forEach(r => { if (!byType[r.type]) byType[r.type] = []; byType[r.type].push(r); });
+        const typeIcons = { related:'🔄', accessory:'🔗', 'cross-sell':'🛒', upsell:'⬆️', outfit:'👔' };
+        const typeColors = { related:'var(--blue)', accessory:'var(--green)', 'cross-sell':'var(--orange)', upsell:'var(--purple)', outfit:'#EC672B' };
+        return Object.entries(byType).map(([type, items]) =>
+          `<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${typeColors[type]||'var(--muted)'};margin-bottom:3px">${typeIcons[type]||'📎'} ${type}</div>` +
+          items.map(r => `<div class="rel-chip" onclick="closeDetail();openDetail('${r.product.id}')"><span style="font-weight:700">${esc(r.product.name)}</span> <span style="font-size:10px;color:var(--muted)">$${r.product.price}</span></div>`).join('') +
+          '</div>'
+        ).join('');
+      })() : '<span style="font-size:12px;color:var(--muted)">No relationships</span>'}</div>
     </div>
     <div class="detail-section">
       <div class="detail-section-title">History</div>
@@ -983,6 +1039,16 @@ function parseCommand(input) {
   if (/^(show\s*me\s*everything|everything|all|give\s*me\s*everything)/i.test(n)) return { type:'show_all', raw };
   if (/^(how'?s?\s*(my|the|our)?\s*(data\s*)?quality)/i.test(n)) return { type:'quality', raw };
 
+  // Relationships (must come before smart query to avoid false matches)
+  let relm = n.match(/^(related|relationships?|cross.?sell|upsell|accessories|outfit)\s*(products?\s*)?(for|of|to)?\s*(.*)/i);
+  if (relm && relm[4]) return { type:'relationships', target: relm[4].trim(), raw };
+  // "what goes with X", "what pairs with X", "complete the look for X"
+  let relm2 = n.match(/^(what\s*(goes|pairs|works)\s*with|complete\s*the\s*look\s*(for)?|style\s*with)\s*(.*)/i);
+  if (relm2 && relm2[4]) return { type:'relationships', target: relm2[4].trim(), raw };
+  // Add relationship
+  let arm = n.match(/^(add|create)\s+(related|cross.?sell|upsell|accessory|outfit)\s+(.+?)\s+to\s+(.+)/i);
+  if (arm) return { type:'add_relationship', relType: arm[2].replace(/\s/g,'-'), from: arm[4].trim(), to: arm[3].trim(), raw };
+
   // ============ SMART NATURAL LANGUAGE QUERIES ============
   // These catch rich attribute/property queries before simpler patterns
 
@@ -1094,14 +1160,6 @@ function parseCommand(input) {
   // History
   let hm = n.match(/^(history|changelog|changes|log|audit)\s*(for|of)?\s*(.*)/i);
   if (hm && hm[3]) return { type:'history', target: hm[3].trim(), raw };
-
-  // Relationships
-  let relm = n.match(/^(related|relationships?|cross.?sell|upsell|accessories)\s*(for|of|to)?\s*(.*)/i);
-  if (relm && relm[3]) return { type:'relationships', target: relm[3].trim(), raw };
-
-  // Add relationship
-  let arm = n.match(/^(add|create)\s+(related|cross.?sell|upsell|accessory)\s+(.+?)\s+to\s+(.+)/i);
-  if (arm) return { type:'add_relationship', relType: arm[2].replace(/\s/g,'-'), from: arm[4].trim(), to: arm[3].trim(), raw };
 
   // Move to category
   let movm = n.match(/^move\s+(.+?)\s+to\s+(category\s+)?(.+)/i);
@@ -2691,13 +2749,38 @@ function execRelationships(target) {
   const byType = {};
   rels.forEach(r => { if (!byType[r.type]) byType[r.type] = []; byType[r.type].push(r.product); });
 
-  let html = `<p><strong>Relationships for ${esc(product.name)}</strong> <span class="sku">${esc(product.sku)}</span></p>`;
+  const typeLabels = {
+    'related': { label: 'Similar Products', icon: '🔄', color: 'var(--blue)', desc: 'Alternatives customers might consider' },
+    'accessory': { label: 'Accessories', icon: '🔗', color: 'var(--green)', desc: 'Works great together' },
+    'cross-sell': { label: 'Cross-Sell', icon: '🛒', color: 'var(--orange)', desc: 'Frequently bought together' },
+    'upsell': { label: 'Upsell', icon: '⬆️', color: 'var(--purple)', desc: 'Premium alternative' },
+    'outfit': { label: 'Complete the Look', icon: '👔', color: '#EC672B', desc: 'Style together for a complete outfit' }
+  };
+
+  let html = `<p><strong>Relationships for ${esc(product.name)}</strong> <span class="sku">${esc(product.sku)}</span></p>
+    <p style="font-size:12px;color:var(--muted);margin-top:2px">${rels.length} relationship${rels.length!==1?'s':''} across ${Object.keys(byType).length} type${Object.keys(byType).length!==1?'s':''}</p>`;
+
   for (const [type, products] of Object.entries(byType)) {
-    html += `<div style="margin:10px 0"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">${type}</div>`;
-    html += products.map(p => `<div class="rel-chip" onclick="openDetail('${p.id}')">${esc(p.name)} <span class="sku">${esc(p.sku)}</span></div>`).join('');
-    html += '</div>';
+    const meta = typeLabels[type] || { label: type, icon: '📎', color: 'var(--muted)', desc: '' };
+    html += `<div style="margin:12px 0;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:14px">${meta.icon}</span>
+        <span style="font-size:12px;font-weight:700;color:${meta.color};text-transform:uppercase;letter-spacing:0.5px">${meta.label}</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:4px">${meta.desc}</span>
+      </div>`;
+    html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
+    html += products.map(p => `<div class="rel-chip" onclick="openDetail('${p.id}')">
+      <span style="font-weight:700">${esc(p.name)}</span>
+      <span class="sku">${esc(p.sku)}</span>
+      <span style="font-size:10px;color:var(--muted)">$${p.price}</span>
+    </div>`).join('');
+    html += '</div></div>';
   }
-  addSystem(html, [`Add related product to ${product.sku}`, `Compare ${product.sku} and ${rels[0]?.product.sku}`]);
+
+  const suggestions = [`Add related product to ${product.sku}`];
+  if (rels[0]?.product) suggestions.push(`Compare ${product.sku} and ${rels[0].product.sku}`);
+  suggestions.push(`Show ${product.sku}`);
+  addSystem(html, suggestions);
 }
 
 function execAddRelationship(relType, fromTarget, toTarget) {
