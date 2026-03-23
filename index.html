@@ -498,10 +498,18 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         </button>
       </div>
       <div class="welcome-hints">
-        <div class="welcome-hint" onclick="welcomeHint(this)">Show me everything</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">What should I work on?</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">Data quality report</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">Find draft products</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📦 Show me everything</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🎯 What should I work on?</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📊 Data quality report</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">✏️ Find draft products</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Find products missing description</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">✨ AI Enrich iPhone 15 Pro Max</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🔗 Related products for AirPods</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🏷️ Show Bestseller products</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">👔 What goes with Nike Air Max 90?</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📈 Increase shoes price by 10%</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🔎 Find duplicates</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📋 Show attributes</div>
       </div>
     </div>
 
@@ -4339,7 +4347,8 @@ function handleWelcomeSend() {
 }
 
 function welcomeHint(el) {
-  const text = el.textContent;
+  // Strip leading emoji from hint text before sending as command
+  const text = el.textContent.replace(/^[\u{1F300}-\u{1FAD6}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}✨✏️🔍🔗🏷️👔📈📦🎯📊🔎📋]+\s*/u, '').trim();
   dismissWelcome();
   showInitialGreeting();
   setTimeout(() => executeCommand(text), 200);
