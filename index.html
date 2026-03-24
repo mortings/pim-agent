@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agentic PIM</title>
+<title>The AI PIM</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -406,15 +406,15 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 .welcome-title{font-size:32px;font-weight:800;text-align:center;line-height:1.3;margin-bottom:10px;letter-spacing:-0.5px}
 .welcome-title .gradient{background:linear-gradient(135deg,#34D399,#3D74F4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .welcome-subtitle{font-size:15px;color:var(--muted);text-align:center;margin-bottom:36px;max-width:440px;line-height:1.6}
-.welcome-input-wrap{width:100%;max-width:600px;position:relative}
+.welcome-input-wrap{width:90%;max-width:640px;position:relative}
 .welcome-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 56px 18px 24px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:16px;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
 .welcome-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,116,244,0.12)}
 .welcome-input::placeholder{color:var(--muted)}
 .welcome-send{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--electric));border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
 .welcome-send:hover{box-shadow:0 0 20px rgba(61,116,244,0.4)}
 .welcome-send svg{width:16px;height:16px}
-.welcome-hints{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;justify-content:center;max-width:600px}
-.welcome-hint{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:500;padding:8px 18px;border-radius:100px;cursor:pointer;transition:all 0.15s;font-family:'Montserrat',sans-serif}
+.welcome-hints{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:20px;width:90%;max-width:640px}
+.welcome-hint{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:500;padding:7px 10px;border-radius:100px;cursor:pointer;transition:all 0.15s;font-family:'Montserrat',sans-serif;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis}
 .welcome-hint:hover{background:rgba(61,116,244,0.08);border-color:rgba(61,116,244,0.25);color:var(--text)}
 [data-theme="light"] .welcome-send{color:#fff}
 
@@ -434,7 +434,7 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
     </button>
     <div class="logo">
       <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg)"/><defs><linearGradient id="lg" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#3D74F4"/><stop offset="100%" stop-color="#0F05CC"/></linearGradient></defs></svg>
-      Agentic PIM
+      The AI PIM
     </div>
     <div class="mode-toggle" id="mode-toggle">
       <button class="mode-toggle-btn active" data-mode="chat" onclick="setMode('chat')">
@@ -498,16 +498,16 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         </button>
       </div>
       <div class="welcome-hints">
-        <div class="welcome-hint" onclick="welcomeHint(this)">📦 Show me everything</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🎯 What should I work on?</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">📊 Data quality report</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">✏️ Find draft products</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Find products missing description</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">✨ AI Enrich iPhone 15 Pro Max</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🔗 Related products for AirPods</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🏷️ Show Bestseller products</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">👔 What goes with Nike Air Max 90?</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">📈 Increase shoes price by 10%</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📦 Show all products</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🎯 What to work on?</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📊 Quality report</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">✏️ Find drafts</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Missing descriptions</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">✨ AI Enrich iPhone</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🔗 AirPods relations</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🏷️ Bestsellers</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">👔 Style with Air Max</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📈 Raise shoe prices 10%</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">🔎 Find duplicates</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">📋 Show attributes</div>
       </div>
@@ -2030,7 +2030,7 @@ function execGreeting() {
       ])
     : pick([
         `${greeting}! 👋 I'm your AI product catalog assistant.`,
-        `${greeting}! Welcome to Agentic PIM.`,
+        `${greeting}! Welcome to The AI PIM.`,
         `${greeting}! I'm here to help you manage your product catalog.`
       ]);
 
@@ -4311,7 +4311,7 @@ function openSettings() {
     </div>
 
     <div style="text-align:center;font-size:11px;color:var(--muted);padding-top:10px;border-top:1px solid var(--border)">
-      Agentic PIM · Built with AI
+      The AI PIM · Built with AI
     </div>
   `;
   document.getElementById('modal-overlay').classList.add('open');
