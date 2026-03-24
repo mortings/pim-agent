@@ -358,6 +358,31 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 .changes-bar .changes-count{font-size:18px;font-weight:800;color:var(--yellow)}
 .changes-bar .changes-list{flex:1;font-size:11px;color:var(--muted);max-width:500px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* ========== DAM VIEW ========== */
+#dam-view{display:none;flex-direction:column;overflow:hidden;flex:1}
+#dam-view.active{display:flex}
+.dam-toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.dam-grid-wrap{flex:1;overflow-y:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-content:start}
+.dam-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.15s}
+.dam-card:hover{border-color:rgba(61,116,244,0.4);box-shadow:0 4px 16px rgba(0,0,0,0.2)}
+.dam-card-img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:rgba(255,255,255,0.03)}
+.dam-card-placeholder{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);color:var(--muted);font-size:32px}
+.dam-card-info{padding:10px}
+.dam-card-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dam-card-meta{font-size:10px;color:var(--muted);margin-top:2px;display:flex;gap:6px;align-items:center}
+.dam-card-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px}
+
+/* Thumbnail in data grid */
+.grid-thumb{width:32px;height:32px;border-radius:4px;object-fit:cover;flex-shrink:0}
+.grid-thumb-placeholder{width:32px;height:32px;border-radius:4px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;flex-shrink:0}
+.grid-name-wrap{display:flex;align-items:center;gap:8px}
+
+/* Detail panel image */
+.detail-image-wrap{margin-bottom:16px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.detail-image{width:100%;max-height:240px;object-fit:cover;display:block}
+.detail-image-placeholder{width:100%;height:160px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);color:var(--muted);font-size:40px}
+.detail-image-count{font-size:11px;color:var(--muted);padding:6px 10px;background:var(--surface2);display:flex;align-items:center;gap:6px}
+
 /* Column picker dropdown */
 .col-picker-wrap{position:relative}
 .col-picker-btn{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all 0.15s;display:flex;align-items:center;gap:4px}
@@ -444,6 +469,10 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
       <button class="mode-toggle-btn" data-mode="data" onclick="setMode('data')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Data
+      </button>
+      <button class="mode-toggle-btn" data-mode="dam" onclick="setMode('dam')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        DAM
       </button>
     </div>
     <div class="header-stats">
@@ -569,6 +598,25 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         <button class="btn btn-cancel" onclick="discardChanges()" style="font-size:11px;padding:5px 12px">Discard</button>
         <button class="btn btn-confirm" onclick="saveChanges()" style="font-size:11px;padding:5px 12px">Save All Changes</button>
       </div>
+    </div>
+
+    <!-- DAM VIEW -->
+    <div id="dam-view">
+      <div class="dam-toolbar">
+        <div class="data-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="data-search" type="text" placeholder="Search assets..." id="dam-search" oninput="renderDamGrid()">
+        </div>
+        <div class="data-filter">
+          <button class="data-filter-btn active" data-damfilter="all" onclick="setDamFilter('all')">All</button>
+          <button class="data-filter-btn" data-damfilter="with" onclick="setDamFilter('with')">With Images</button>
+          <button class="data-filter-btn" data-damfilter="without" onclick="setDamFilter('without')">Missing Images</button>
+        </div>
+        <div class="data-toolbar-right">
+          <span class="data-count" id="dam-count">0 assets</span>
+        </div>
+      </div>
+      <div class="dam-grid-wrap" id="dam-grid"></div>
     </div>
 
     <div id="detail-overlay" onclick="closeDetail()"></div>
@@ -701,14 +749,49 @@ const seedProducts = [
   { sku:'SHRT-004', name:'Comme des Garçons Play Tee', category:'cat-shirts', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' }
 ];
 
+// Generate product placeholder images (colored SVG data URIs)
+const catImageColors = {
+  'cat-phones':'#3D74F4','cat-audio':'#A78BFF','cat-laptops':'#0F05CC','cat-wear':'#EC672B',
+  'cat-shoes':'#34D399','cat-jackets':'#EB485E','cat-shirts':'#FBE74D','cat-furniture':'#3D74F4',
+  'cat-lighting':'#FBE74D','cat-camping':'#34D399','cat-fitness':'#EC672B'
+};
+const catImageIcons = {
+  'cat-phones':'📱','cat-audio':'🎧','cat-laptops':'💻','cat-wear':'⌚',
+  'cat-shoes':'👟','cat-jackets':'🧥','cat-shirts':'👕','cat-furniture':'🪑',
+  'cat-lighting':'💡','cat-camping':'⛺','cat-fitness':'🏋️'
+};
+function generateProductImage(name, category) {
+  const color = catImageColors[category] || '#3D74F4';
+  const initials = name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="${color}" opacity="0.15"/><rect x="10" y="10" width="380" height="380" rx="20" fill="${color}" opacity="0.08"/><text x="200" y="180" text-anchor="middle" font-family="sans-serif" font-size="80" font-weight="bold" fill="${color}" opacity="0.6">${initials}</text><text x="200" y="260" text-anchor="middle" font-family="sans-serif" font-size="40">${catImageIcons[category]||'📦'}</text></svg>`)}`;
+}
+
+// Image count per product (active products get 2-4, drafts get 0-1)
+function seedImages(p, category) {
+  const count = p.status === 'active' ? (2 + Math.floor(Math.random() * 3)) : (Math.random() > 0.5 ? 1 : 0);
+  const imgs = [];
+  for (let i = 0; i < count; i++) {
+    imgs.push({
+      id: 'img_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+      url: generateProductImage(p.name + (i > 0 ? ' ' + (i+1) : ''), category),
+      name: `${p.name}${i > 0 ? ' - View ' + (i+1) : ' - Main'}`.replace(/[^\w\s-]/g,'') + '.jpg',
+      primary: i === 0,
+      size: Math.round(200 + Math.random() * 800) + 'KB'
+    });
+  }
+  return imgs;
+}
+
 seedProducts.forEach((p, i) => {
   const id = 'prod_' + (i + 1).toString().padStart(3, '0');
   const created = new Date(Date.now() - Math.random() * 30 * 86400000).toISOString();
+  const images = seedImages(p, p.category);
   DB.products.push({
     id, sku: p.sku, name: p.name, category: p.category, price: p.price,
     status: p.status, brand: p.brand || '', description: p.description || '',
     labels: p.labels || [], weight: p.weight || '', material: p.material || '',
-    color: p.color || '', ean: p.ean || '', channels: p.channels || [], created,
+    color: p.color || '', ean: p.ean || '', channels: p.channels || [],
+    images, created,
     updated: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString()
   });
   // Seed some history
@@ -841,6 +924,18 @@ function catDescendants(catId) {
 function productsInCat(catId) { const ids = catDescendants(catId); return DB.products.filter(p => ids.includes(p.category)); }
 function labelObj(id) { return DB.labels.find(l => l.id === id); }
 function labelByName(name) { return DB.labels.find(l => l.name.toLowerCase() === name.toLowerCase()); }
+
+function getProductThumb(p) {
+  const img = (p.images || []).find(i => i.primary) || (p.images || [])[0];
+  return img ? img.url : null;
+}
+
+function thumbHtml(p, size) {
+  const url = getProductThumb(p);
+  const sz = size || 32;
+  if (url) return `<img src="${url}" class="grid-thumb" style="width:${sz}px;height:${sz}px" alt="">`;
+  return `<div class="grid-thumb-placeholder" style="width:${sz}px;height:${sz}px">${catImageIcons[p.category]||'📦'}</div>`;
+}
 
 function getRelationships(productId) {
   return DB.relationships.filter(r => r.from === productId).map(r => ({
@@ -1053,8 +1148,20 @@ function openDetail(productId) {
   const rels = getRelationships(productId);
   const histEntries = DB.history[productId] || [];
 
+  const pImages = p.images || [];
+  const primaryImg = pImages.find(i => i.primary) || pImages[0];
+
   panel.innerHTML = `
     <button class="detail-close" onclick="closeDetail()">&times;</button>
+    <div class="detail-image-wrap">
+      ${primaryImg
+        ? `<img src="${primaryImg.url}" class="detail-image" alt="${esc(p.name)}">`
+        : `<div class="detail-image-placeholder">${catImageIcons[p.category]||'📦'}</div>`}
+      <div class="detail-image-count">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        ${pImages.length} image${pImages.length !== 1 ? 's' : ''}
+      </div>
+    </div>
     <div class="detail-title">${esc(p.name)}</div>
     <div class="detail-sku">${esc(p.sku)}</div>
     <div class="detail-section">
@@ -3169,25 +3276,34 @@ function setMode(mode) {
   const inputArea = document.getElementById('input-area');
   const dropOverlay = document.getElementById('drop-overlay');
   const dataView = document.getElementById('data-view');
+  const damView = document.getElementById('dam-view');
   const welcomeScreen = document.getElementById('welcome-screen');
 
+  // Dismiss welcome if visible
+  if (mode !== 'chat' && !welcomeDismissed) {
+    welcomeDismissed = true;
+    welcomeScreen.style.display = 'none';
+  }
+
+  // Hide everything first
+  chatArea.classList.add('hidden');
+  inputArea.classList.add('hidden');
+  dropOverlay.classList.add('hidden');
+  dataView.classList.remove('active');
+  damView.classList.remove('active');
+
   if (mode === 'data') {
-    // Dismiss welcome if visible
-    if (!welcomeDismissed) {
-      welcomeDismissed = true;
-      welcomeScreen.style.display = 'none';
-    }
-    chatArea.classList.add('hidden');
-    inputArea.classList.add('hidden');
-    dropOverlay.classList.add('hidden');
     dataView.classList.add('active');
     renderDataGrid();
     document.getElementById('status-text').textContent = 'Data View — click any cell to edit · changes are tracked';
+  } else if (mode === 'dam') {
+    damView.classList.add('active');
+    renderDamGrid();
+    document.getElementById('status-text').textContent = 'Digital Asset Management — browse and manage product images';
   } else {
     chatArea.classList.remove('hidden');
     inputArea.classList.remove('hidden');
     dropOverlay.classList.remove('hidden');
-    dataView.classList.remove('active');
     document.getElementById('status-text').textContent = 'PIM Agent ready — all systems operational';
   }
 }
@@ -3279,7 +3395,7 @@ function renderDataGrid() {
     gridAttrs.forEach(attr => {
       const val = changes?.[attr.key] ?? p[attr.key];
       if (attr.key === 'name') {
-        cells += `<td class="name-cell" onclick="selectProduct('${p.id}')" title="Click to view details">${esc(val || '')}</td>`;
+        cells += `<td class="name-cell" onclick="selectProduct('${p.id}')" title="Click to view details"><div class="grid-name-wrap">${thumbHtml(p, 28)}<span>${esc(val || '')}</span></div></td>`;
       } else if (attr.key === 'sku') {
         cells += `<td class="sku-cell">${esc(val || '')}</td>`;
       } else if (attr.key === 'price') {
@@ -4185,6 +4301,68 @@ function handleSend() {
 document.getElementById('prompt-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') handleSend();
 });
+
+// ============ DAM (Digital Asset Management) ============
+let damFilter = 'all';
+
+function setDamFilter(filter) {
+  damFilter = filter;
+  document.querySelectorAll('[data-damfilter]').forEach(b => b.classList.toggle('active', b.dataset.damfilter === filter));
+  renderDamGrid();
+}
+
+function renderDamGrid() {
+  const search = (document.getElementById('dam-search')?.value || '').toLowerCase();
+  let products = [...DB.products];
+
+  if (search) {
+    products = products.filter(p =>
+      p.name.toLowerCase().includes(search) ||
+      p.sku.toLowerCase().includes(search) ||
+      (p.brand || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (damFilter === 'with') products = products.filter(p => (p.images || []).length > 0);
+  else if (damFilter === 'without') products = products.filter(p => (p.images || []).length === 0);
+
+  // Flatten: one card per image, plus a card for products with no images
+  let assets = [];
+  products.forEach(p => {
+    const imgs = p.images || [];
+    if (imgs.length === 0) {
+      assets.push({ product: p, image: null });
+    } else {
+      imgs.forEach(img => assets.push({ product: p, image: img }));
+    }
+  });
+
+  const totalImages = assets.filter(a => a.image).length;
+  const missingCount = DB.products.filter(p => (p.images || []).length === 0).length;
+  document.getElementById('dam-count').textContent = `${totalImages} assets · ${missingCount} missing`;
+
+  const grid = document.getElementById('dam-grid');
+  grid.innerHTML = assets.map(a => {
+    const p = a.product;
+    const img = a.image;
+    const imgCount = (p.images || []).length;
+    const primaryBadge = img?.primary ? '<span class="dam-card-badge" style="background:rgba(61,116,244,0.15);color:var(--blue)">Primary</span>' : '';
+
+    return `<div class="dam-card" onclick="openDetail('${p.id}')">
+      ${img
+        ? `<img class="dam-card-img" src="${img.url}" alt="${esc(p.name)}" loading="lazy">`
+        : `<div class="dam-card-placeholder">${catImageIcons[p.category]||'📦'}</div>`}
+      <div class="dam-card-info">
+        <div class="dam-card-name" title="${esc(p.name)}">${esc(p.name)}</div>
+        <div class="dam-card-meta">
+          <span class="sku">${esc(p.sku)}</span>
+          ${img ? `<span>${img.size}</span>` : '<span style="color:var(--red)">No image</span>'}
+          ${primaryBadge}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 // ============ SETTINGS & THEME ============
 const appSettings = {
