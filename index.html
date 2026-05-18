@@ -430,6 +430,13 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 .toggle-switch input:checked+.toggle-track::after{transform:translateX(20px);background:#fff}
 .settings-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:12px;cursor:pointer}
 .settings-select:focus{outline:none;border-color:var(--blue)}
+.settings-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:12px;outline:none}
+.settings-input:focus{border-color:var(--blue)}
+.settings-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600}
+.settings-status .dot{width:6px;height:6px;border-radius:50%}
+.settings-status.ok{color:#34D399}.settings-status.ok .dot{background:#34D399}
+.settings-status.off{color:var(--muted)}.settings-status.off .dot{background:var(--muted)}
+.settings-status.err{color:var(--red)}.settings-status.err .dot{background:var(--red)}
 
 /* ========== WELCOME SCREEN ========== */
 #welcome-screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;background:var(--bg);transition:opacity 0.4s,transform 0.4s}
@@ -579,6 +586,10 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
           <button class="data-filter-btn" data-filter="archived" onclick="setDataFilter('archived')">Archived</button>
         </div>
         <div class="data-toolbar-right">
+          <button class="col-picker-btn" onclick="execCreateProduct()" title="Create a new product in Bluestone PIM" style="background:linear-gradient(135deg,var(--blue),var(--electric));color:#fff;border-color:transparent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Product
+          </button>
           <div class="col-picker-wrap">
             <button class="col-picker-btn" onclick="toggleColPicker()" title="Choose columns">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -2988,49 +2999,119 @@ window.confirmDelete = function(previewId, productId) {
 };
 
 function execCreateProduct() {
+  const backendOn = backendConfigured();
+  const banner = backendOn
+    ? `<div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#34D399;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 6px #34D399"></span><span><strong>Live mode</strong> — this product will be created in Bluestone PIM LABS via the MCP connector.</span></div>`
+    : `<div style="background:rgba(251,231,77,0.08);border:1px solid rgba(251,231,77,0.25);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--yellow)"><strong>Demo mode</strong> — backend not configured. Product will stay local. Set up the Cloudflare Worker via Settings → Backend to write to Bluestone PIM.</div>`;
   openModal(`
-    <h3 style="font-size:16px;font-weight:800;margin-bottom:16px">Create New Product</h3>
+    <h3 style="font-size:16px;font-weight:800;margin-bottom:6px">Create New Product</h3>
+    ${banner}
     <div style="display:grid;gap:12px">
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">SKU *</label><input id="new-sku" placeholder="e.g. PROD-001" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
       <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Name *</label><input id="new-name" placeholder="Product name" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Brand</label><input id="new-brand" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Price</label><input id="new-price" type="number" step="0.01" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">SKU / Product Number</label><input id="new-sku" placeholder="e.g. PROD-001 (optional but recommended)" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
       <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Category</label>
         <select id="new-cat" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px">
-          ${DB.categories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+          ${DB.categories.filter(c => !!c.parent).concat(DB.categories.filter(c => !c.parent)).map(c => `<option value="${c.id}">${esc(c.name)}${c.parent ? ' — ' + esc(DB.categories.find(p => p.id === c.parent)?.name || '') : ''}</option>`).join('')}
         </select></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Description</label><textarea id="new-desc" rows="3" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px;resize:vertical"></textarea></div>
+      <details style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+        <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)">More fields (local only)</summary>
+        <div style="display:grid;gap:10px;margin-top:10px">
+          <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Brand</label><input id="new-brand" style="width:100%;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
+          <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Price</label><input id="new-price" type="number" step="0.01" style="width:100%;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px"></div>
+          <div><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Description</label><textarea id="new-desc" rows="3" style="width:100%;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;margin-top:4px;resize:vertical"></textarea></div>
+        </div>
+        <p style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">Bluestone's <code>create_product</code> only accepts Name, Number, and Category. The fields above are stored locally so the demo can show them; wire <code>set_product_attribute</code> later to persist them to PIM.</p>
+      </details>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
       <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-confirm" onclick="saveNewProduct()">Create Product</button>
+      <button class="btn btn-confirm" id="new-product-submit" onclick="saveNewProduct()">${backendOn ? 'Create in Bluestone PIM' : 'Create (local only)'}</button>
     </div>
   `);
 }
 
-window.saveNewProduct = function() {
-  const sku = document.getElementById('new-sku').value.trim();
-  const name = document.getElementById('new-name').value.trim();
-  if (!sku || !name) { alert('SKU and Name are required'); return; }
-  if (DB.products.find(p => p.sku.toLowerCase() === sku.toLowerCase())) { alert('SKU already exists'); return; }
+window.saveNewProduct = async function() {
+  const btn = document.getElementById('new-product-submit');
+  const skuRaw = (document.getElementById('new-sku').value || '').trim();
+  const name = (document.getElementById('new-name').value || '').trim();
+  const categoryId = document.getElementById('new-cat').value;
+  if (!name) { alert('Name is required'); return; }
+  if (skuRaw && DB.products.find(p => p.sku.toLowerCase() === skuRaw.toLowerCase())) { alert('SKU already exists locally'); return; }
 
+  const brand = (document.getElementById('new-brand')?.value || '').trim();
+  const price = parseFloat(document.getElementById('new-price')?.value) || 0;
+  const description = (document.getElementById('new-desc')?.value || '').trim();
+
+  let pimId = '';
+  let pimNumber = skuRaw;
+  let createdVia = 'local';
+
+  if (backendConfigured()) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating in Bluestone PIM…'; }
+    try {
+      const res = await fetch(appSettings.workerUrl + '/api/create-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Demo-Secret': appSettings.workerSecret },
+        body: JSON.stringify({ name, number: skuRaw || undefined, categoryId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || ('HTTP ' + res.status));
+      }
+      // Extract id + number from the MCP response. The PIM connector returns
+      // content as a structured object; pull whatever name/id/number we can find.
+      const text = extractMcpText(data.result);
+      const m = text.match(/\b([0-9a-f]{24})\b/i);
+      pimId = m ? m[1] : '';
+      const numMatch = text.match(/number[^A-Za-z0-9]+([A-Za-z0-9\-_.]+)/i);
+      if (!pimNumber && numMatch) pimNumber = numMatch[1];
+      createdVia = 'pim';
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Create in Bluestone PIM'; }
+      alert('Failed to create in Bluestone PIM:\n\n' + e.message + '\n\nThe product was NOT created. Check Settings → Backend.');
+      return;
+    }
+  }
+
+  const finalSku = pimNumber || ('LOCAL-' + Date.now().toString(36).toUpperCase());
   const product = {
-    id: genId('prod'), sku, name,
-    brand: document.getElementById('new-brand').value.trim(),
-    price: parseFloat(document.getElementById('new-price').value) || 0,
-    category: document.getElementById('new-cat').value,
-    description: document.getElementById('new-desc').value.trim(),
-    status: 'draft', labels: [], weight: '', material: '', ean: '',
+    id: genId('prod'), sku: finalSku, name,
+    brand, price, category: categoryId, description,
+    status: 'draft', labels: [], weight: '', material: '', color: '', ean: '',
+    pimId, pimType: 'SINGLE', parentSku: '',
+    images: [],
     created: new Date().toISOString(), updated: new Date().toISOString()
   };
   DB.products.push(product);
+  DB.history[product.id] = [{
+    time: product.created,
+    user: createdVia === 'pim' ? 'Bluestone PIM' : 'You',
+    action: 'created',
+    detail: createdVia === 'pim' ? 'Created via MCP connector' : 'Created locally in demo'
+  }];
   closeModal();
-  addAudit('create', `Created ${sku} (${name})`);
+  addAudit('create', `Created ${finalSku} (${name})${createdVia === 'pim' ? ' in Bluestone PIM' : ' locally'}`);
+  render();
   addSystem(
-    `<p style="color:var(--green);font-weight:700">✓ Product created successfully!</p>` + productTableHtml([product]),
-    [`Edit ${sku}`, `Show all products`, `Add label to ${sku}`]
+    createdVia === 'pim'
+      ? `<p style="color:var(--green);font-weight:700">✓ Created in Bluestone PIM LABS</p><p style="font-size:12px;color:var(--muted);margin-top:4px">Product ID: <code style="background:var(--surface2);padding:1px 6px;border-radius:3px;font-size:11px">${esc(pimId || '—')}</code></p>` + productTableHtml([product])
+      : `<p style="color:var(--green);font-weight:700">✓ Product created locally</p><p style="font-size:12px;color:var(--muted);margin-top:4px">Configure Settings → Backend to write to Bluestone PIM.</p>` + productTableHtml([product]),
+    [`Edit ${finalSku}`, `Show all products`, `Add label to ${finalSku}`]
   );
 };
+
+// MCP tool responses are envelope objects like `{ content: [{ type:'text', text:'…' }] }`.
+// This pulls the text out so we can parse it for IDs/numbers without binding to one shape.
+function extractMcpText(result) {
+  if (!result) return '';
+  if (typeof result === 'string') return result;
+  if (Array.isArray(result.content)) {
+    return result.content
+      .filter(c => c && c.type === 'text' && typeof c.text === 'string')
+      .map(c => c.text).join('\n');
+  }
+  try { return JSON.stringify(result); } catch (e) { return String(result); }
+}
 
 // ============ NEW PIM FEATURES ============
 
@@ -4572,8 +4653,41 @@ const appSettings = {
   compactMode: localStorage.getItem('pim-compact') === 'true',
   showQualityInGrid: localStorage.getItem('pim-showQ') !== 'false',
   defaultView: localStorage.getItem('pim-defaultView') || 'chat',
-  animationsEnabled: localStorage.getItem('pim-animations') !== 'false'
+  animationsEnabled: localStorage.getItem('pim-animations') !== 'false',
+  workerUrl: localStorage.getItem('pim-workerUrl') || '',
+  workerSecret: localStorage.getItem('pim-workerSecret') || ''
 };
+function backendConfigured() { return !!(appSettings.workerUrl && appSettings.workerSecret); }
+function saveBackendConfig() {
+  const u = document.getElementById('worker-url'); const s = document.getElementById('worker-secret');
+  if (!u || !s) return;
+  appSettings.workerUrl = u.value.trim().replace(/\/+$/, '');
+  appSettings.workerSecret = s.value.trim();
+  localStorage.setItem('pim-workerUrl', appSettings.workerUrl);
+  localStorage.setItem('pim-workerSecret', appSettings.workerSecret);
+  showToast('✓ Backend settings saved', 'var(--green)');
+  openSettings(); // re-render with refreshed status
+}
+async function testBackendConnection() {
+  const url = appSettings.workerUrl;
+  const statusEl = document.getElementById('backend-status');
+  if (!url) return;
+  if (statusEl) statusEl.innerHTML = '<span class="dot"></span>Checking...';
+  try {
+    const res = await fetch(url + '/api/health', { method: 'GET' });
+    const j = await res.json();
+    if (res.ok && j.ok) {
+      if (statusEl) {
+        statusEl.className = 'settings-status ' + (j.mcpConfigured && j.authConfigured ? 'ok' : 'err');
+        statusEl.innerHTML = '<span class="dot"></span>' + (j.mcpConfigured && j.authConfigured ? 'Worker reachable, MCP + secret configured' : 'Worker reachable but missing secrets');
+      }
+    } else {
+      throw new Error(j.error || ('HTTP ' + res.status));
+    }
+  } catch (e) {
+    if (statusEl) { statusEl.className = 'settings-status err'; statusEl.innerHTML = '<span class="dot"></span>' + esc(e.message); }
+  }
+}
 
 // ============ SIDEBAR TOGGLE ============
 let sidebarOpen = localStorage.getItem('pim-sidebar') === 'true';
@@ -4654,6 +4768,33 @@ function openSettings() {
           <option value="chat" ${appSettings.defaultView==='chat'?'selected':''}>Agent (Chat)</option>
           <option value="data" ${appSettings.defaultView==='data'?'selected':''}>Data Grid</option>
         </select>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Backend (Bluestone PIM MCP)</div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">
+        Paste your Cloudflare Worker URL and the shared secret you set with <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px">wrangler secret put SHARED_SECRET</code>.
+        When configured, the <strong>+ New Product</strong> button writes to your real Bluestone PIM tenant via the MCP connector.
+      </p>
+      <div class="settings-row" style="display:block">
+        <div class="lbl" style="margin-bottom:6px">Worker URL</div>
+        <input type="text" id="worker-url" class="settings-input" placeholder="https://pim-agent-proxy.your-account.workers.dev" value="${esc(appSettings.workerUrl)}">
+      </div>
+      <div class="settings-row" style="display:block">
+        <div class="lbl" style="margin-bottom:6px">Shared Secret</div>
+        <input type="password" id="worker-secret" class="settings-input" placeholder="The passphrase you set in the Worker" value="${esc(appSettings.workerSecret)}">
+      </div>
+      <div class="settings-row" style="display:block">
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+          <div id="backend-status" class="settings-status ${backendConfigured() ? 'ok' : 'off'}">
+            <span class="dot"></span>${backendConfigured() ? 'Configured — click Test to verify' : 'Not configured (creates stay local)'}
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-cancel" style="font-size:11px;padding:5px 12px" onclick="testBackendConnection()">Test</button>
+            <button class="btn btn-confirm" style="font-size:11px;padding:5px 12px" onclick="saveBackendConfig()">Save</button>
+          </div>
+        </div>
       </div>
     </div>
 
