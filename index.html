@@ -32,6 +32,11 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 /* HEADER */
 .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--white)}
 .logo svg{width:24px;height:24px}
+.pim-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);font-size:11px;font-weight:600;color:#34D399;letter-spacing:0.2px}
+.pim-badge .pim-dot{width:6px;height:6px;border-radius:50%;background:#34D399;box-shadow:0 0 6px #34D399;animation:pimPulse 2.4s ease-in-out infinite}
+@keyframes pimPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+[data-theme="light"] .pim-badge{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.3);color:#059669}
+[data-theme="light"] .pim-badge .pim-dot{background:#059669;box-shadow:0 0 6px #059669}
 /* Light theme */
 [data-theme="light"]{
   --bg:#F5F7FA;--surface:#FFFFFF;--surface2:#F0F2F5;--border:rgba(0,0,0,0.08);
@@ -461,6 +466,10 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
       <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg)"/><defs><linearGradient id="lg" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#3D74F4"/><stop offset="100%" stop-color="#0F05CC"/></linearGradient></defs></svg>
       The AI PIM
     </div>
+    <div class="pim-badge" title="Live-connected to Bluestone PIM LABS via MCP">
+      <span class="pim-dot"></span>
+      Bluestone PIM LABS
+    </div>
     <div class="mode-toggle" id="mode-toggle">
       <button class="mode-toggle-btn active" data-mode="chat" onclick="setMode('chat')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -532,12 +541,12 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         <div class="welcome-hint" onclick="welcomeHint(this)">📊 Quality report</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">✏️ Find drafts</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Missing descriptions</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">✨ AI Enrich iPhone</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🔗 AirPods relations</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">✨ AI Enrich Heritage Brogue</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🔗 OPTISONIC 3400 relations</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">🏷️ Bestsellers</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">👔 Style with Air Max</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">📈 Raise shoe prices 10%</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🔎 Find duplicates</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🏃 Show running shoes</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">⚡ Show cable ladders</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📡 Show flowmeters</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">📋 Show attributes</div>
       </div>
     </div>
@@ -651,22 +660,33 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 <script>
 // ============ DATA STORE ============
 const DB = {
+  // Real categories from Bluestone PIM LABS "Products" catalog
   categories: [
-    { id: 'cat-elec', name: 'Electronics', parent: null },
-    { id: 'cat-phones', name: 'Smartphones', parent: 'cat-elec' },
-    { id: 'cat-audio', name: 'Audio', parent: 'cat-elec' },
-    { id: 'cat-laptops', name: 'Laptops', parent: 'cat-elec' },
-    { id: 'cat-wear', name: 'Wearables', parent: 'cat-elec' },
-    { id: 'cat-cloth', name: 'Clothing', parent: null },
-    { id: 'cat-shoes', name: 'Shoes', parent: 'cat-cloth' },
-    { id: 'cat-jackets', name: 'Jackets', parent: 'cat-cloth' },
-    { id: 'cat-shirts', name: 'Shirts', parent: 'cat-cloth' },
-    { id: 'cat-home', name: 'Home & Garden', parent: null },
-    { id: 'cat-furniture', name: 'Furniture', parent: 'cat-home' },
-    { id: 'cat-lighting', name: 'Lighting', parent: 'cat-home' },
-    { id: 'cat-sports', name: 'Sports & Outdoor', parent: null },
-    { id: 'cat-camping', name: 'Camping', parent: 'cat-sports' },
-    { id: 'cat-fitness', name: 'Fitness', parent: 'cat-sports' }
+    { id: '69970cf954b2bc35386c43ca', name: 'Shoes', parent: null },
+    { id: '699d421110e99d3efd404a2a', name: 'Running', parent: '69970cf954b2bc35386c43ca' },
+    { id: '699d421554b2bc35386ce149', name: 'Sandals', parent: '69970cf954b2bc35386c43ca' },
+    { id: '69fba64ecf44eb828e1558a0', name: 'Work Boots', parent: '69970cf954b2bc35386c43ca' },
+    { id: '69bb943ba00183b24e6c79d4', name: 'Fashion', parent: null },
+    { id: '69bb92b0cfa347c3b57b1539', name: 'Beauty', parent: null },
+    { id: '69bb92bdcfa347c3b57b153a', name: 'Skincare', parent: '69bb92b0cfa347c3b57b1539' },
+    { id: '69bb9425cfa347c3b57b153b', name: 'Facial', parent: '69bb92bdcfa347c3b57b153a' },
+    { id: '69bb942da00183b24e6c79d3', name: 'Serum & Special Treatment', parent: '69bb9425cfa347c3b57b153b' },
+    { id: '69bb9437cfa347c3b57b153c', name: 'Fragrance', parent: '69bb92b0cfa347c3b57b1539' },
+    { id: '69bb966ea00183b24e6c79d7', name: 'Eau De Toilette', parent: '69bb9437cfa347c3b57b153c' },
+    { id: '69970d0254b2bc35386c43cb', name: 'Socks', parent: null },
+    { id: '69ae895dcfa347c3b5781216', name: 'Medical Gloves', parent: null },
+    { id: '69ae896fa00183b24e698d97', name: 'Disposable', parent: '69ae895dcfa347c3b5781216' },
+    { id: '69c22bd9f9025d5844a6b5e0', name: 'Tubing Clamps', parent: null },
+    { id: '69c22bf37b22ec3aa9240bc0', name: 'Support', parent: null },
+    { id: '69c22bfaf9025d5844a6b5e2', name: 'Mekano Support System', parent: '69c22bf37b22ec3aa9240bc0' },
+    { id: '69c22c13f9025d5844a6b5e7', name: 'Cable Ladders', parent: null },
+    { id: '69c22c2c7b22ec3aa9240bc4', name: 'OE Cable Ladder System', parent: '69c22c13f9025d5844a6b5e7' },
+    { id: '69ca26763c23aa9f3a1e1c63', name: 'Flow measurement', parent: null },
+    { id: '69ca2676413c770d2313927d', name: 'Flowmeters', parent: '69ca26763c23aa9f3a1e1c63' },
+    { id: '69ca26763c23aa9f3a1e1c64', name: 'Ultrasonic flowmeters', parent: '69ca2676413c770d2313927d' },
+    { id: '69ca30483c23aa9f3a1e1c9e', name: 'Altosonic flowmeters', parent: '69ca2676413c770d2313927d' },
+    { id: '69ca30593c23aa9f3a1e1c9f', name: 'Optisonic flowmeters', parent: '69ca2676413c770d2313927d' },
+    { id: '69ca2712413c770d23139281', name: 'Level measurement', parent: null }
   ],
   labels: [
     { id: 'lbl-summer', name: 'Summer Sale', color: '#EC672B' },
@@ -699,219 +719,310 @@ const DB = {
   ]
 };
 
-// Seed products
+// Real product data from Bluestone PIM LABS "Products" catalog (working state, English context).
+// pimId = product ID in Bluestone PIM, pimType = GROUP / VARIANT / SINGLE, parentSku = variant parent SKU.
+const PIM_CDN = 'https://media.test.bluestonepim.com/02862f40-6493-4803-a645-308cf2053604';
 const seedProducts = [
-  { sku:'ELEC-001', name:'iPhone 15 Pro Max', category:'cat-phones', price:1199, status:'active', brand:'Apple', description:'Latest flagship smartphone with A17 Pro chip, titanium design, and 48MP camera system.', labels:['lbl-best','lbl-premium'], weight:'221g', material:'Titanium', color:'Black Titanium', ean:'5901234123457' },
-  { sku:'ELEC-002', name:'Samsung Galaxy S24 Ultra', category:'cat-phones', price:1299, status:'active', brand:'Samsung', description:'Premium Android smartphone with built-in S Pen, 200MP camera, and Galaxy AI features.', labels:['lbl-new'], weight:'232g', material:'Titanium', color:'Titanium Gray', ean:'4901234567890' },
-  { sku:'ELEC-003', name:'Sony WH-1000XM5', category:'cat-audio', price:349, status:'active', brand:'Sony', description:'Industry-leading noise cancelling wireless headphones with exceptional sound quality.', labels:['lbl-best'], weight:'250g', material:'Plastic/Leather', color:'Black', ean:'4548736132153' },
-  { sku:'ELEC-004', name:'AirPods Pro 2', category:'cat-audio', price:249, status:'active', brand:'Apple', description:'Active noise cancelling earbuds with adaptive audio and USB-C charging.', labels:['lbl-best'], weight:'50.8g', material:'Plastic', color:'White', ean:'' },
-  { sku:'ELEC-005', name:'MacBook Air M3', category:'cat-laptops', price:1099, status:'active', brand:'Apple', description:'Supercharged by M3 chip. Up to 18 hours battery life. Fanless design.', labels:['lbl-new','lbl-premium'], weight:'1.24kg', material:'Aluminium', color:'Silver', ean:'5901234567891' },
-  { sku:'ELEC-006', name:'ThinkPad X1 Carbon Gen 11', category:'cat-laptops', price:1449, status:'active', brand:'Lenovo', description:'Ultralight 14" business laptop with Intel 13th gen processor.', labels:['lbl-premium'], weight:'1.12kg', material:'Carbon Fiber', color:'Black', ean:'1234567890123' },
-  { sku:'ELEC-007', name:'Apple Watch Ultra 2', category:'cat-wear', price:799, status:'active', brand:'Apple', description:'The most rugged and capable Apple Watch with precision GPS and 36-hour battery.', labels:['lbl-premium'], weight:'61.4g', material:'Titanium', color:'Orange', ean:'' },
-  { sku:'ELEC-008', name:'Galaxy Buds3 Pro', category:'cat-audio', price:229, status:'draft', brand:'Samsung', description:'', labels:['lbl-new'], weight:'', material:'', color:'White', ean:'' },
-  { sku:'SHOE-001', name:'Nike Air Max 90', category:'cat-shoes', price:129, status:'active', brand:'Nike', description:'Iconic sneaker with visible Air cushioning and retro design.', labels:['lbl-best','lbl-summer'], weight:'350g', material:'Mesh/Leather', color:'White', ean:'1928374650123' },
-  { sku:'SHOE-002', name:'Adidas Ultraboost Light', category:'cat-shoes', price:189, status:'active', brand:'Adidas', description:'Lightweight performance running shoe with BOOST midsole technology.', labels:['lbl-new'], weight:'280g', material:'Primeknit', color:'Black', ean:'4001234567890' },
-  { sku:'SHOE-003', name:'New Balance 574', category:'cat-shoes', price:89, status:'active', brand:'New Balance', description:'Classic heritage sneaker with ENCAP midsole cushioning.', labels:[], weight:'340g', material:'Suede/Mesh', color:'Gray', ean:'7391234567890' },
-  { sku:'SHOE-004', name:'Salomon Speedcross 6', category:'cat-shoes', price:139, status:'active', brand:'Salomon', description:'Aggressive trail running shoe with Contagrip outsole.', labels:['lbl-eco'], weight:'310g', material:'Synthetic', color:'Blue', ean:'' },
-  { sku:'JACK-001', name:'North Face Thermoball Eco', category:'cat-jackets', price:199, status:'active', brand:'The North Face', description:'Lightweight insulated jacket made from recycled materials.', labels:['lbl-eco','lbl-summer'], weight:'420g', material:'Recycled Polyester', color:'Black', ean:'8801234567890' },
-  { sku:'JACK-002', name:'Patagonia Down Sweater', category:'cat-jackets', price:279, status:'active', brand:'Patagonia', description:'800-fill-power down jacket with Fair Trade Certified sewing.', labels:['lbl-premium','lbl-eco'], weight:'371g', material:'Recycled Nylon/Down', color:'Navy', ean:'2201234567890' },
-  { sku:'SHRT-001', name:'Uniqlo Supima Cotton Tee', category:'cat-shirts', price:19.90, status:'active', brand:'Uniqlo', description:'Premium cotton crew neck t-shirt with smooth texture.', labels:[], weight:'180g', material:'Supima Cotton', color:'White', ean:'4901234567001' },
-  { sku:'SHRT-002', name:'Ralph Lauren Oxford Shirt', category:'cat-shirts', price:119, status:'active', brand:'Ralph Lauren', description:'', labels:['lbl-premium'], weight:'', material:'Cotton', color:'Blue', ean:'' },
-  { sku:'FURN-001', name:'IKEA KALLAX Shelf', category:'cat-furniture', price:69.99, status:'active', brand:'IKEA', description:'Versatile shelving unit, can be placed on the floor or mounted on a wall.', labels:[], weight:'18.5kg', material:'Particleboard', color:'White', ean:'7021234567890' },
-  { sku:'FURN-002', name:'HAY About A Chair', category:'cat-furniture', price:349, status:'draft', brand:'HAY', description:'Minimalist Scandinavian design chair with shell seat.', labels:['lbl-premium'], weight:'3.8kg', material:'Polypropylene/Oak', color:'Black', ean:'' },
-  { sku:'LITE-001', name:'Muuto E27 Pendant', category:'cat-lighting', price:89, status:'active', brand:'Muuto', description:'Iconic pendant lamp celebrating the beauty of the bare bulb.', labels:[], weight:'0.5kg', material:'Silicone Rubber', color:'Gray', ean:'5701234567890' },
-  { sku:'CAMP-001', name:'Thule Capstone 50L', category:'cat-camping', price:219, status:'active', brand:'Thule', description:'Comfortable hiking backpack with VersaClick accessories system.', labels:['lbl-eco'], weight:'1.75kg', material:'Recycled Nylon', color:'Green', ean:'' },
-  { sku:'CAMP-002', name:'Fjallraven Keb Tent 2', category:'cat-camping', price:899, status:'active', brand:'Fjallraven', description:'Lightweight 3-season tunnel tent for two persons.', labels:['lbl-premium'], weight:'2.4kg', material:'G-1000 HeavyDuty', color:'Green', ean:'7323450123456' },
-  { sku:'FIT-001', name:'Garmin Forerunner 265', category:'cat-fitness', price:449, status:'active', brand:'Garmin', description:'GPS running smartwatch with AMOLED display and training readiness.', labels:['lbl-new','lbl-best'], weight:'47g', material:'Fiber-reinforced polymer', color:'Black', ean:'7531234567890' },
-  { sku:'FIT-002', name:'Theragun Elite', category:'cat-fitness', price:399, status:'active', brand:'Therabody', description:'', labels:[], weight:'1.0kg', material:'', color:'Black', ean:'' },
-  { sku:'SHOE-005', name:'Dr. Martens 1460 Boot', category:'cat-shoes', price:169, status:'draft', brand:'Dr. Martens', description:'Classic 8-eye boot with air-cushioned sole.', labels:['lbl-clearance'], weight:'', material:'Leather', color:'Black', ean:'' },
-  // Low quality / incomplete products across categories
-  { sku:'ELEC-009', name:'JBL Flip 6', category:'cat-audio', price:129, status:'draft', brand:'JBL', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'ELEC-010', name:'Google Pixel Watch 2', category:'cat-wear', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'Black', ean:'' },
-  { sku:'SHOE-006', name:'Converse Chuck Taylor', category:'cat-shoes', price:65, status:'draft', brand:'Converse', description:'', labels:[], weight:'', material:'Canvas', color:'White', ean:'' },
-  { sku:'SHOE-007', name:'ASICS Gel-Kayano 30', category:'cat-shoes', price:0, status:'draft', brand:'ASICS', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'JACK-003', name:'Arc\'teryx Beta LT', category:'cat-jackets', price:599, status:'draft', brand:'', description:'', labels:[], weight:'', material:'Gore-Tex', color:'', ean:'' },
-  { sku:'SHRT-003', name:'COS Oversized T-Shirt', category:'cat-shirts', price:0, status:'draft', brand:'COS', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'FURN-003', name:'String Shelf System', category:'cat-furniture', price:289, status:'draft', brand:'String', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'LITE-002', name:'Louis Poulsen PH 5', category:'cat-lighting', price:0, status:'draft', brand:'Louis Poulsen', description:'', labels:['lbl-premium'], weight:'', material:'', color:'White', ean:'' },
-  { sku:'CAMP-003', name:'MSR Hubba Hubba NX', category:'cat-camping', price:449, status:'draft', brand:'MSR', description:'', labels:[], weight:'1.8kg', material:'', color:'', ean:'' },
-  { sku:'FIT-003', name:'Peloton Bike+', category:'cat-fitness', price:0, status:'draft', brand:'Peloton', description:'', labels:[], weight:'', material:'', color:'Black', ean:'' },
-  { sku:'ELEC-011', name:'Bose QuietComfort Ultra', category:'cat-audio', price:429, status:'draft', brand:'Bose', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'SHOE-008', name:'Birkenstock Arizona', category:'cat-shoes', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'Brown', ean:'' },
-  // Very low quality products (< 40% — only name + category, barely anything else)
-  { sku:'ELEC-012', name:'Marshall Stanmore III', category:'cat-audio', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'SHOE-009', name:'Veja Campo', category:'cat-shoes', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'JACK-004', name:'Canada Goose Expedition', category:'cat-jackets', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'FURN-004', name:'Vitra Eames Lounge Chair', category:'cat-furniture', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'CAMP-004', name:'Yeti Tundra 45', category:'cat-camping', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'FIT-004', name:'Concept2 RowErg', category:'cat-fitness', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'LITE-003', name:'Flos IC Lights', category:'cat-lighting', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' },
-  { sku:'SHRT-004', name:'Comme des Garçons Play Tee', category:'cat-shirts', price:0, status:'draft', brand:'', description:'', labels:[], weight:'', material:'', color:'', ean:'' }
+  // === STRIDE-X RUNNER (Performance running, GROUP + 3 color variants) ===
+  { sku:'STR-99', name:'Stride-X Runner', category:'699d421110e99d3efd404a2a',
+    pimId:'69aec643cfa347c3b578138d', pimType:'GROUP',
+    price:159, status:'active', brand:'Stride-X',
+    description:'Performance running shoe built from breathable engineered mesh. Marathon-recommended, lightweight, and engineered for high-impact running across the full range of Nordic conditions.',
+    labels:['lbl-best','lbl-new'], weight:'330g', material:'Breathable Engineered Mesh', color:'Multi', ean:'4021234567890',
+    imageUrls:[
+      `${PIM_CDN}/432e9d16-db1c-4217-afc3-89d79bb4a4bb/hhdkJccGPphGGslOiMb2PBCqO/O5EKoDLAwPJlJhNoWczD1r5yq.png?f=jpg&w=600`,
+      `${PIM_CDN}/848397cc-863d-4825-aa68-6cbe56217fef/uWakMgIkDFgUCR9e6YEbdNtZh/lTEJoURffXM1n5Mo0kiwCvxGC.png?f=jpg&w=600`,
+      `${PIM_CDN}/50654d66-e765-46ca-b276-5fcd9e1e144f/cshCwE6HQLQkFiP73jNC6dk02/EYZmgsZdZLIpnVVrgdHwJG3as.png?f=jpg&w=600`
+    ]
+  },
+  { sku:'STR-99-MB', name:'Stride-X Runner - Midnight Black', category:'699d421110e99d3efd404a2a',
+    pimId:'6997129e54b2bc35386c43f0', pimType:'VARIANT', parentSku:'STR-99',
+    price:179, status:'active', brand:'Stride-X',
+    description:'The Stride-X Runner in Midnight Black is a high-performance athletic shoe crafted from breathable engineered mesh, designed specifically for high-impact running. Weighing just 330g, it delivers a lightweight feel that supports endurance and speed, and is fully recommended for marathon distances.',
+    labels:['lbl-best'], weight:'330g', material:'Breathable Engineered Mesh', color:'Midnight Black', ean:'4021234567893',
+    imageUrls:[`${PIM_CDN}/848397cc-863d-4825-aa68-6cbe56217fef/uWakMgIkDFgUCR9e6YEbdNtZh/lTEJoURffXM1n5Mo0kiwCvxGC.png?f=jpg&w=600`]
+  },
+  { sku:'STR-99-NL', name:'Stride-X Runner - Neon Lime', category:'699d421110e99d3efd404a2a',
+    pimId:'6997129e54b2bc35386c43f1', pimType:'VARIANT', parentSku:'STR-99',
+    price:179, status:'active', brand:'Stride-X',
+    description:'The Stride-X Runner is a lightweight, high-performance athletic shoe crafted from Breathable Engineered Mesh, designed for high-impact running and built to go the distance — marathon recommended and summer-ready. Weighing just 330g, it combines superior ventilation with a bold Neon Lime finish.',
+    labels:['lbl-new','lbl-summer'], weight:'330g', material:'Breathable Engineered Mesh', color:'Neon Lime', ean:'4021234567894',
+    imageUrls:[`${PIM_CDN}/432e9d16-db1c-4217-afc3-89d79bb4a4bb/hhdkJccGPphGGslOiMb2PBCqO/O5EKoDLAwPJlJhNoWczD1r5yq.png?f=jpg&w=600`]
+  },
+  { sku:'STR-99-SG', name:'Stride-X Runner - Slate Gray', category:'699d421110e99d3efd404a2a',
+    pimId:'6997129e54b2bc35386c43f2', pimType:'VARIANT', parentSku:'STR-99',
+    price:189, status:'active', brand:'Stride-X',
+    description:'The Stride-X Runner is a performance athletic shoe crafted from breathable engineered mesh, designed for high-impact running and built to keep up with your most demanding training sessions. Weighing only 330g, it offers a lightweight feel without sacrificing support, and is officially recommended for marathon distances.',
+    labels:['lbl-best','lbl-premium'], weight:'330g', material:'Breathable Engineered Mesh', color:'Slate Gray', ean:'4021234567892',
+    imageUrls:[`${PIM_CDN}/50654d66-e765-46ca-b276-5fcd9e1e144f/cshCwE6HQLQkFiP73jNC6dk02/EYZmgsZdZLIpnVVrgdHwJG3as.png?f=jpg&w=600`]
+  },
+
+  // === HERITAGE BROGUE (Classic dress shoes, 3 color variants — sparse data, candidates for AI enrichment) ===
+  { sku:'BRG-22-TN-CT', name:'Heritage Brogue - Cognac Tan', category:'69970cf954b2bc35386c43ca',
+    pimId:'6997129e52d7b36ee509a608', pimType:'VARIANT', parentSku:'BRG-22',
+    price:189, status:'draft', brand:'Heritage',
+    description:'', labels:[], weight:'420g', material:'Full-Grain Bovine Leather', color:'Cognac Tan', ean:'',
+    imageUrls:[`${PIM_CDN}/6e57f310-5331-4844-b195-144fd0631918/Fgcvk07YwpRmsWRbDYmCOzhpc/eRWZ8KCzqwX5jOtW7CSjfvKr2.png?f=jpg&w=600`]
+  },
+  { sku:'BRG-22-TN-EB', name:'Heritage Brogue - Espresso Brown', category:'69970cf954b2bc35386c43ca',
+    pimId:'6997129e52d7b36ee509a609', pimType:'VARIANT', parentSku:'BRG-22',
+    price:189, status:'draft', brand:'Heritage',
+    description:'', labels:[], weight:'420g', material:'Full-Grain Bovine Leather', color:'Espresso Brown', ean:'',
+    imageUrls:[`${PIM_CDN}/05130ff0-cb89-44f9-ae02-a310ec35594a/Zc81jD5O3M7CBqCLPrCitl2NF/qAePH5eJ8sHZG1fKOVjcyUme8.png?f=jpg&w=600`]
+  },
+  { sku:'BRG-22-TN-O', name:'Heritage Brogue - Onyx', category:'69970cf954b2bc35386c43ca',
+    pimId:'6997129e52d7b36ee509a60a', pimType:'VARIANT', parentSku:'BRG-22',
+    price:189, status:'draft', brand:'Heritage',
+    description:'', labels:[], weight:'420g', material:'Full-Grain Bovine Leather', color:'Onyx', ean:'',
+    imageUrls:[`${PIM_CDN}/0d41b662-6c56-4d9b-938a-249db7388832/vNJbL9dXtVLwNdnjmdrarhfM9/5rUvVTfOFvuos9PDsqZOhVuDq.png?f=jpg&w=600`]
+  },
+
+  // === URBAN CLOUD SLIDE (Casual sandals, 3 color variants — sparse data) ===
+  { sku:'VIB-44-SD-DR', name:'Urban Cloud Slide - Dusty Rose', category:'699d421554b2bc35386ce149',
+    pimId:'6997129e52d7b36ee509a60d', pimType:'VARIANT', parentSku:'VIB-44',
+    price:79, status:'draft', brand:'Urban Cloud',
+    description:'', labels:[], weight:'230g', material:'Injection-Molded EVA Foam', color:'Dusty Rose', ean:'',
+    imageUrls:[`${PIM_CDN}/fd0bfe92-cdeb-409e-a544-7f96e325b605/pWFps6hCTfspeebnQEt7a7OBn/YOJE8IYPcyvGUo6mh8DnSLGdE.png?f=jpg&w=600`]
+  },
+  { sku:'VIB-44-SD-SG', name:'Urban Cloud Slide - Sage Green', category:'699d421554b2bc35386ce149',
+    pimId:'6997129e52d7b36ee509a60c', pimType:'VARIANT', parentSku:'VIB-44',
+    price:79, status:'draft', brand:'Urban Cloud',
+    description:'', labels:[], weight:'230g', material:'Injection-Molded EVA Foam', color:'Sage Green', ean:'',
+    imageUrls:[`${PIM_CDN}/6a921f0e-b138-411a-b2d0-9b42619bbd06/GbjhRIx3OGaYtfqAJSeerZOjB/oNdRvPMu1z8YpVokbkmR3JOXU.png?f=jpg&w=600`]
+  },
+  { sku:'VIB-44-SD-S', name:'Urban Cloud Slide - Sand', category:'699d421554b2bc35386ce149',
+    pimId:'6997129e52d7b36ee509a60b', pimType:'VARIANT', parentSku:'VIB-44',
+    price:79, status:'draft', brand:'Urban Cloud',
+    description:'', labels:['lbl-summer'], weight:'230g', material:'Injection-Molded EVA Foam', color:'Sand', ean:'',
+    imageUrls:[`${PIM_CDN}/efd8d73a-4171-458a-9731-595befbd83ca/kgVPNRrgCuuDWGu1gip54mfIV/vrbmTAdn2B5H7nzgQziPrzlU0.png?f=jpg&w=600`]
+  },
+
+  // === OE125 CABLE LADDER (Industrial cable management, GROUP + 6 width variants) ===
+  { sku:'OE125-3M', name:'Cable ladder OE125 3m', category:'69c22c2c7b22ec3aa9240bc4',
+    pimId:'69c23f4bf9025d5844a6b6eb', pimType:'GROUP',
+    price:189, status:'active', brand:'OE125',
+    description:'Cable ladder OE125 3m, 125 mm high and 3000 mm long, designed for cable routing applications where defined rung spacing and material thickness are important. Features 300 mm rung spacing and 1.5 mm material thickness.',
+    labels:['lbl-best'], weight:'14kg', material:'Stainless Steel', color:'Steel', ean:'7059210000000',
+    imageUrls:[
+      `${PIM_CDN}/2821ae6f-4d7a-42ed-98e0-580fef7ee301/AJj9NiCnNo1Nfaz6rllkpJZPf/uGIXC3wmMGqSEkzGbgnXLsImf.jpg?f=jpg&w=600`,
+      `${PIM_CDN}/301859b0-0e1c-4ec3-8fd5-09db99cde257/YdFgmtuQkXCQxISL6hJSa5IuQ/pOWjaBZVqEDnGKKavq7AFgWgT.jpg?f=jpg&w=600`
+    ]
+  },
+  { sku:'59210', name:'OE125CQQ CL-150-3000 SS', category:'69c22c2c7b22ec3aa9240bc4',
+    pimId:'69c23cb37b22ec3aa9240ca4', pimType:'VARIANT', parentSku:'OE125-3M',
+    price:139, status:'active', brand:'OE125',
+    description:'Heavy load cable ladder OE125CQQ CL-150-3000 SS (item 59210) designed to fit many purposes in cable management installations. 3000 mm long ladder with 125 mm height, 150/196 mm widths and 300 mm rung spacing. Rungs have lateral slots prepared for UNO nuts for fixing equipment.',
+    labels:[], weight:'9kg', material:'Stainless Steel', color:'Steel', ean:'7059210000150',
+    imageUrls:[`${PIM_CDN}/1a9e4425-e727-449b-997e-c1ad4f010ee0/kBTtSWDMWmnBqckaQd1NTXOSM/PkcdjvpTxUL5yEWJ5HoVlDpXa.jpg?f=jpg&w=600`]
+  },
+  { sku:'59211', name:'OE125CQQ CL-300-3000 SS', category:'69c22c2c7b22ec3aa9240bc4',
+    pimId:'69c23cb37b22ec3aa9240ca5', pimType:'VARIANT', parentSku:'OE125-3M',
+    price:169, status:'active', brand:'OE125',
+    description:'Heavy load cable ladder designed to fit many purposes, with rungs featuring lateral slots for flexible cable and equipment mounting. The rungs are prepared for using UNO nuts for easy and secure fixing of equipment. For support spans over 4.5 m, 6 metre cable ladder lengths are recommended.',
+    labels:[], weight:'11kg', material:'Stainless Steel', color:'Steel', ean:'7059210000300',
+    imageUrls:[`${PIM_CDN}/5cb0e482-31ca-4e3b-bdcd-35fd64027768/BiVbRRUjVTweJhCSahltNMvxe/U46R9oGJeurwTNgD8a9xCGHmy.jpg?f=jpg&w=600`]
+  },
+  { sku:'59212', name:'OE125CQQ CL-450-3000 SS', category:'69c22c2c7b22ec3aa9240bc4',
+    pimId:'69c23cb37b22ec3aa9240ca6', pimType:'VARIANT', parentSku:'OE125-3M',
+    price:209, status:'active', brand:'OE125',
+    description:'Heavy load cable ladder OE125CQQ CL-450-3000 SS (number 59212) designed to fit many purposes in cable installations. The 3000 mm long ladder has 125 mm height, 450/496 mm widths, 300 mm rung spacing and 1.5 mm material thickness.',
+    labels:[], weight:'13kg', material:'Stainless Steel', color:'Steel', ean:'7059210000450',
+    imageUrls:[`${PIM_CDN}/2821ae6f-4d7a-42ed-98e0-580fef7ee301/AJj9NiCnNo1Nfaz6rllkpJZPf/uGIXC3wmMGqSEkzGbgnXLsImf.jpg?f=jpg&w=600`]
+  },
+  { sku:'59213', name:'OE125CQQ CL-600-3000 SS', category:'69c22c2c7b22ec3aa9240bc4',
+    pimId:'69c23cb37b22ec3aa9240ca7', pimType:'VARIANT', parentSku:'OE125-3M',
+    price:259, status:'active', brand:'OE125',
+    description:'Heavy load cable ladder OE125CQQ CL-600-3000 SS (item no. 59213) designed to fit many purposes. The 3000 mm long ladder has rungs with lateral slots prepared for UNO nuts for easy fixing of equipment. Recommended in 6 metre ladder lengths when support spans exceed 4.5 m.',
+    labels:[], weight:'15kg', material:'Stainless Steel', color:'Steel', ean:'7059210000600',
+    imageUrls:[`${PIM_CDN}/45a949f6-c091-48f1-ab12-00b6a6a10966/haIiO5MyH4eHRauGvLlvvzgth/twgbLMEKnjNAvv8HHK2Lfz3pa.jpg?f=jpg&w=600`]
+  },
+  { sku:'59214', name:'OE125CQQ CL-750-3000 SS', category:'69c22c2c7b22ec3aa9240bc4',
+    pimId:'69c23cb37b22ec3aa9240ca8', pimType:'VARIANT', parentSku:'OE125-3M',
+    price:299, status:'active', brand:'OE125',
+    description:'The OE125CQQ CL-750-3000 SS is a heavy load cable ladder designed to fit many purposes and long support spans. It features rungs with lateral slots, optimized for using UNO nuts to fix equipment securely. With a length of 3000 mm, ladder height of 125 mm and widths of 750/796 mm, it is suitable for robust cable support installations.',
+    labels:[], weight:'17kg', material:'Stainless Steel', color:'Steel', ean:'7059210000750',
+    imageUrls:[`${PIM_CDN}/c5222618-8e00-4788-905e-739204d7eb4c/nOCrXOaY9pENGG4EpPHqW3U0C/BARxbV7UcA1wd4cSssGzwRbcT.jpg?f=jpg&w=600`]
+  },
+  { sku:'59215', name:'OE125CQQ CL-900-3000 SS', category:'69c22c2c7b22ec3aa9240bc4',
+    pimId:'69c23cb37b22ec3aa9240ca9', pimType:'VARIANT', parentSku:'OE125-3M',
+    price:349, status:'active', brand:'OE125',
+    description:'Heavy load cable ladder OE125CQQ CL-900-3000 SS (item no. 59215) designed for versatile cable support applications. Features rungs with lateral slots prepared for UNO nuts for easy fixing of equipment. Recommended for use in 6 metre cable ladder lengths when support spans exceed 4.5 m.',
+    labels:['lbl-premium'], weight:'19kg', material:'Stainless Steel', color:'Steel', ean:'7059210000900',
+    imageUrls:[`${PIM_CDN}/301859b0-0e1c-4ec3-8fd5-09db99cde257/YdFgmtuQkXCQxISL6hJSa5IuQ/pOWjaBZVqEDnGKKavq7AFgWgT.jpg?f=jpg&w=600`]
+  },
+
+  // === OPTISONIC 3400 (Ultrasonic flowmeter, GROUP + 4 variants) ===
+  { sku:'OPT-3400', name:'OPTISONIC 3400', category:'69ca30593c23aa9f3a1e1c9f',
+    pimId:'69ca2861413c770d23139282', pimType:'GROUP',
+    price:7900, status:'active', brand:'OPTISONIC',
+    description:'The OPTISONIC 3400 is a three-path ultrasonic flowmeter designed for applications up to 200 bar and nominal diameters from 25 mm to 3000 mm. It is specified for non-custody-transfer use where reliable measurement under high pressure and wide diameter ranges is required.',
+    labels:['lbl-best'], weight:'50kg', material:'Industrial Steel', color:'Industrial', ean:'7059234000000',
+    imageUrls:[
+      `${PIM_CDN}/f78957cf-f6df-42ce-841f-7d7f376fc5eb/NP1qXZcaHyLLQBOBBwl7qHgYA/RcTRkRGg9X1PJehGfFMLQUiv9.webp?f=jpg&w=600`,
+      `${PIM_CDN}/c896d8b8-eb9e-4544-b7a1-dbb39131e3ff/QFJ9wzbfKQghkqdfMLkl51gBT/njenyERyIwGKdol8ev57QQxSi.webp?f=jpg&w=600`
+    ]
+  },
+  { sku:'3400', name:'OPTISONIC 3400 STANDARD', category:'69ca30593c23aa9f3a1e1c9f',
+    pimId:'69ca26763c23aa9f3a1e1c69', pimType:'VARIANT', parentSku:'OPT-3400',
+    price:7900, status:'active', brand:'OPTISONIC',
+    description:'The OPTISONIC 3400 STANDARD is an ultrasonic flow solution designed for demanding process conditions across a very wide nominal diameter range from 25 mm to 3000 mm. It is engineered for applications up to 200 bar and a broad operating temperature window from -45 °C to 140 °C.',
+    labels:[], weight:'50kg', material:'Industrial Steel', color:'Industrial', ean:'7059234003400',
+    imageUrls:[`${PIM_CDN}/c896d8b8-eb9e-4544-b7a1-dbb39131e3ff/QFJ9wzbfKQghkqdfMLkl51gBT/njenyERyIwGKdol8ev57QQxSi.webp?f=jpg&w=600`]
+  },
+  { sku:'3402', name:'OPTISONIC 3400 LT', category:'69ca30593c23aa9f3a1e1c9f',
+    pimId:'69ca26763c23aa9f3a1e1c6b', pimType:'VARIANT', parentSku:'OPT-3400',
+    price:9400, status:'active', brand:'OPTISONIC',
+    description:'The OPTISONIC 3400 LT is an ultrasonic flowmeter engineered for demanding low-temperature applications with a three-path measuring configuration. It is designed for nominal diameters from 25 mm up to 3000 mm, operating reliably between -200 °C and 40 °C at pressures up to 200 bar.',
+    labels:['lbl-premium'], weight:'50kg', material:'Industrial Steel', color:'Industrial', ean:'7059234003402',
+    imageUrls:[`${PIM_CDN}/c896d8b8-eb9e-4544-b7a1-dbb39131e3ff/QFJ9wzbfKQghkqdfMLkl51gBT/njenyERyIwGKdol8ev57QQxSi.webp?f=jpg&w=600`]
+  },
+  { sku:'3401', name:'OPTISONIC 3400 HV', category:'69ca30593c23aa9f3a1e1c9f',
+    pimId:'69ca26763c23aa9f3a1e1c6a', pimType:'VARIANT', parentSku:'OPT-3400',
+    price:8400, status:'active', brand:'OPTISONIC',
+    description:'The OPTISONIC 3400 HV is an ultrasonic flowmeter designed for high-pressure applications up to 200 bar and extreme process temperatures from -45 to 140 °C. With a 3-path configuration, it ensures stable and accurate flow measurement across a very wide nominal diameter range from 25 to 3000 mm.',
+    labels:[], weight:'50kg', material:'Industrial Steel', color:'Industrial', ean:'7059234003401',
+    imageUrls:[`${PIM_CDN}/c896d8b8-eb9e-4544-b7a1-dbb39131e3ff/QFJ9wzbfKQghkqdfMLkl51gBT/njenyERyIwGKdol8ev57QQxSi.webp?f=jpg&w=600`]
+  },
+  { sku:'3403', name:'OPTISONIC 3400 XXT', category:'69ca30593c23aa9f3a1e1c9f',
+    pimId:'69ca26763c23aa9f3a1e1c6c', pimType:'VARIANT', parentSku:'OPT-3400',
+    price:9900, status:'active', brand:'OPTISONIC',
+    description:'The OPTISONIC 3400 XXT is an ultrasonic flow solution engineered for demanding applications with high pressure and extreme temperature ranges. Designed for pipelines from 25 mm up to 3000 mm, it features a robust 3-path configuration for advanced measurement performance. Suitable for process conditions up to 200 bar and temperatures from -45 °C to 250 °C.',
+    labels:['lbl-premium'], weight:'50kg', material:'Industrial Steel', color:'Industrial', ean:'7059234003403',
+    imageUrls:[`${PIM_CDN}/c896d8b8-eb9e-4544-b7a1-dbb39131e3ff/QFJ9wzbfKQghkqdfMLkl51gBT/njenyERyIwGKdol8ev57QQxSi.webp?f=jpg&w=600`]
+  },
+
+  // === ALTOSONIC V12 (Custody transfer flowmeter, SINGLE — top-end) ===
+  { sku:'1200', name:'ALTOSONIC V12', category:'69ca30483c23aa9f3a1e1c9e',
+    pimId:'69ca26763c23aa9f3a1e1c6d', pimType:'SINGLE',
+    price:24500, status:'active', brand:'ALTOSONIC',
+    description:'ALTOSONIC V12 is designed for high-precision measurement applications with a 12-path configuration. It supports nominal diameters from 100 mm to 750 mm and operates reliably from -50 °C to 80 °C. The device is suitable for custody transfer applications and withstands pressures up to 152.2 bar.',
+    labels:['lbl-premium','lbl-best'], weight:'50kg', material:'Industrial Steel', color:'Industrial', ean:'7059234001200',
+    imageUrls:[`${PIM_CDN}/4b875e5c-a69b-4651-ac0e-ed2831ea5e98/b9c0mSpDPsYqcJCNG5WV100WT/YU1wdPfOmAmnBrk1TpwaH5Qr0.webp?f=jpg&w=600`]
+  }
 ];
 
-// Product photo URLs from Unsplash (real product photos on neutral backgrounds)
-const catImageUrls = {
-  'cat-phones': [
-    'https://images.unsplash.com/photo-1751699187649-efce189ff2c5?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1692521726889-02fda2c15454?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1573808092199-d471c3b83d7e?w=400&h=400&fit=crop'
-  ],
-  'cat-audio': [
-    'https://images.unsplash.com/photo-1722891067479-5fd39edbfc3d?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1677019758448-4c34a78df2c3?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1640643639986-c0bbc3634637?w=400&h=400&fit=crop'
-  ],
-  'cat-laptops': [
-    'https://images.unsplash.com/photo-1655226569940-b0ed83f6e268?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1527443195645-1133f7f28990?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1587716645570-e1715ad0a0a0?w=400&h=400&fit=crop'
-  ],
-  'cat-wear': [
-    'https://images.unsplash.com/photo-1593871978329-02621035b835?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1737731662588-729f42147158?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1651563688824-a853587bfb2c?w=400&h=400&fit=crop'
-  ],
-  'cat-shoes': [
-    'https://images.unsplash.com/photo-1605348532760-6753d2c43329?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1731132198530-e4b2dc51d511?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1637437757614-6491c8e915b5?w=400&h=400&fit=crop'
-  ],
-  'cat-jackets': [
-    'https://images.unsplash.com/photo-1746813627956-64cf760e3085?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1727519366940-fd9b926e362e?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1742151103404-fc8a4248f6b5?w=400&h=400&fit=crop'
-  ],
-  'cat-shirts': [
-    'https://images.unsplash.com/photo-1631479501467-a46d06c900fc?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1580598302731-b98fbf7191a5?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1654886778524-91a7e966e062?w=400&h=400&fit=crop'
-  ],
-  'cat-furniture': [
-    'https://images.unsplash.com/photo-1551459456-12c91f20a130?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1740154093925-ffb8e7ae526e?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1629642608911-119c25ef2e33?w=400&h=400&fit=crop'
-  ],
-  'cat-lighting': [
-    'https://images.unsplash.com/photo-1502743780242-f10d2ce370f3?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1639311206439-12b12b53e020?w=400&h=400&fit=crop'
-  ],
-  'cat-camping': [
-    'https://images.unsplash.com/photo-1763741958009-fcd40f6145ef?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1760716530071-95e9684e85ff?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1773658949444-8b250016919d?w=400&h=400&fit=crop'
-  ],
-  'cat-fitness': [
-    'https://images.unsplash.com/photo-1627257058769-0a99529e4312?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1722925541311-2117dfa21fe3?w=400&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1674834727206-4bc272bfd8da?w=400&h=400&fit=crop'
-  ]
-};
+// Category icons (emojis for sidebar / detail placeholders, keyed by real Bluestone PIM category IDs)
 const catImageIcons = {
-  'cat-phones':'📱','cat-audio':'🎧','cat-laptops':'💻','cat-wear':'⌚',
-  'cat-shoes':'👟','cat-jackets':'🧥','cat-shirts':'👕','cat-furniture':'🪑',
-  'cat-lighting':'💡','cat-camping':'⛺','cat-fitness':'🏋️'
+  '69970cf954b2bc35386c43ca': '👞', // Shoes
+  '699d421110e99d3efd404a2a': '🏃', // Running
+  '699d421554b2bc35386ce149': '🩴', // Sandals
+  '69fba64ecf44eb828e1558a0': '🥾', // Work Boots
+  '69bb943ba00183b24e6c79d4': '👗', // Fashion
+  '69bb92b0cfa347c3b57b1539': '💄', // Beauty
+  '69bb92bdcfa347c3b57b153a': '🧴', // Skincare
+  '69bb9425cfa347c3b57b153b': '🧖', // Facial
+  '69bb942da00183b24e6c79d3': '✨', // Serum
+  '69bb9437cfa347c3b57b153c': '🌸', // Fragrance
+  '69bb966ea00183b24e6c79d7': '🌷', // Eau De Toilette
+  '69970d0254b2bc35386c43cb': '🧦', // Socks
+  '69ae895dcfa347c3b5781216': '🧤', // Medical Gloves
+  '69ae896fa00183b24e698d97': '🩹', // Disposable
+  '69c22bd9f9025d5844a6b5e0': '⚙️', // Tubing Clamps
+  '69c22bf37b22ec3aa9240bc0': '🔧', // Support
+  '69c22bfaf9025d5844a6b5e2': '🪜', // Mekano Support System
+  '69c22c13f9025d5844a6b5e7': '⚡', // Cable Ladders
+  '69c22c2c7b22ec3aa9240bc4': '🪜', // OE Cable Ladder System
+  '69ca26763c23aa9f3a1e1c63': '🌊', // Flow measurement
+  '69ca2676413c770d2313927d': '📊', // Flowmeters
+  '69ca26763c23aa9f3a1e1c64': '🔊', // Ultrasonic flowmeters
+  '69ca30483c23aa9f3a1e1c9e': '〰️', // Altosonic flowmeters
+  '69ca30593c23aa9f3a1e1c9f': '📡', // Optisonic flowmeters
+  '69ca2712413c770d23139281': '📏'  // Level measurement
 };
 
-// Image count per product (active products get 2-4, drafts get 0-1)
-function seedImages(p, category) {
-  const count = p.status === 'active' ? (2 + Math.floor(Math.random() * 3)) : (Math.random() > 0.5 ? 1 : 0);
-  const urls = catImageUrls[category] || catImageUrls['cat-phones'];
-  const imgs = [];
-  for (let i = 0; i < count; i++) {
-    imgs.push({
-      id: 'img_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
-      url: urls[i % urls.length],
-      name: `${p.name}${i > 0 ? ' - View ' + (i+1) : ' - Main'}`.replace(/[^\w\s-]/g,'') + '.jpg',
-      primary: i === 0,
-      size: Math.round(200 + Math.random() * 800) + 'KB'
-    });
-  }
-  return imgs;
-}
-
+// Build product DB from real PIM data. Each product carries its own imageUrls; we wrap them as image asset objects.
 seedProducts.forEach((p, i) => {
   const id = 'prod_' + (i + 1).toString().padStart(3, '0');
   const created = new Date(Date.now() - Math.random() * 30 * 86400000).toISOString();
-  const images = seedImages(p, p.category);
+  const urls = p.imageUrls || [];
+  const ext = (u) => u.includes('.webp') ? 'webp' : (u.includes('.png') ? 'png' : 'jpg');
+  const images = urls.map((url, idx) => ({
+    id: 'img_' + (i + 1).toString().padStart(3, '0') + '_' + (idx + 1),
+    url,
+    name: `${p.sku}${idx > 0 ? '-view-' + (idx + 1) : '-main'}.${ext(url)}`,
+    primary: idx === 0,
+    size: Math.round(200 + Math.random() * 800) + 'KB'
+  }));
   DB.products.push({
     id, sku: p.sku, name: p.name, category: p.category, price: p.price,
     status: p.status, brand: p.brand || '', description: p.description || '',
     labels: p.labels || [], weight: p.weight || '', material: p.material || '',
     color: p.color || '', ean: p.ean || '', channels: p.channels || [],
+    pimId: p.pimId || '', pimType: p.pimType || 'SINGLE', parentSku: p.parentSku || '',
     images, created,
     updated: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString()
   });
-  // Seed some history
+  // Seed history — note the real provenance from Bluestone PIM
   DB.history[id] = [
-    { time: created, user: 'System', action: 'created', detail: 'Product created' },
-    { time: new Date(Date.now() - Math.random() * 14 * 86400000).toISOString(), user: 'Admin', action: 'update', detail: 'Updated price and description' }
+    { time: created, user: 'Bluestone PIM', action: 'created', detail: 'Synced from Bluestone PIM LABS' },
+    { time: new Date(Date.now() - Math.random() * 14 * 86400000).toISOString(), user: 'Admin', action: 'update', detail: 'Enriched marketing description' }
   ];
 });
 
-// Seed relationships (cross-sell, up-sell, related, accessory, outfit/bundle)
+// Seed relationships — modeled after real Bluestone PIM relationships where available, plus sensible
+// cross-sells/upsells inside variant families. Indices follow seedProducts order:
+//   001=Stride-X Runner (GROUP)  002=MB  003=Neon Lime  004=Slate Gray
+//   005=Brogue Cognac  006=Brogue Espresso  007=Brogue Onyx
+//   008=Cloud Slide Dusty Rose  009=Sage Green  010=Sand
+//   011=Cable ladder OE125 3m (GROUP)  012=59210 … 017=59215
+//   018=OPTISONIC 3400 (GROUP)  019=STANDARD  020=LT  021=HV  022=XXT
+//   023=ALTOSONIC V12 (SINGLE)
 DB.relationships = [
-  // Apple ecosystem — accessories & upsells
-  { from: 'prod_001', to: 'prod_004', type: 'accessory' },    // iPhone → AirPods Pro
-  { from: 'prod_001', to: 'prod_007', type: 'accessory' },    // iPhone → Apple Watch Ultra
-  { from: 'prod_001', to: 'prod_002', type: 'related' },      // iPhone → Galaxy S24 (alternative)
-  { from: 'prod_001', to: 'prod_005', type: 'cross-sell' },   // iPhone → MacBook Air
-  { from: 'prod_004', to: 'prod_001', type: 'accessory' },    // AirPods → iPhone
-  { from: 'prod_004', to: 'prod_005', type: 'cross-sell' },   // AirPods → MacBook Air
-  { from: 'prod_004', to: 'prod_003', type: 'related' },      // AirPods → Sony WH-1000XM5 (alternative)
-  { from: 'prod_005', to: 'prod_001', type: 'cross-sell' },   // MacBook → iPhone
-  { from: 'prod_005', to: 'prod_006', type: 'related' },      // MacBook Air → ThinkPad (alternative)
-  { from: 'prod_007', to: 'prod_001', type: 'accessory' },    // Apple Watch → iPhone
-  { from: 'prod_007', to: 'prod_022', type: 'cross-sell' },   // Apple Watch → Garmin Forerunner
+  // Stride-X family
+  { from: 'prod_001', to: 'prod_002', type: 'related' },
+  { from: 'prod_001', to: 'prod_003', type: 'related' },
+  { from: 'prod_001', to: 'prod_004', type: 'related' },
+  { from: 'prod_003', to: 'prod_004', type: 'related' },   // REAL PIM relationship
+  { from: 'prod_004', to: 'prod_003', type: 'related' },   // REAL PIM relationship
 
-  // Samsung ecosystem
-  { from: 'prod_002', to: 'prod_008', type: 'accessory' },    // Galaxy S24 → Galaxy Buds3
-  { from: 'prod_002', to: 'prod_001', type: 'related' },      // Galaxy S24 → iPhone (alternative)
-  { from: 'prod_008', to: 'prod_002', type: 'accessory' },    // Galaxy Buds → Galaxy S24
+  // Cross-sell: Stride-X (athletic) ↔ Heritage Brogue (formal alternative)
+  { from: 'prod_002', to: 'prod_005', type: 'cross-sell' },
+  { from: 'prod_004', to: 'prod_005', type: 'cross-sell' },
 
-  // Audio alternatives
-  { from: 'prod_003', to: 'prod_004', type: 'related' },      // Sony WH → AirPods (alternative)
-  { from: 'prod_003', to: 'prod_008', type: 'related' },      // Sony WH → Galaxy Buds (alternative)
+  // Heritage Brogue family
+  { from: 'prod_005', to: 'prod_006', type: 'related' },
+  { from: 'prod_005', to: 'prod_007', type: 'related' },
+  { from: 'prod_006', to: 'prod_007', type: 'related' },
 
-  // Outfit combos — Shoes + Jackets + Shirts
-  { from: 'prod_009', to: 'prod_013', type: 'outfit' },       // Nike Air Max → North Face Thermoball
-  { from: 'prod_009', to: 'prod_015', type: 'outfit' },       // Nike Air Max → Uniqlo Cotton Tee
-  { from: 'prod_010', to: 'prod_014', type: 'outfit' },       // Adidas Ultraboost → Patagonia Down Sweater
-  { from: 'prod_010', to: 'prod_016', type: 'outfit' },       // Adidas Ultraboost → Ralph Lauren Oxford
-  { from: 'prod_013', to: 'prod_009', type: 'outfit' },       // North Face → Nike Air Max
-  { from: 'prod_013', to: 'prod_015', type: 'outfit' },       // North Face → Uniqlo Cotton Tee
-  { from: 'prod_014', to: 'prod_024', type: 'outfit' },       // Patagonia → Dr. Martens 1460
-  { from: 'prod_014', to: 'prod_016', type: 'outfit' },       // Patagonia → Ralph Lauren Oxford
-  { from: 'prod_015', to: 'prod_011', type: 'outfit' },       // Uniqlo Tee → New Balance 574
-  { from: 'prod_015', to: 'prod_013', type: 'outfit' },       // Uniqlo Tee → North Face
-  { from: 'prod_024', to: 'prod_014', type: 'outfit' },       // Dr. Martens → Patagonia
-  { from: 'prod_024', to: 'prod_016', type: 'outfit' },       // Dr. Martens → Ralph Lauren Oxford
-  { from: 'prod_011', to: 'prod_015', type: 'outfit' },       // New Balance → Uniqlo Tee
-  { from: 'prod_011', to: 'prod_013', type: 'outfit' },       // New Balance → North Face
+  // Heritage Brogue ↔ Urban Cloud Slide (formal ↔ casual)
+  { from: 'prod_005', to: 'prod_008', type: 'cross-sell' },
+  { from: 'prod_006', to: 'prod_009', type: 'cross-sell' },
+  { from: 'prod_007', to: 'prod_010', type: 'cross-sell' },
 
-  // Running / Fitness bundle
-  { from: 'prod_012', to: 'prod_022', type: 'cross-sell' },   // Salomon Speedcross → Garmin Forerunner
-  { from: 'prod_012', to: 'prod_020', type: 'cross-sell' },   // Salomon Speedcross → Thule Capstone
-  { from: 'prod_022', to: 'prod_012', type: 'cross-sell' },   // Garmin → Salomon
-  { from: 'prod_022', to: 'prod_023', type: 'related' },      // Garmin → Theragun (recovery)
-  { from: 'prod_023', to: 'prod_022', type: 'related' },      // Theragun → Garmin
+  // Urban Cloud Slide family
+  { from: 'prod_008', to: 'prod_009', type: 'related' },
+  { from: 'prod_008', to: 'prod_010', type: 'related' },
+  { from: 'prod_009', to: 'prod_010', type: 'related' },
 
-  // Camping bundle
-  { from: 'prod_020', to: 'prod_021', type: 'related' },      // Thule backpack → Fjallraven tent
-  { from: 'prod_021', to: 'prod_020', type: 'related' },      // Fjallraven tent → Thule backpack
-  { from: 'prod_021', to: 'prod_013', type: 'cross-sell' },   // Fjallraven tent → North Face jacket
+  // Cable ladder GROUP → all six width variants
+  { from: 'prod_011', to: 'prod_012', type: 'related' },
+  { from: 'prod_011', to: 'prod_013', type: 'related' },
+  { from: 'prod_011', to: 'prod_014', type: 'related' },
+  { from: 'prod_011', to: 'prod_015', type: 'related' },
+  { from: 'prod_011', to: 'prod_016', type: 'related' },
+  { from: 'prod_011', to: 'prod_017', type: 'related' },
 
-  // Home & Living
-  { from: 'prod_017', to: 'prod_019', type: 'related' },      // IKEA Kallax → Muuto E27
-  { from: 'prod_018', to: 'prod_019', type: 'related' },      // HAY Chair → Muuto E27
-  { from: 'prod_019', to: 'prod_018', type: 'related' },      // Muuto E27 → HAY Chair
+  // Cable ladder upsells: smaller width → next larger (common quote-stepping pattern)
+  { from: 'prod_012', to: 'prod_013', type: 'upsell' },
+  { from: 'prod_013', to: 'prod_014', type: 'upsell' },
+  { from: 'prod_014', to: 'prod_015', type: 'upsell' },
+  { from: 'prod_015', to: 'prod_016', type: 'upsell' },
+  { from: 'prod_016', to: 'prod_017', type: 'upsell' },
 
-  // Upsells
-  { from: 'prod_011', to: 'prod_010', type: 'upsell' },       // New Balance 574 ($89) → Adidas Ultraboost ($189)
-  { from: 'prod_009', to: 'prod_012', type: 'upsell' },       // Nike Air Max ($129) → Salomon Speedcross ($139)
-  { from: 'prod_006', to: 'prod_005', type: 'related' },      // ThinkPad → MacBook (alternative)
-  { from: 'prod_022', to: 'prod_007', type: 'accessory' },
-  { from: 'prod_020', to: 'prod_021', type: 'related' }
+  // OPTISONIC 3400 family
+  { from: 'prod_018', to: 'prod_019', type: 'related' },
+  { from: 'prod_018', to: 'prod_020', type: 'related' },
+  { from: 'prod_018', to: 'prod_021', type: 'related' },
+  { from: 'prod_018', to: 'prod_022', type: 'related' },
+  { from: 'prod_019', to: 'prod_020', type: 'related' },
+  { from: 'prod_019', to: 'prod_021', type: 'upsell' },   // STANDARD → HV (high-pressure variant)
+  { from: 'prod_019', to: 'prod_022', type: 'upsell' },   // STANDARD → XXT (extreme-temp variant)
+
+  // OPTISONIC ↔ ALTOSONIC V12 — REAL PIM relationships (custody-transfer upgrade path)
+  { from: 'prod_019', to: 'prod_023', type: 'upsell' },   // STANDARD → ALTOSONIC V12 (REAL)
+  { from: 'prod_021', to: 'prod_023', type: 'upsell' },   // HV → ALTOSONIC V12 (REAL)
+  { from: 'prod_023', to: 'prod_019', type: 'cross-sell' },// ALTOSONIC → STANDARD (alternative if no custody transfer)
+  { from: 'prod_023', to: 'prod_021', type: 'related' }
 ];
 
 // ============ UTILITIES ============
@@ -1004,25 +1115,40 @@ function showToast(msg, duration=3000) {
   setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 300); }, duration);
 }
 
-// AI enrichment suggestions (simulated)
+// AI enrichment suggestions (simulated). Real Bluestone PIM category IDs as keys.
 function generateEnrichment(product) {
   const suggestions = {};
   if (!product.description) {
     const descs = {
-      'cat-phones': `Premium smartphone from ${product.brand} featuring cutting-edge technology, stunning display, and all-day battery life. Designed for performance and style.`,
-      'cat-audio': `High-fidelity audio device from ${product.brand} delivering immersive sound quality with premium build and comfortable design for extended listening.`,
-      'cat-laptops': `Powerful laptop from ${product.brand} built for productivity and creativity. Features fast processing, brilliant display, and all-day battery life.`,
-      'cat-shoes': `${product.brand} footwear combining style and comfort with durable construction and modern design. Perfect for everyday wear.`,
-      'cat-jackets': `${product.brand} jacket offering superior warmth and protection with a modern silhouette and sustainable materials.`,
-      'cat-furniture': `Thoughtfully designed ${product.brand} piece combining Scandinavian aesthetics with everyday functionality.`,
-      'cat-fitness': `Advanced fitness device from ${product.brand} with precise tracking, smart features, and durable build for active lifestyles.`,
-      'cat-camping': `${product.brand} outdoor gear engineered for reliability in any conditions. Lightweight yet durable for serious adventurers.`,
+      '69970cf954b2bc35386c43ca': `${product.brand} footwear combining heritage craftsmanship and modern comfort. Built for everyday wear with durable construction and timeless design.`,
+      '699d421110e99d3efd404a2a': `${product.brand} performance running shoe engineered for high-impact training. Breathable, lightweight, and built to support marathon distances.`,
+      '699d421554b2bc35386ce149': `${product.brand} casual slide with injection-molded EVA foam for all-day comfort. Lightweight, water-friendly, and easy to slip on for leisure and recovery.`,
+      '69fba64ecf44eb828e1558a0': `${product.brand} work boot built for tough environments. Reinforced safety construction, durable leather upper, and grippy outsole for demanding job sites.`,
+      '69bb92b0cfa347c3b57b1539': `${product.brand} beauty product formulated with carefully selected ingredients. Gentle, effective, and crafted to fit into a refined daily routine.`,
+      '69c22c2c7b22ec3aa9240bc4': `Heavy load ${product.brand} cable ladder designed to fit many purposes. Rungs with lateral slots prepared for UNO nuts for fixing equipment.`,
+      '69ca30593c23aa9f3a1e1c9f': `${product.brand} ultrasonic flow solution for demanding process conditions. Wide nominal diameter range and robust multi-path configuration deliver stable, repeatable measurements.`,
+      '69ca30483c23aa9f3a1e1c9e': `${product.brand} high-precision multi-path flow meter engineered for custody transfer applications and demanding industrial processes.`
     };
     suggestions.description = descs[product.category] || `Quality product from ${product.brand} designed to meet the highest standards of performance and durability.`;
   }
-  if (!product.weight) suggestions.weight = pick(['180g','250g','350g','450g','1.2kg','2.1kg']);
+  if (!product.weight) {
+    const wts = {
+      '699d421110e99d3efd404a2a': '330g', '699d421554b2bc35386ce149': '230g',
+      '69970cf954b2bc35386c43ca': '420g', '69fba64ecf44eb828e1558a0': '620g',
+      '69c22c2c7b22ec3aa9240bc4': '13kg', '69ca30593c23aa9f3a1e1c9f': '50kg', '69ca30483c23aa9f3a1e1c9e': '50kg'
+    };
+    suggestions.weight = wts[product.category] || pick(['180g','250g','350g','450g','1.2kg']);
+  }
   if (!product.material) {
-    const mats = { 'cat-shoes':'Mesh/Synthetic','cat-jackets':'Recycled Polyester','cat-shirts':'Cotton','cat-furniture':'Oak/Steel','cat-audio':'Aluminium/Leather' };
+    const mats = {
+      '699d421110e99d3efd404a2a': 'Breathable Engineered Mesh',
+      '699d421554b2bc35386ce149': 'Injection-Molded EVA Foam',
+      '69970cf954b2bc35386c43ca': 'Full-Grain Bovine Leather',
+      '69fba64ecf44eb828e1558a0': 'Nubuck Leather / Rubber',
+      '69c22c2c7b22ec3aa9240bc4': 'Stainless Steel',
+      '69ca30593c23aa9f3a1e1c9f': 'Industrial Steel',
+      '69ca30483c23aa9f3a1e1c9e': 'Industrial Steel'
+    };
     suggestions.material = mats[product.category] || 'Mixed materials';
   }
   if (!product.ean) suggestions.ean = Array.from({length:13}, ()=>Math.floor(Math.random()*10)).join('');
@@ -1669,18 +1795,23 @@ function parseSmartQuery(n, raw) {
       break; // one category at a time
     }
   }
-  // Also check singular/plural variants
+  // Also check singular/plural variants — mapped to real Bluestone PIM category IDs
   const catSingularPlural = {
-    'shoe': 'cat-shoes', 'shoes': 'cat-shoes', 'jacket': 'cat-jackets', 'jackets': 'cat-jackets',
-    'shirt': 'cat-shirts', 'shirts': 'cat-shirts', 'phone': 'cat-phones', 'phones': 'cat-phones',
-    'smartphone': 'cat-phones', 'smartphones': 'cat-phones', 'laptop': 'cat-laptops', 'laptops': 'cat-laptops',
-    'headphone': 'cat-audio', 'headphones': 'cat-audio', 'speaker': 'cat-audio', 'speakers': 'cat-audio',
-    'watch': 'cat-wear', 'watches': 'cat-wear', 'wearable': 'cat-wear', 'wearables': 'cat-wear',
-    'tent': 'cat-camping', 'tents': 'cat-camping', 'lamp': 'cat-lighting', 'lamps': 'cat-lighting',
-    'light': 'cat-lighting', 'lights': 'cat-lighting', 'chair': 'cat-furniture', 'chairs': 'cat-furniture',
-    'furniture': 'cat-furniture', 'shelf': 'cat-furniture', 'shelves': 'cat-furniture',
-    'sport': 'cat-sports', 'sports': 'cat-sports', 'outdoor': 'cat-sports', 'fitness': 'cat-fitness',
-    'gym': 'cat-fitness', 'exercise': 'cat-fitness', 'camping': 'cat-camping'
+    'shoe': '69970cf954b2bc35386c43ca', 'shoes': '69970cf954b2bc35386c43ca',
+    'runner': '699d421110e99d3efd404a2a', 'runners': '699d421110e99d3efd404a2a',
+    'running': '699d421110e99d3efd404a2a', 'sneaker': '699d421110e99d3efd404a2a', 'sneakers': '699d421110e99d3efd404a2a',
+    'sandal': '699d421554b2bc35386ce149', 'sandals': '699d421554b2bc35386ce149', 'slide': '699d421554b2bc35386ce149', 'slides': '699d421554b2bc35386ce149',
+    'boot': '69fba64ecf44eb828e1558a0', 'boots': '69fba64ecf44eb828e1558a0', 'brogue': '69970cf954b2bc35386c43ca', 'brogues': '69970cf954b2bc35386c43ca',
+    'sock': '69970d0254b2bc35386c43cb', 'socks': '69970d0254b2bc35386c43cb',
+    'glove': '69ae895dcfa347c3b5781216', 'gloves': '69ae895dcfa347c3b5781216',
+    'serum': '69bb942da00183b24e6c79d3', 'skincare': '69bb92bdcfa347c3b57b153a', 'beauty': '69bb92b0cfa347c3b57b1539',
+    'fragrance': '69bb9437cfa347c3b57b153c', 'perfume': '69bb9437cfa347c3b57b153c',
+    'cable': '69c22c2c7b22ec3aa9240bc4', 'ladder': '69c22c2c7b22ec3aa9240bc4', 'ladders': '69c22c13f9025d5844a6b5e7',
+    'clamp': '69c22bd9f9025d5844a6b5e0', 'clamps': '69c22bd9f9025d5844a6b5e0',
+    'flowmeter': '69ca2676413c770d2313927d', 'flowmeters': '69ca2676413c770d2313927d',
+    'flow': '69ca26763c23aa9f3a1e1c63', 'ultrasonic': '69ca26763c23aa9f3a1e1c64',
+    'optisonic': '69ca30593c23aa9f3a1e1c9f', 'altosonic': '69ca30483c23aa9f3a1e1c9e',
+    'level': '69ca2712413c770d23139281'
   };
   if (!filters.some(f => f.type === 'category')) {
     for (const [word, catId] of Object.entries(catSingularPlural)) {
@@ -2292,7 +2423,7 @@ function execShowAll() {
   convo.lastProducts = DB.products;
   addSystem(
     `<p>${pick(["Here's your full catalog:","Here are all your products:","Showing everything — ${DB.products.length} products:"])}</p>${productTableHtml(DB.products, 'All Products')}
-    <p style="margin-top:8px;font-size:12px;color:var(--muted)">💡 Click any product for details, or filter by saying "show draft products" or "show products in Electronics"</p>`,
+    <p style="margin-top:8px;font-size:12px;color:var(--muted)">💡 Click any product for details, or filter by saying "show draft products" or "show running shoes"</p>`,
     ['Show draft products', 'Data quality report', 'What should I work on next?', 'Find duplicates']
   );
 }
@@ -2321,7 +2452,7 @@ function execShowCategory(category) {
   if (!cat) {
     addSystem(`<p>I couldn't find a category matching "<strong>${esc(category)}</strong>". Available categories:</p>
     <ul style="margin:8px 0 8px 16px;font-size:13px;color:var(--muted)">${DB.categories.map(c => `<li>${esc(c.name)}</li>`).join('')}</ul>`,
-    ['Show products in Electronics', 'Show products in Shoes', 'Show products in Jackets']);
+    ['Show products in Running', 'Show products in Cable Ladders', 'Show products in Flowmeters']);
     return;
   }
   const products = productsInCat(cat.id);
@@ -2357,7 +2488,7 @@ function execSearch(query) {
   if (results.length === 0) {
     addSystem(
       `<p>${pick(["Hmm, nothing came up for","No results for","I couldn't find anything matching"])} "<strong>${esc(query)}</strong>". ${pick(["Try a different term?","Want to browse by category instead?","Let me know if you want to try something else."])}</p>`,
-      ['Show all products', 'Show products in Electronics', 'Show products in Shoes', 'Help']
+      ['Show all products', 'Show products in Shoes', 'Show products in Flowmeters', 'Help']
     );
     return;
   }
@@ -4172,8 +4303,8 @@ function executeImport() {
   valid.forEach(item => {
     const existingIdx = DB.products.findIndex(p => p.sku.toLowerCase() === (item.sku || '').toLowerCase());
 
-    // Resolve category
-    let catId = 'cat-elec'; // default
+    // Resolve category — default to first top-level real Bluestone PIM category
+    let catId = (DB.categories.find(c => !c.parent) || DB.categories[0]).id;
     if (item.category) {
       const found = DB.categories.find(c => c.name.toLowerCase().includes(item.category.toLowerCase()));
       if (found) catId = found.id;
@@ -4287,7 +4418,7 @@ function execImport() {
 function execDownloadTemplate() {
   const headers = ['SKU','Product Name','Brand','Price','Description','Category','Status','Weight','Material','Color','EAN'];
   const sample = [
-    ['SAMPLE-001','Example Product','Brand Name','29.99','A great product description','Electronics','draft','0.5','Aluminum','Black','1234567890123'],
+    ['SAMPLE-001','Example Product','Brand Name','29.99','A great product description','Running','draft','0.5','Mesh','Black','1234567890123'],
     ['SAMPLE-002','Another Product','Other Brand','49.99','Another description','Clothing','active','0.3','Cotton','Blue','9876543210987']
   ];
   const csv = [headers, ...sample].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
