@@ -65,11 +65,17 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
 .sidebar-section{padding:12px}
 .sidebar-title{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .sidebar-scroll{flex:1;overflow-y:auto;padding:4px 0}
-.cat-item{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);transition:all 0.15s}
+.cat-item{display:flex;align-items:center;gap:4px;padding:6px 8px 6px 4px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);transition:background 0.15s;user-select:none}
 .cat-item:hover{background:rgba(255,255,255,0.05)}
 .cat-item.active{background:rgba(61,116,244,0.15);color:var(--blue)}
 .cat-item .cnt{margin-left:auto;font-size:11px;color:var(--muted);font-weight:600}
-.cat-item .indent{width:16px;flex-shrink:0}
+.cat-item .indent{width:14px;flex-shrink:0}
+.cat-item .caret{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);border-radius:4px;transition:transform 0.15s,background 0.15s}
+.cat-item .caret:hover{background:rgba(255,255,255,0.08);color:var(--white)}
+.cat-item .caret.open{transform:rotate(90deg)}
+.cat-item .caret.empty{visibility:hidden;pointer-events:none}
+.cat-item .caret svg{width:10px;height:10px}
+.cat-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .label-item{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s}
 .label-item:hover{background:rgba(255,255,255,0.05)}
@@ -1075,6 +1081,16 @@ function formatAttrValue(p, attr) {
 
 function catName(catId) { const c = DB.categories.find(c => c.id === catId); return c ? c.name : 'Uncategorized'; }
 function catChildren(parentId) { return DB.categories.filter(c => c.parent === parentId); }
+
+// Sidebar tree expand/collapse — defaults to all collapsed, persisted to localStorage
+const expandedCats = new Set((() => {
+  try { return JSON.parse(localStorage.getItem('aiPimExpandedCats') || '[]'); } catch (e) { return []; }
+})());
+function toggleCat(catId) {
+  if (expandedCats.has(catId)) expandedCats.delete(catId); else expandedCats.add(catId);
+  try { localStorage.setItem('aiPimExpandedCats', JSON.stringify([...expandedCats])); } catch (e) {}
+  renderSidebar();
+}
 function catDescendants(catId) {
   let ids = [catId];
   catChildren(catId).forEach(c => ids.push(...catDescendants(c.id)));
@@ -1185,15 +1201,22 @@ function updateStats() {
 }
 
 function renderSidebar() {
-  // Categories
+  // Categories — collapsible tree. Caret toggles expand/collapse, name click filters.
   let catHtml = '';
+  const caretSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
   function renderCat(parentId, depth) {
     const cats = catChildren(parentId);
     cats.forEach(c => {
       const count = productsInCat(c.id).length;
       const indent = depth > 0 ? `<span class="indent"></span>`.repeat(depth) : '';
-      catHtml += `<div class="cat-item" onclick="handleCatClick('${c.id}')">${indent}${esc(c.name)}<span class="cnt">${count}</span></div>`;
-      renderCat(c.id, depth + 1);
+      const kids = catChildren(c.id);
+      const hasKids = kids.length > 0;
+      const open = expandedCats.has(c.id);
+      const caret = hasKids
+        ? `<span class="caret${open ? ' open' : ''}" onclick="event.stopPropagation();toggleCat('${c.id}')">${caretSvg}</span>`
+        : `<span class="caret empty"></span>`;
+      catHtml += `<div class="cat-item" onclick="handleCatClick('${c.id}')">${indent}${caret}<span class="cat-name">${esc(c.name)}</span><span class="cnt">${count}</span></div>`;
+      if (hasKids && open) renderCat(c.id, depth + 1);
     });
   }
   renderCat(null, 0);
