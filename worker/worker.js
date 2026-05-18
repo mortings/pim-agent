@@ -1,15 +1,16 @@
-// PIM Agent Proxy — thin Cloudflare Worker that bridges the static demo at
-// https://mortings.github.io/pim-agent/ to a deployed Bluestone PIM MCP server.
+// PIM Agent Proxy — Cloudflare Worker that bridges the static demo at
+// https://mortings.github.io/pim-agent/ to the Bluestone MCP server.
 //
 // Env (set as Worker secrets via `wrangler secret put ...`):
-//   MCP_URL          — HTTPS URL of the MCP server (streamable HTTP transport)
-//   MCP_AUTH_HEADER  — optional, "HeaderName:HeaderValue" sent to the MCP server
-//                      e.g. "Authorization:Bearer eyJhbGciOi..."
-//   SHARED_SECRET    — passphrase the demo must send in X-Demo-Secret
+//   MCP_URL                       — HTTPS URL of the MCP server (e.g. https://bluestone-mcp-unofficial.vercel.app/mcp)
+//   SHARED_SECRET                 — passphrase the demo must send in X-Demo-Secret
+//   BLUESTONE_PAPI_KEY            — Bluestone PIM PAPI key
+//   BLUESTONE_MAPI_CLIENT_ID      — Bluestone MAPI client id
+//   BLUESTONE_MAPI_CLIENT_SECRET  — Bluestone MAPI client secret
 //
 // Routes:
-//   POST /api/create-product   { name, number?, categoryId? }
 //   GET  /api/health           sanity check (no auth)
+//   POST /api/create-product   { name, number?, categoryId? }
 
 const ALLOWED_ORIGINS = [
   'https://mortings.github.io',
@@ -36,7 +37,12 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/api/health') {
-      return json({ ok: true, mcpConfigured: !!env.MCP_URL, authConfigured: !!env.SHARED_SECRET }, 200, cors);
+      return json({
+        ok: true,
+        mcpConfigured: !!env.MCP_URL,
+        authConfigured: !!env.SHARED_SECRET,
+        bluestoneConfigured: !!(env.BLUESTONE_PAPI_KEY && env.BLUESTONE_MAPI_CLIENT_ID && env.BLUESTONE_MAPI_CLIENT_SECRET)
+      }, 200, cors);
     }
 
     if (url.pathname !== '/api/create-product') {
@@ -47,30 +53,27 @@ export default {
       return json({ error: 'Method not allowed' }, 405, cors);
     }
 
-    // Auth gate
-    const providedSecret = request.headers.get('X-Demo-Secret') || '';
     if (!env.SHARED_SECRET) {
       return json({ error: 'Worker is missing SHARED_SECRET. Run `wrangler secret put SHARED_SECRET`.' }, 500, cors);
     }
-    if (!constantTimeEqual(providedSecret, env.SHARED_SECRET)) {
+    if (!constantTimeEqual(request.headers.get('X-Demo-Secret') || '', env.SHARED_SECRET)) {
       return json({ error: 'Unauthorized' }, 401, cors);
     }
 
     if (!env.MCP_URL) {
       return json({ error: 'Worker is missing MCP_URL. Run `wrangler secret put MCP_URL`.' }, 500, cors);
     }
+    if (!env.BLUESTONE_PAPI_KEY || !env.BLUESTONE_MAPI_CLIENT_ID || !env.BLUESTONE_MAPI_CLIENT_SECRET) {
+      return json({ error: 'Worker is missing Bluestone credentials. Run `wrangler secret put BLUESTONE_PAPI_KEY`, then BLUESTONE_MAPI_CLIENT_ID, then BLUESTONE_MAPI_CLIENT_SECRET.' }, 500, cors);
+    }
 
     let body;
-    try {
-      body = await request.json();
-    } catch (e) {
-      return json({ error: 'Invalid JSON body' }, 400, cors);
-    }
+    try { body = await request.json(); }
+    catch (e) { return json({ error: 'Invalid JSON body' }, 400, cors); }
 
     const name = (body.name || '').trim();
     const number = (body.number || '').trim() || undefined;
     const categoryId = (body.categoryId || '').trim() || undefined;
-
     if (!name) return json({ error: 'name is required' }, 400, cors);
 
     try {
@@ -101,14 +104,11 @@ function constantTimeEqual(a, b) {
 async function callMcpTool(env, toolName, args) {
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json, text/event-stream'
+    'Accept': 'application/json, text/event-stream',
+    'x-papi-key': env.BLUESTONE_PAPI_KEY,
+    'x-mapi-client-id': env.BLUESTONE_MAPI_CLIENT_ID,
+    'x-mapi-client-secret': env.BLUESTONE_MAPI_CLIENT_SECRET
   };
-  if (env.MCP_AUTH_HEADER) {
-    const colon = env.MCP_AUTH_HEADER.indexOf(':');
-    if (colon > 0) {
-      headers[env.MCP_AUTH_HEADER.slice(0, colon).trim()] = env.MCP_AUTH_HEADER.slice(colon + 1).trim();
-    }
-  }
 
   const requestBody = {
     jsonrpc: '2.0',
@@ -130,11 +130,7 @@ async function callMcpTool(env, toolName, args) {
 
   const ct = (res.headers.get('Content-Type') || '').toLowerCase();
   const rpc = ct.includes('text/event-stream') ? await readSseUntilResult(res) : await res.json();
-
-  if (rpc.error) {
-    const msg = rpc.error.message || JSON.stringify(rpc.error);
-    throw new Error(`MCP error: ${msg}`);
-  }
+  if (rpc.error) throw new Error(`MCP error: ${rpc.error.message || JSON.stringify(rpc.error)}`);
   return rpc.result;
 }
 
@@ -150,18 +146,15 @@ async function readSseUntilResult(res) {
     while ((idx = buf.indexOf('\n\n')) >= 0) {
       const event = buf.slice(0, idx);
       buf = buf.slice(idx + 2);
-      const lines = event.split('\n');
       let data = '';
-      for (const line of lines) {
+      for (const line of event.split('\n')) {
         if (line.startsWith('data:')) data += line.slice(5).trim();
       }
       if (!data) continue;
       try {
-        const json = JSON.parse(data);
-        if (json.jsonrpc && (json.result !== undefined || json.error !== undefined)) return json;
-      } catch (e) {
-        // not JSON yet, keep buffering
-      }
+        const j = JSON.parse(data);
+        if (j.jsonrpc && (j.result !== undefined || j.error !== undefined)) return j;
+      } catch (e) { /* keep buffering */ }
     }
   }
   throw new Error('MCP SSE stream ended without a JSON-RPC response');

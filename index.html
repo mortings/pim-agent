@@ -3049,15 +3049,17 @@ window.saveNewProduct = async function() {
   if (backendConfigured()) {
     if (btn) { btn.disabled = true; btn.textContent = 'Creating in Bluestone PIM…'; }
     try {
-      const result = await callMcpDirect('create_product', {
-        name,
-        number: skuRaw || undefined,
-        categoryId: categoryId || undefined
+      const res = await fetch(appSettings.workerUrl + '/api/create-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Demo-Secret': appSettings.workerSecret },
+        body: JSON.stringify({ name, number: skuRaw || undefined, categoryId: categoryId || undefined })
       });
-      // The PIM connector returns content as a structured object. Pull the
-      // PIM product id (24-hex ObjectId) and product number from the text
-      // payload — both shapes appear depending on the tool's response.
-      const text = extractMcpText(result);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || ('HTTP ' + res.status));
+      }
+      // Pull PIM product id + number out of the connector's text payload.
+      const text = extractMcpText(data.result);
       const idMatch = text.match(/\b([0-9a-f]{24})\b/i);
       pimId = idMatch ? idMatch[1] : '';
       const numMatch = text.match(/number[^A-Za-z0-9]+([A-Za-z0-9\-_.]+)/i);
@@ -3065,11 +3067,7 @@ window.saveNewProduct = async function() {
       createdVia = 'pim';
     } catch (e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Create in Bluestone PIM'; }
-      let msg = e.message;
-      if (/failed to fetch|networkerror|cors/i.test(msg)) {
-        msg += '\n\nLikely cause: your MCP server is not sending CORS headers for https://mortings.github.io. Add Access-Control-Allow-Origin: https://mortings.github.io (or *) to its responses.';
-      }
-      alert('Failed to create in Bluestone PIM:\n\n' + msg + '\n\nThe product was NOT created.');
+      alert('Failed to create in Bluestone PIM:\n\n' + e.message + '\n\nThe product was NOT created. Check Settings → Backend → Test.');
       return;
     }
   }
@@ -4655,85 +4653,44 @@ const appSettings = {
   showQualityInGrid: localStorage.getItem('pim-showQ') !== 'false',
   defaultView: localStorage.getItem('pim-defaultView') || 'chat',
   animationsEnabled: localStorage.getItem('pim-animations') !== 'false',
-  mcpUrl: localStorage.getItem('pim-mcpUrl') || '',
-  mcpAuthHeader: localStorage.getItem('pim-mcpAuthHeader') || ''
+  workerUrl: localStorage.getItem('pim-workerUrl') || '',
+  workerSecret: localStorage.getItem('pim-workerSecret') || ''
 };
-function backendConfigured() { return !!appSettings.mcpUrl; }
+function backendConfigured() { return !!(appSettings.workerUrl && appSettings.workerSecret); }
 function saveBackendConfig() {
-  const u = document.getElementById('mcp-url'); const a = document.getElementById('mcp-auth');
-  if (!u) return;
-  appSettings.mcpUrl = u.value.trim().replace(/\/+$/, '');
-  appSettings.mcpAuthHeader = (a && a.value.trim()) || '';
-  localStorage.setItem('pim-mcpUrl', appSettings.mcpUrl);
-  localStorage.setItem('pim-mcpAuthHeader', appSettings.mcpAuthHeader);
-  showToast('✓ MCP settings saved', 'var(--green)');
+  const u = document.getElementById('worker-url'); const s = document.getElementById('worker-secret');
+  if (!u || !s) return;
+  appSettings.workerUrl = u.value.trim().replace(/\/+$/, '');
+  appSettings.workerSecret = s.value.trim();
+  localStorage.setItem('pim-workerUrl', appSettings.workerUrl);
+  localStorage.setItem('pim-workerSecret', appSettings.workerSecret);
+  showToast('✓ Backend settings saved', 'var(--green)');
   openSettings(); // re-render status
-}
-
-// Browser-side MCP client. Calls the streamable-HTTP transport directly —
-// no proxy. Handles both JSON and text/event-stream responses.
-async function callMcpDirect(toolName, args) {
-  if (!appSettings.mcpUrl) throw new Error('MCP URL is not configured (open Settings → Backend).');
-  const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
-  if (appSettings.mcpAuthHeader) {
-    const colon = appSettings.mcpAuthHeader.indexOf(':');
-    if (colon > 0) {
-      headers[appSettings.mcpAuthHeader.slice(0, colon).trim()] = appSettings.mcpAuthHeader.slice(colon + 1).trim();
-    }
-  }
-  const body = { jsonrpc: '2.0', id: Date.now(), method: 'tools/call', params: { name: toolName, arguments: args } };
-  const res = await fetch(appSettings.mcpUrl, { method: 'POST', headers, body: JSON.stringify(body) });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error('MCP returned ' + res.status + (text ? ': ' + text.slice(0, 300) : ''));
-  }
-  const ct = (res.headers.get('Content-Type') || '').toLowerCase();
-  const rpc = ct.includes('text/event-stream') ? await readMcpSse(res) : await res.json();
-  if (rpc.error) throw new Error('MCP error: ' + (rpc.error.message || JSON.stringify(rpc.error)));
-  return rpc.result;
-}
-async function readMcpSse(res) {
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    let idx;
-    while ((idx = buf.indexOf('\n\n')) >= 0) {
-      const event = buf.slice(0, idx); buf = buf.slice(idx + 2);
-      let data = '';
-      for (const line of event.split('\n')) {
-        if (line.startsWith('data:')) data += line.slice(5).trim();
-      }
-      if (!data) continue;
-      try {
-        const j = JSON.parse(data);
-        if (j.jsonrpc && (j.result !== undefined || j.error !== undefined)) return j;
-      } catch (e) { /* keep buffering */ }
-    }
-  }
-  throw new Error('MCP SSE stream ended without a JSON-RPC response');
 }
 
 async function testBackendConnection() {
   const statusEl = document.getElementById('backend-status');
-  if (!appSettings.mcpUrl) return;
-  if (statusEl) { statusEl.className = 'settings-status off'; statusEl.innerHTML = '<span class="dot"></span>Calling list_contexts…'; }
+  if (!appSettings.workerUrl) return;
+  if (statusEl) { statusEl.className = 'settings-status off'; statusEl.innerHTML = '<span class="dot"></span>Checking Worker…'; }
   try {
-    const result = await callMcpDirect('list_contexts', {});
-    const text = extractMcpText(result);
+    const res = await fetch(appSettings.workerUrl + '/api/health', { method: 'GET' });
+    const j = await res.json();
+    if (!res.ok || !j.ok) throw new Error(j.error || ('HTTP ' + res.status));
     if (statusEl) {
-      statusEl.className = 'settings-status ok';
-      statusEl.innerHTML = '<span class="dot"></span>Connected — MCP responded (' + (text.match(/Found (\d+)/)?.[1] || '?') + ' contexts)';
+      const allGreen = j.mcpConfigured && j.authConfigured && j.bluestoneConfigured;
+      statusEl.className = 'settings-status ' + (allGreen ? 'ok' : 'err');
+      const parts = [];
+      parts.push((j.mcpConfigured ? '✓' : '✗') + ' MCP_URL');
+      parts.push((j.authConfigured ? '✓' : '✗') + ' SHARED_SECRET');
+      parts.push((j.bluestoneConfigured ? '✓' : '✗') + ' Bluestone creds');
+      statusEl.innerHTML = '<span class="dot"></span>Worker reachable — ' + parts.join(', ');
     }
   } catch (e) {
     if (statusEl) {
       statusEl.className = 'settings-status err';
       let hint = esc(e.message);
       if (/failed to fetch|networkerror|cors/i.test(e.message)) {
-        hint += ' — most likely CORS: your MCP server must return Access-Control-Allow-Origin: https://mortings.github.io (or *).';
+        hint += ' — is the Worker URL correct and deployed?';
       }
       statusEl.innerHTML = '<span class="dot"></span>' + hint;
     }
@@ -4825,18 +4782,16 @@ function openSettings() {
     <div class="settings-group">
       <div class="settings-group-title">Backend (Bluestone PIM MCP)</div>
       <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">
-        Paste your MCP server's HTTPS URL. The demo will call it directly using the JSON-RPC streamable-HTTP transport.
-        Your MCP server must allow CORS from <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px">https://mortings.github.io</code> (or <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px">*</code>).
-        Anything you paste is stored in this browser's localStorage and is visible in DevTools — scope your token accordingly.
+        Paste your Cloudflare Worker URL and the passphrase you set with <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px">wrangler secret put SHARED_SECRET</code>.
+        Bluestone credentials live on the Worker as secrets; this page never sees them. See <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px">worker/README.md</code> in the repo for deploy steps.
       </p>
       <div class="settings-row" style="display:block">
-        <div class="lbl" style="margin-bottom:6px">MCP Server URL</div>
-        <input type="text" id="mcp-url" class="settings-input" placeholder="https://your-mcp-server.example.com/mcp" value="${esc(appSettings.mcpUrl)}">
+        <div class="lbl" style="margin-bottom:6px">Worker URL</div>
+        <input type="text" id="worker-url" class="settings-input" placeholder="https://pim-agent-proxy.your-account.workers.dev" value="${esc(appSettings.workerUrl)}">
       </div>
       <div class="settings-row" style="display:block">
-        <div class="lbl" style="margin-bottom:6px">Auth Header (optional)</div>
-        <input type="password" id="mcp-auth" class="settings-input" placeholder="HeaderName:HeaderValue — e.g. Authorization:Bearer eyJ..." value="${esc(appSettings.mcpAuthHeader)}">
-        <div class="desc" style="margin-top:4px">Pasted in <code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:10px">Name:Value</code> form. Leave empty if your MCP needs no auth.</div>
+        <div class="lbl" style="margin-bottom:6px">Shared Secret</div>
+        <input type="password" id="worker-secret" class="settings-input" placeholder="The passphrase you set in the Worker" value="${esc(appSettings.workerSecret)}">
       </div>
       <div class="settings-row" style="display:block">
         <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">

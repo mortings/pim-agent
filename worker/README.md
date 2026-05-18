@@ -2,10 +2,19 @@
 
 Thin Cloudflare Worker that lets the static demo at
 [mortings.github.io/pim-agent](https://mortings.github.io/pim-agent/) call
-the Bluestone PIM MCP server. The demo posts to this Worker; the Worker
-forwards the call to your deployed MCP server using the standard
-streamable-HTTP transport (JSON-RPC 2.0 over POST, with SSE responses
-handled transparently).
+the Bluestone PIM MCP server (e.g. `https://bluestone-mcp-unofficial.vercel.app/mcp`).
+The demo posts to this Worker with a shared-secret header; the Worker
+forwards the call to the MCP server using its three Bluestone auth
+headers (`x-papi-key`, `x-mapi-client-id`, `x-mapi-client-secret`),
+which never leave the server.
+
+## Why a proxy?
+
+The MCP server requires real Bluestone PIM credentials and doesn't send
+CORS headers, so a browser can't call it directly. Embedding those
+credentials in the demo's JavaScript would expose them to anyone with
+DevTools. The Worker holds them as Cloudflare secrets and only forwards
+calls signed with a demo passphrase.
 
 ## Deploy
 
@@ -14,12 +23,12 @@ cd worker
 npm install -g wrangler   # if you don't have it
 wrangler login
 
-# Required secrets
-wrangler secret put MCP_URL           # https URL of your MCP server
-wrangler secret put SHARED_SECRET     # passphrase the demo will paste in Settings
-
-# Optional — only if your MCP server requires auth
-wrangler secret put MCP_AUTH_HEADER   # "HeaderName:HeaderValue", e.g. "Authorization:Bearer eyJ..."
+# Required secrets — wrangler will prompt for each value
+wrangler secret put MCP_URL                       # e.g. https://bluestone-mcp-unofficial.vercel.app/mcp
+wrangler secret put SHARED_SECRET                 # pick a passphrase; you'll paste it into the demo
+wrangler secret put BLUESTONE_PAPI_KEY            # your Bluestone PAPI key
+wrangler secret put BLUESTONE_MAPI_CLIENT_ID      # your Bluestone MAPI client id
+wrangler secret put BLUESTONE_MAPI_CLIENT_SECRET  # your Bluestone MAPI client secret
 
 wrangler deploy
 ```
@@ -29,19 +38,19 @@ Wrangler prints the deployed URL — something like
 
 ## Configure the demo
 
-Open the demo → Settings (gear icon) → **Backend**. Paste:
+Open the demo → Settings (gear icon) → **Backend (Bluestone PIM MCP)**:
 
 - **Worker URL** — the URL Wrangler printed
-- **Shared Secret** — same passphrase you set above
+- **Shared Secret** — the same passphrase you set above
 
-Click **Save**. From then on, the **+ New Product** button (and the
-chat command `create product …`) will hit the real Bluestone PIM via
-this Worker.
+Click **Test** to verify (should turn green), then **Save**. After that, the
+**+ New Product** button in the Data Viewer writes to the real Bluestone
+PIM via this Worker.
 
 ## Endpoints
 
 ```
-GET  /api/health           → { ok, mcpConfigured, authConfigured }
+GET  /api/health           → { ok, mcpConfigured, authConfigured, bluestoneConfigured }
 POST /api/create-product   → { success, result }
 ```
 
@@ -68,5 +77,4 @@ edit `ALLOWED_ORIGINS` at the top of `worker.js`.
 wrangler dev    # serves on http://localhost:8787
 ```
 
-Point the demo's Worker URL setting at `http://localhost:8787` to test
-without deploying.
+Point the demo's Worker URL at `http://localhost:8787` to test without deploying.
