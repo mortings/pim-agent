@@ -48,8 +48,6 @@
     .live-banner .pim-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
 
     .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:18px;transition:opacity 0.25s,transform 0.25s}
-    .card.slide-out{opacity:0;transform:translateX(-30px)}
-    .card.slide-in{opacity:0;transform:translateX(30px)}
     .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
     .card-head h2{font-size:18px;font-weight:700;color:var(--white);line-height:1.3}
     .card-head .sku{font-size:11px;color:var(--muted);margin-top:4px;font-family:'Menlo','SF Mono',monospace}
@@ -76,6 +74,11 @@
     .swatch.checked{border-color:var(--blue);background:rgba(61,116,244,0.12)}
     .swatch .dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);flex-shrink:0}
     .swatch .name{flex:1;color:var(--text);font-weight:500}
+
+    .pill-row{display:flex;flex-wrap:wrap;gap:6px}
+    .size-pill{padding:8px 14px;border:1px solid var(--border);border-radius:100px;background:var(--surface2);cursor:pointer;font-size:12px;font-weight:600;color:var(--text);min-width:46px;text-align:center;transition:all 0.15s;user-select:none}
+    .size-pill:hover{border-color:rgba(255,255,255,0.18)}
+    .size-pill.checked{border-color:var(--blue);background:rgba(61,116,244,0.18);color:#cfdcff}
 
     .toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
     .toggle-track{width:38px;height:22px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;position:relative;transition:all 0.2s}
@@ -126,7 +129,7 @@
     </div>
     <div class="pim-badge" title="Live-connected to Bluestone PIM LABS via MCP"><span class="pim-dot"></span>Bluestone PIM LABS</div>
     <div class="header-spacer"></div>
-    <div class="header-supplier">Supplier: <strong>VibeStride AS</strong></div>
+    <div class="header-supplier">Supplier: <strong>NorthernTextiles AS</strong></div>
     <button class="btn" onclick="openSettings()">⚙ Settings</button>
   </header>
 
@@ -195,70 +198,72 @@
     function toast(msg,kind=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+kind;clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2800)}
     function refreshLiveBanner(){document.getElementById('live-banner').style.display=(settings.workerUrl&&settings.workerSecret)?'flex':'none'}
 
-    // ─── Supplier Intake — data baked from the Supplier Data Onboarding catalog ─
+    // ─── Supplier Intake — data baked from the Clothes catalog ─────────
+    // Catalog: Clothes (id 69daef62d41d9dd3b63c2037)
     const QUEUE = [
-      { id:'6997129e52d7b36ee509a60b', name:'Urban Cloud Slide — Sand',         sku:'VIB-44-SD-S'  },
-      { id:'6997129e52d7b36ee509a60c', name:'Urban Cloud Slide — Sage Green',   sku:'VIB-44-SD-SG' },
-      { id:'6997129e52d7b36ee509a60d', name:'Urban Cloud Slide — Dusty Rose',   sku:'VIB-44-SD-DR' },
-      { id:'6997129e54b2bc35386c43f0', name:'Stride-X Runner — Midnight Black', sku:'STR-99-MB'    },
-      { id:'6997129e54b2bc35386c43f1', name:'Stride-X Runner — Neon Lime',      sku:'STR-99-NL'    },
-      { id:'6997129e54b2bc35386c43f2', name:'Stride-X Runner — Slate Gray',     sku:'STR-99-SG'    },
-      { id:'69a7dd1110e99d3efd41230d', name:'Urban Cloud Slide — Slate',        sku:'VIB-44-SD-SL' },
-      { id:'69a7dd123c30c7f9e6c87a3d', name:'Urban Cloud Slide — Oat',          sku:'VIB-44-SD-O'  },
-      { id:'69a7ddcc3c30c7f9e6c87a3e', name:'Urban Cloud Slide — Mist',         sku:'VIB-44-SD-M'  }
+      { id:'69da487cd41d9dd3b63c0ed1', name:'T-shirt — Green Spring Edition', sku:'NT-TEE-GS'  },
+      { id:'69db1ecc09aff1b14989d05a', name:'T-shirt — Blue',                 sku:'NT-TEE-BL'  },
+      { id:'69db20ecd41d9dd3b63c2055', name:'T-shirt — Red',                  sku:'NT-TEE-RD'  },
+      { id:'69db2624d41d9dd3b63c2056', name:'T-shirt — Yellow',               sku:'NT-TEE-YL'  },
+      { id:'69e5f051745e4139ab2f4d96', name:'T-shirt — Black',                sku:'NT-TEE-BK'  },
+      { id:'69fb9a34c21ed255adccf8c0', name:'Green Hoodie',                   sku:'111222'     }
     ];
 
-    // Attribute definitions chosen from the data model. Values for selects
-    // are enum value IDs from list_attribute_definitions, not labels.
+    // Attribute definitions chosen from the Clothes-relevant data model.
+    // Select values use enum value IDs returned by list_attribute_definitions.
     const FIELDS = [
       {
         key:'material', label:'Material composition',
-        definitionId:'6979b8f27a51691cfce3e6a6', type:'single_select',
+        definitionId:'6819da04b75ff231d1d720a8', type:'text',
+        placeholder:'e.g. 100% organic cotton'
+      },
+      {
+        key:'color', label:'Color',
+        definitionId:'66389d34e1564158b740c660', type:'swatches_single',
+        hint:'Pick the dominant garment color.',
         options:[
-          { id:'6997129d54b2bc35386c43dd', label:'Breathable Engineered Mesh' },
-          { id:'6997129d54b2bc35386c43de', label:'Full-Grain Bovine Leather' },
-          { id:'6997129d54b2bc35386c43df', label:'Injection-Molded EVA Foam' },
-          { id:'69ae8b3acfa347c3b5781222', label:'Nitrile' },
-          { id:'6979b8f27a51691cfce3e6a7', label:'Glass' },
-          { id:'6979b8f27a51691cfce3e6a8', label:'Brass' }
+          { id:'66389d34e1564158b740c661', label:'Alpine',       hex:'#e5e1e1' },
+          { id:'66389d34e1564158b740c662', label:'American Elm', hex:'#cc924a' },
+          { id:'6638a86ae1564158b740c6a2', label:'Cherry',       hex:'#8f4615' },
+          { id:'6638a86ae1564158b740c6a3', label:'Chestnut',     hex:'#d9a057' },
+          { id:'663b94b1f3f43a79201248f8', label:'Damson',       hex:'#694b72' },
+          { id:'663b94b1f3f43a79201248f9', label:'Deep Ivy',     hex:'#035046' },
+          { id:'663bd4a754b96664ed816433', label:'Cool Sky',     hex:'#c8d2db' },
+          { id:'663c724954b96664ed81688d', label:'Mahogany',     hex:'#522318' },
+          { id:'6819b3f1ed49b666d53161cf', label:'Black',        hex:'#000000' },
+          { id:'6819da04ed49b666d5316ddf', label:'Yellow',       hex:'#f4ff5c' },
+          { id:'68949a6c053a6c789bb3a1b0', label:'Blue',         hex:'#619eff' },
+          { id:'68949a6c053a6c789bb3a1b2', label:'Green',        hex:'#1ecc41' },
+          { id:'69db252b09aff1b14989d05b', label:'Red',          hex:'#ff4747' }
         ]
       },
       {
-        key:'color_family', label:'Color family',
-        definitionId:'6997129d54b2bc35386c43e0', type:'multi_select',
-        hint:'Pick all colors that apply.',
+        key:'size', label:'Available sizes',
+        definitionId:'6819c05c20d3d420caa536cf', type:'pills',
+        hint:'Pick all sizes the supplier produces.',
         options:[
-          { id:'6997129d54b2bc35386c43e1', label:'Cognac Tan',     hex:'#96643d' },
-          { id:'6997129d54b2bc35386c43e2', label:'Dusty Rose',     hex:'#b39698' },
-          { id:'6997129d54b2bc35386c43e3', label:'Espresso Brown', hex:'#58453b' },
-          { id:'6997129d54b2bc35386c43e4', label:'Midnight Black', hex:'#1d1e20' },
-          { id:'6997129d54b2bc35386c43e5', label:'Neon Lime',      hex:'#9fc366' },
-          { id:'6997129d54b2bc35386c43e6', label:'Onyx',           hex:'#12110d' },
-          { id:'6997129d54b2bc35386c43e7', label:'Sage Green',     hex:'#758d87' },
-          { id:'6997129d54b2bc35386c43e8', label:'Sand',           hex:'#b2a392' },
-          { id:'6997129d54b2bc35386c43e9', label:'Slate Grey',     hex:'#8f9297' },
-          { id:'69a7d38c10e99d3efd412308', label:'Pale Blue',      hex:'#f6f0ff' },
-          { id:'69a7d38c10e99d3efd412309', label:'Warm Cream',     hex:'#d3d197' },
-          { id:'69ae8be8a00183b24e698da9', label:'Blue',           hex:'#85c4ff' },
-          { id:'69ae8be8a00183b24e698daa', label:'Violet',         hex:'#ffbdf9' },
-          { id:'69fbad66cf44eb828e155a24', label:'Black',          hex:'#000000' }
+          { id:'6819c05c20d3d420caa536d0', label:'S'  },
+          { id:'6819c05c20d3d420caa536d1', label:'M'  },
+          { id:'6819da04ed49b666d5316ddd', label:'L'  },
+          { id:'6819da04ed49b666d5316dde', label:'XL' }
         ]
       },
       {
-        key:'weight', label:'Weight', unit:'kg',
-        definitionId:'6979ae0b7a51691cfce3e664', type:'decimal',
-        hint:'Range 1–600 kg.'
+        key:'weight_g', label:'Weight per unit', unit:'g',
+        definitionId:'67b5cd9e49216b344e822d28', type:'integer',
+        placeholder:'e.g. 180'
       },
       {
-        key:'marathon', label:'Recommended for marathon',
-        definitionId:'69b3bd06cfa347c3b579def0', type:'boolean'
+        key:'recycled', label:'Recycled material',
+        definitionId:'663c79eaf3f43a7920124dfb', type:'boolean',
+        booleanLabel:'Yes — made from recycled materials'
       }
     ];
 
     // ─── State ──────────────────────────────────────────────────────────
-    let pos = 0;          // current product index
-    let dirty = {};       // { [fieldKey]: value or array }
-    let savedCount = 0;   // total fields successfully saved across the session
+    let pos = 0;
+    let dirty = {};
+    let savedCount = 0;
 
     // ─── Render ─────────────────────────────────────────────────────────
     function render() {
@@ -302,7 +307,6 @@
           </div>
         </div>`;
 
-      // Queue preview
       const upcoming = QUEUE.slice(pos + 1, pos + 4);
       preview.style.display = upcoming.length ? 'block' : 'none';
       preview.innerHTML = upcoming.length
@@ -314,42 +318,75 @@
       const statusId = `status-${f.key}`;
       const hint = f.hint ? `<div class="hint">${escapeHtml(f.hint)}</div>` : '';
       let control = '';
-      if (f.type === 'single_select') {
+      if (f.type === 'text') {
+        control = `<input type="text" placeholder="${escapeHtml(f.placeholder || '')}" oninput="dirty.${f.key}=this.value">`;
+      } else if (f.type === 'integer') {
+        control = `<input type="number" step="1" min="0" placeholder="${escapeHtml(f.placeholder || '')}" oninput="dirty.${f.key}=this.value">`;
+      } else if (f.type === 'decimal') {
+        control = `<input type="number" step="0.01" min="0" placeholder="${escapeHtml(f.placeholder || '')}" oninput="dirty.${f.key}=this.value">`;
+      } else if (f.type === 'single_select') {
         control = `<select onchange="dirty.${f.key}=this.value">
           <option value="">— select —</option>
           ${f.options.map(o => `<option value="${o.id}">${escapeHtml(o.label)}</option>`).join('')}
         </select>`;
-      } else if (f.type === 'multi_select') {
+      } else if (f.type === 'swatches_single') {
         control = `<div class="swatch-grid">
           ${f.options.map(o => `
-            <label class="swatch" onclick="toggleSwatch(this,'${f.key}','${o.id}')">
+            <label class="swatch" onclick="pickSwatch(this,'${f.key}','${o.id}')">
               <span class="dot" style="background:${o.hex}"></span>
               <span class="name">${escapeHtml(o.label)}</span>
             </label>`).join('')}
         </div>`;
-      } else if (f.type === 'decimal') {
-        control = `<input type="number" step="0.01" min="0" placeholder="${f.unit || ''}" oninput="dirty.${f.key}=this.value">`;
+      } else if (f.type === 'multi_select') {
+        control = `<div class="swatch-grid">
+          ${f.options.map(o => `
+            <label class="swatch" onclick="toggleSwatch(this,'${f.key}','${o.id}')">
+              <span class="dot" style="background:${o.hex || '#444'}"></span>
+              <span class="name">${escapeHtml(o.label)}</span>
+            </label>`).join('')}
+        </div>`;
+      } else if (f.type === 'pills') {
+        control = `<div class="pill-row">
+          ${f.options.map(o => `
+            <div class="size-pill" onclick="togglePill(this,'${f.key}','${o.id}')">${escapeHtml(o.label)}</div>
+          `).join('')}
+        </div>`;
       } else if (f.type === 'boolean') {
+        const lbl = f.booleanLabel || 'Yes';
         control = `<label class="toggle">
           <input type="checkbox" onchange="dirty.${f.key}=this.checked">
           <span class="toggle-track"><span class="toggle-knob"></span></span>
-          <span class="toggle-label">Yes — marathon-ready</span>
+          <span class="toggle-label">${escapeHtml(lbl)}</span>
         </label>`;
       }
+      const unit = f.unit ? ` <span style="color:var(--muted);font-weight:500;text-transform:none">(${f.unit})</span>` : '';
       return `<div class="field">
-        <label>${escapeHtml(f.label)}${f.unit ? ` <span style="color:var(--muted);font-weight:500;text-transform:none">(${f.unit})</span>` : ''}<span class="field-status" id="${statusId}"></span></label>
+        <label>${escapeHtml(f.label)}${unit}<span class="field-status" id="${statusId}"></span></label>
         ${control}
         ${hint}
       </div>`;
     }
 
+    function pickSwatch(el, fieldKey, valueId) {
+      // Single-select swatch: clear siblings first, then check this one.
+      const siblings = el.parentNode.querySelectorAll('.swatch');
+      siblings.forEach(s => s.classList.remove('checked'));
+      el.classList.add('checked');
+      dirty[fieldKey] = valueId;
+    }
     function toggleSwatch(el, fieldKey, valueId) {
       el.classList.toggle('checked');
-      if (!dirty[fieldKey] || !Array.isArray(dirty[fieldKey])) dirty[fieldKey] = [];
+      if (!Array.isArray(dirty[fieldKey])) dirty[fieldKey] = [];
       const arr = dirty[fieldKey];
       const i = arr.indexOf(valueId);
-      if (i >= 0) arr.splice(i, 1);
-      else arr.push(valueId);
+      if (i >= 0) arr.splice(i, 1); else arr.push(valueId);
+    }
+    function togglePill(el, fieldKey, valueId) {
+      el.classList.toggle('checked');
+      if (!Array.isArray(dirty[fieldKey])) dirty[fieldKey] = [];
+      const arr = dirty[fieldKey];
+      const i = arr.indexOf(valueId);
+      if (i >= 0) arr.splice(i, 1); else arr.push(valueId);
     }
 
     function setFieldStatus(key, kind, text) {
@@ -369,7 +406,8 @@
       for (const f of FIELDS) {
         const v = dirty[f.key];
         if (v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) continue;
-        writes.push({ f, values: f.type === 'multi_select' ? v : [String(f.type === 'boolean' ? !!v : v)] });
+        const values = Array.isArray(v) ? v : [String(f.type === 'boolean' ? !!v : v)];
+        writes.push({ f, values });
       }
       if (writes.length === 0) {
         toast('Nothing to save — fill at least one field, or click Skip.', 'error');
@@ -400,7 +438,6 @@
       const failed = results.length - ok;
       if (failed === 0) {
         toast(`✓ ${ok} field${ok === 1 ? '' : 's'} written to Bluestone for ${p.name}`, 'success');
-        // Brief pause so the user sees the green checks, then advance.
         setTimeout(() => { pos++; render(); }, 700);
       } else {
         toast(`${ok} saved, ${failed} failed — check field statuses`, 'error');
@@ -413,7 +450,6 @@
 
     function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
-    // ─── Boot ───────────────────────────────────────────────────────────
     refreshLiveBanner();
     render();
   </script>
