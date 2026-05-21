@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Manager — Bluestone PIM LABS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#050D1F; --surface:#0C1829; --surface2:#111F35;
+      --border:rgba(255,255,255,0.08);
+      --blue:#3D74F4; --electric:#0F05CC;
+      --green:#34D399; --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --orange:#EC672B;
+      --white:#fff; --muted:rgba(255,255,255,0.45); --text:rgba(255,255,255,0.85);
+      --radius:10px;
+    }
+    html,body{height:100%;font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+
+    #header{display:flex;align-items:center;gap:14px;padding:0 20px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+    .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--white)}
+    .logo svg{width:24px;height:24px}
+    .crumb{font-size:13px;color:var(--muted);font-weight:500}
+    .crumb strong{color:var(--white);font-weight:700}
+    .pim-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);font-size:11px;font-weight:600;color:var(--green);letter-spacing:0.2px}
+    .pim-badge .pim-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 2.4s ease-in-out infinite}
+    @keyframes pimPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+    .header-spacer{flex:1}
+    .header-persona{font-size:12px;color:var(--muted)}
+    .header-persona strong{color:var(--white)}
+
+    .btn{background:rgba(255,255,255,0.04);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+    .btn:hover{background:rgba(61,116,244,0.1);border-color:rgba(61,116,244,0.3);color:var(--blue)}
+    .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+    .btn.primary:hover{background:#5687f5;color:#fff}
+    .btn.primary:disabled{opacity:0.55;cursor:not-allowed}
+    .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+    .btn.ghost:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+    .btn.small{padding:5px 10px;font-size:11px}
+
+    main{padding:24px;max-width:1240px;margin:0 auto}
+
+    .live-banner{display:flex;align-items:center;gap:8px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:9px 13px;margin-bottom:18px;font-size:12px;color:var(--green)}
+    .live-banner .pim-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+    .tile-cap{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .tile-num{font-size:30px;font-weight:800;color:var(--white);line-height:1.05}
+    .tile-num.green{color:var(--green)}
+    .tile-num.yellow{color:var(--yellow)}
+    .tile-num.red{color:var(--red)}
+    .tile-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .filter-pills{display:flex;gap:6px}
+    .filter-pill{padding:7px 13px;border:1px solid var(--border);background:rgba(255,255,255,0.03);border-radius:100px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;letter-spacing:0.3px}
+    .filter-pill:hover{color:var(--text);border-color:rgba(255,255,255,0.18)}
+    .filter-pill.active{border-color:var(--blue);background:rgba(61,116,244,0.15);color:#cfdcff}
+    .toolbar-spacer{flex:1}
+    .toolbar-control{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+    .toolbar-control select{padding:6px 28px 6px 10px;font-family:inherit;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff77' stroke-width='2'><polyline points='6,9 12,15 18,9'/></svg>");background-repeat:no-repeat;background-position:right 9px center}
+
+    .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    table.fpu{width:100%;border-collapse:separate;border-spacing:0}
+    table.fpu thead th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:12px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);user-select:none}
+    table.fpu thead th.sortable{cursor:pointer}
+    table.fpu thead th.sortable:hover{color:var(--text)}
+    table.fpu thead th.sorted{color:var(--blue)}
+    table.fpu tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle}
+    table.fpu tbody tr{cursor:pointer;transition:background 0.1s}
+    table.fpu tbody tr:hover{background:rgba(61,116,244,0.06)}
+    table.fpu tbody tr.selected{background:rgba(61,116,244,0.12)}
+    table.fpu tbody tr:last-child td{border-bottom:none}
+    .product-name{font-weight:600;color:var(--white)}
+    .product-sku{font-size:11px;color:var(--muted);margin-top:2px;font-family:'Menlo','SF Mono',monospace}
+    .quality-cell{display:flex;align-items:center;gap:10px;min-width:180px}
+    .quality-bar{width:120px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;flex-shrink:0}
+    .quality-fill{height:100%;border-radius:3px;transition:width 0.4s ease}
+    .quality-fill[data-q="low"]{background:var(--red)}
+    .quality-fill[data-q="mid"]{background:var(--yellow)}
+    .quality-fill[data-q="high"]{background:var(--green)}
+    .quality-pct{font-weight:700;color:var(--white);min-width:38px;text-align:right;font-variant-numeric:tabular-nums}
+    .quality-pct.low{color:var(--red)}
+    .quality-pct.mid{color:var(--yellow)}
+    .quality-pct.high{color:var(--green)}
+    .row-arrow{color:var(--muted);font-size:18px;transition:transform 0.15s}
+    tbody tr:hover .row-arrow{color:var(--blue);transform:translateX(3px)}
+    .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:0.2px}
+    .pill.ready{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.3)}
+    .pill.gap{background:rgba(251,231,77,0.08);color:var(--yellow);border:1px solid rgba(251,231,77,0.3)}
+    .pill.critical{background:rgba(235,72,94,0.1);color:var(--red);border:1px solid rgba(235,72,94,0.3)}
+
+    .empty{padding:54px 24px;text-align:center;color:var(--muted)}
+    .empty h2{font-weight:600;color:var(--text);margin-bottom:6px;font-size:15px}
+    .empty p{font-size:12px}
+    .empty code{background:var(--surface2);padding:2px 7px;border-radius:4px;font-size:11px}
+    .loading{padding:40px 24px;text-align:center;color:var(--muted);font-size:12px}
+    .loading .spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:8px;vertical-align:-2px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Drawer */
+    .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:30}
+    .drawer-backdrop.open{opacity:1;pointer-events:auto}
+    .drawer{position:fixed;top:0;right:0;height:100%;width:520px;max-width:100vw;background:var(--surface);border-left:1px solid var(--border);box-shadow:-20px 0 60px rgba(0,0,0,0.45);transform:translateX(100%);transition:transform 0.25s ease;z-index:40;display:flex;flex-direction:column}
+    .drawer.open{transform:translateX(0)}
+    .drawer-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:14px}
+    .drawer-head-text{flex:1;min-width:0}
+    .drawer-head h2{font-size:17px;font-weight:700;color:var(--white);line-height:1.3}
+    .drawer-head .sku{font-size:11px;color:var(--muted);margin-top:3px;font-family:'Menlo','SF Mono',monospace}
+    .drawer-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
+    .drawer-close:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+    .drawer-body{flex:1;overflow-y:auto;padding:0 22px 18px}
+    .score-block{padding:16px 0 14px;border-bottom:1px solid var(--border);margin-bottom:18px;display:flex;align-items:center;gap:16px}
+    .score-num{font-size:36px;font-weight:800;color:var(--white);font-variant-numeric:tabular-nums;min-width:90px}
+    .score-num.low{color:var(--red)} .score-num.mid{color:var(--yellow)} .score-num.high{color:var(--green)}
+    .score-block .score-meta{flex:1}
+    .score-block .quality-bar{width:100%;height:8px}
+    .score-block .score-cap{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:6px}
+    .score-block .score-validation{font-size:11px;margin-top:4px;color:var(--muted)}
+    .score-block .score-validation.invalid{color:var(--orange)}
+    .section-cap{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+    .section-cap .count{background:var(--surface2);color:var(--text);padding:1px 7px;border-radius:100px;font-size:10px}
+    .req-list{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px}
+    .req-item{display:flex;align-items:center;gap:10px;font-size:12px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+    .req-item .req-icon{width:14px;height:14px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+    .req-item.pass .req-icon{background:rgba(52,211,153,0.18);color:var(--green)}
+    .req-item.fail .req-icon{background:rgba(235,72,94,0.15);color:var(--red)}
+    .req-item.media .req-icon{background:rgba(167,139,255,0.18);color:var(--purple)}
+    .req-item .req-name{flex:1;color:var(--text)}
+    .req-item.pass .req-name{color:var(--muted)}
+    .req-item .req-tag{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+    .req-item.media .req-tag{color:var(--purple)}
+
+    .field{margin-bottom:16px}
+    .field label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--text);margin-bottom:7px;text-transform:uppercase;letter-spacing:0.5px}
+    .field label .req-dot{width:6px;height:6px;border-radius:50%;background:var(--red)}
+    .field .hint{font-size:11px;color:var(--muted);margin-top:5px;font-weight:400}
+    .field-status{display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:none}
+    .field-status.saving{color:var(--blue)}
+    .field-status.ok{color:var(--green)}
+    .field-status.err{color:var(--red)}
+    .field-status .spinner{width:8px;height:8px;border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:spin 0.7s linear infinite}
+    input[type="text"],input[type="number"],select,textarea{width:100%;padding:10px 12px;font-family:inherit;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text)}
+    textarea{min-height:74px;resize:vertical}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);background:var(--bg)}
+    select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff77' stroke-width='2'><polyline points='6,9 12,15 18,9'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+    .toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .toggle-track{width:38px;height:22px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;position:relative;transition:all 0.2s}
+    .toggle-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--text);border-radius:50%;transition:all 0.2s}
+    .toggle input{display:none}
+    .toggle input:checked + .toggle-track{background:var(--green);border-color:var(--green)}
+    .toggle input:checked + .toggle-track .toggle-knob{left:18px;background:#04221a}
+    .toggle-label{font-size:13px;color:var(--text)}
+    .unfixable{font-size:11px;color:var(--purple);background:rgba(167,139,255,0.08);border:1px dashed rgba(167,139,255,0.3);padding:8px 11px;border-radius:8px}
+
+    .drawer-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface)}
+    .drawer-foot .footer-info{flex:1;font-size:11px;color:var(--muted)}
+    .drawer-foot .footer-info strong{color:var(--text)}
+
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:100}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:480px;max-width:92vw;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+    .modal h2{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--white)}
+    .modal .hint{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+    .modal .hint code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px}
+    .modal .field{margin-bottom:12px}
+    .modal .field label{text-transform:uppercase;font-size:11px;letter-spacing:0.5px;color:var(--muted);font-weight:600;margin-bottom:5px;display:block}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:18px}
+    .modal-status{flex:1;font-size:11px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+    .modal-status .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+    .modal-status.ok{color:var(--green)} .modal-status.ok .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+    .modal-status.err{color:var(--red)} .modal-status.err .dot{background:var(--red)}
+
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);padding:11px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.4);transform:translateY(120px);opacity:0;transition:all 0.25s;z-index:200;max-width:360px}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.success{border-color:rgba(52,211,153,0.4);color:var(--green)}
+    .toast.error{border-color:rgba(235,72,94,0.4);color:var(--red)}
+
+    .footnote{text-align:center;font-size:11px;color:var(--muted);margin:32px 0 8px}
+    .footnote a{color:var(--blue);text-decoration:none}
+  </style>
+</head>
+<body>
+  <header id="header">
+    <div class="logo">
+      <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg)"/><defs><linearGradient id="lg" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#3D74F4"/><stop offset="100%" stop-color="#0F05CC"/></linearGradient></defs></svg>
+      Product Manager
+    </div>
+    <span class="crumb">/ <strong id="crumb-cat">—</strong></span>
+    <div class="pim-badge" title="Live-connected to Bluestone PIM LABS via MCP"><span class="pim-dot"></span>Bluestone PIM LABS</div>
+    <div class="header-spacer"></div>
+    <div class="header-persona">Owner: <strong id="header-owner">—</strong></div>
+    <button class="btn" onclick="openSettings()">⚙ Settings</button>
+  </header>
+
+  <main>
+    <div class="live-banner" id="live-banner" style="display:none">
+      <span class="pim-dot"></span>
+      <span><strong>Live mode</strong> — completeness scores and attribute writes both go through Bluestone PIM LABS via the MCP connector.</span>
+    </div>
+
+    <div class="kpi-row">
+      <div class="tile"><div class="tile-cap" id="kpi-count-cap">Products in catalog</div><div class="tile-num" id="kpi-count">—</div><div class="tile-sub" id="kpi-count-sub">awaiting load</div></div>
+      <div class="tile"><div class="tile-cap">Avg completeness</div><div class="tile-num" id="kpi-avg">—</div><div class="tile-sub" id="kpi-avg-sub">locale <span id="kpi-avg-locale">en</span></div></div>
+      <div class="tile"><div class="tile-cap">Needs attention (&lt;80%)</div><div class="tile-num yellow" id="kpi-gap">—</div><div class="tile-sub" id="kpi-gap-sub">below publish bar</div></div>
+      <div class="tile"><div class="tile-cap">Ready to publish</div><div class="tile-num green" id="kpi-ready">—</div><div class="tile-sub" id="kpi-ready-sub">at 100%</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="filter-pills" id="filter-pills">
+        <div class="filter-pill active" data-filter="all">All</div>
+        <div class="filter-pill" data-filter="lt50">&lt; 50%</div>
+        <div class="filter-pill" data-filter="lt80">&lt; 80%</div>
+        <div class="filter-pill" data-filter="eq100">100%</div>
+      </div>
+      <div class="toolbar-spacer"></div>
+      <div class="toolbar-control">
+        <span>Catalog</span>
+        <select id="catalog-select"><option value="">Loading…</option></select>
+      </div>
+      <div class="toolbar-control">
+        <span>Locale</span>
+        <select id="locale-select"><option value="en">en</option></select>
+      </div>
+      <div class="toolbar-control">
+        <span>Sort</span>
+        <select id="sort-select">
+          <option value="score-asc">Lowest score first</option>
+          <option value="score-desc">Highest score first</option>
+          <option value="name-asc">Name A→Z</option>
+          <option value="name-desc">Name Z→A</option>
+        </select>
+      </div>
+      <button class="btn" onclick="loadProducts()">↻ Refresh</button>
+      <button class="btn" onclick="showDebug()" title="Inspect the last raw MCP response">🔍 Debug</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="fpu">
+        <thead>
+          <tr>
+            <th style="width:42%">Product</th>
+            <th style="width:14%">SKU / Number</th>
+            <th style="width:24%">Completeness</th>
+            <th style="width:16%">Status</th>
+            <th style="width:4%"></th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="5"><div class="loading">Open <code>⚙ Settings</code> and configure the Worker, then click Refresh.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="footnote">Single-file UI on the Bluestone PIM MCP — read completeness from Bluestone, write fixes back to Bluestone, all live.</p>
+  </main>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div class="drawer-head-text">
+        <h2 id="drawer-name">—</h2>
+        <div class="sku" id="drawer-sku">—</div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()" title="Close">×</button>
+    </div>
+    <div class="drawer-body" id="drawer-body">
+      <div class="loading"><span class="spinner"></span>Loading…</div>
+    </div>
+    <div class="drawer-foot">
+      <div class="footer-info" id="drawer-footer-info"><strong>Live</strong> — Save writes to Bluestone via MCP</div>
+      <button class="btn" onclick="closeDrawer()">Cancel</button>
+      <button class="btn primary" id="drawer-save" onclick="saveDrawer()" disabled>Save & refresh score</button>
+    </div>
+  </aside>
+
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+      <h2>Backend (Bluestone PIM MCP)</h2>
+      <p class="hint">Worker URL and shared secret. Bluestone credentials live on the Worker as secrets; this page never sees them.</p>
+      <div class="field"><label>Worker URL</label><input type="text" id="worker-url" placeholder="https://pim-agent-proxy.your-account.workers.dev"></div>
+      <div class="field"><label>Shared Secret</label><input type="password" id="worker-secret" placeholder="The passphrase you set with wrangler secret put SHARED_SECRET"></div>
+      <div class="modal-actions">
+        <div class="modal-status" id="modal-status"><span class="dot"></span><span>Not tested</span></div>
+        <button class="btn" onclick="testBackend()">Test</button>
+        <button class="btn primary" onclick="saveSettings()">Save</button>
+        <button class="btn" onclick="closeSettings()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="debug-modal">
+    <div class="modal" style="width:680px;max-width:96vw">
+      <h2>Last MCP response</h2>
+      <p class="hint">Raw <code>content[0].text</code> from the last <code>search_products</code> call. Use this to confirm which fields hold the score and summary.</p>
+      <pre id="debug-text" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:60vh;overflow:auto;font-family:'Menlo','SF Mono',monospace;font-size:11px;color:var(--text);white-space:pre-wrap;word-break:break-word">(no call yet)</pre>
+      <div class="modal-actions">
+        <div class="modal-status" id="debug-status"><span class="dot"></span><span id="debug-status-text">—</span></div>
+        <button class="btn" onclick="copyDebug()">Copy</button>
+        <button class="btn" onclick="document.getElementById('debug-modal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── Settings + MCP wiring (lifted from the skill starter) ──────────
+    // Worker URL is safe to bake in (it's public). The shared secret never
+    // lives in source — Settings modal only.
+    const DEFAULT_WORKER_URL = 'https://pim-agent-proxy.mortings.workers.dev';
+    const settings = {
+      workerUrl: localStorage.getItem('pim-workerUrl') || DEFAULT_WORKER_URL,
+      workerSecret: localStorage.getItem('pim-workerSecret') || ''
+    };
+    function openSettings(){document.getElementById('worker-url').value=settings.workerUrl;document.getElementById('worker-secret').value=settings.workerSecret;setModalStatus(settings.workerUrl?'ok':'',settings.workerUrl?'Saved — click Test to verify':'Not configured');document.getElementById('settings-modal').classList.add('open')}
+    function closeSettings(){document.getElementById('settings-modal').classList.remove('open')}
+    function saveSettings(){settings.workerUrl=document.getElementById('worker-url').value.trim().replace(/\/+$/,'');settings.workerSecret=document.getElementById('worker-secret').value.trim();localStorage.setItem('pim-workerUrl',settings.workerUrl);localStorage.setItem('pim-workerSecret',settings.workerSecret);toast('Backend settings saved','success');refreshLiveBanner();setModalStatus('ok','Saved — click Test to verify')}
+    function setModalStatus(kind,text){const el=document.getElementById('modal-status');el.className='modal-status'+(kind?' '+kind:'');el.querySelector('span:last-child').textContent=text}
+    async function testBackend(){
+      saveSettings();
+      if(!settings.workerUrl){setModalStatus('err','Worker URL is empty');return}
+      try{
+        const r=await fetch(settings.workerUrl+'/api/health');
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok){setModalStatus('err','HTTP '+r.status);return}
+        const checks=[];
+        checks.push(j.mcpConfigured?'MCP_URL ✓':'MCP_URL ✗');
+        checks.push(j.authConfigured?'SHARED_SECRET ✓':'SHARED_SECRET ✗');
+        checks.push(j.bluestoneConfigured?'Bluestone creds ✓':'Bluestone creds ✗');
+        if(settings.workerSecret){
+          try{
+            const r2=await fetch(settings.workerUrl+'/api/mcp-list',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':settings.workerSecret},body:'{}'});
+            if(r2.status===404)checks.push('Generic /api/mcp-call ✗ (Worker is legacy)');
+            else if(r2.status===401)checks.push('Generic /api/mcp-call ✗ (secret mismatch)');
+            else if(r2.ok){const j2=await r2.json().catch(()=>({}));const n=j2?.result?.tools?.length;checks.push('Generic /api/mcp-call ✓'+(n?' ('+n+' MCP tools)':''))}
+            else checks.push('Generic /api/mcp-call ✗ (HTTP '+r2.status+')');
+          }catch(e2){checks.push('Generic /api/mcp-call ✗ ('+(e2.message||'unreachable')+')')}
+        }
+        const last=checks[checks.length-1];
+        const ok=j.mcpConfigured&&j.authConfigured&&j.bluestoneConfigured&&(last.endsWith('✓')||last.includes('✓ ('));
+        setModalStatus(ok?'ok':'err',checks.join('  •  '));
+      }catch(e){setModalStatus('err',/failed to fetch|networkerror|cors/i.test(String(e.message))?'Network/CORS — check Worker URL':'Unreachable: '+e.message)}
+    }
+    async function mcpCall(tool,args={}){
+      if(!settings.workerUrl||!settings.workerSecret){openSettings();throw new Error('Open Settings first')}
+      const r=await fetch(settings.workerUrl+'/api/mcp-call',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':settings.workerSecret},body:JSON.stringify({tool,args})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok||data.success===false)throw new Error(data.error||('HTTP '+r.status));
+      return data.result;
+    }
+    function toast(msg,kind=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+kind;clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2800)}
+    function refreshLiveBanner(){document.getElementById('live-banner').style.display=(settings.workerUrl&&settings.workerSecret)?'flex':'none'}
+    function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))}
+
+    // Centralized label refresh — call after any catalog change.
+    function applyCatalogLabels(){
+      const n=state.catalogName||'—';
+      const crumb=document.getElementById('crumb-cat');if(crumb)crumb.textContent=n;
+      const owner=document.getElementById('header-owner');if(owner)owner.textContent=n+' category';
+      const cap=document.getElementById('kpi-count-cap');if(cap)cap.textContent='Products in '+n;
+      document.title='Product Manager — '+n+' — Bluestone PIM LABS';
+    }
+
+    // ─── MCP-text parsing (JSON-first, regex fallback) ───────────────────
+    // MCP results come back as { content: [{ type:'text', text:'…' }] }. The
+    // text payload may be a JSON document or a human-readable summary —
+    // shape depends on the MCP server. We try JSON first.
+    function extractMcpText(result){
+      if(!result)return '';
+      if(typeof result==='string')return result;
+      if(Array.isArray(result.content))return result.content.filter(c=>c&&c.type==='text'&&typeof c.text==='string').map(c=>c.text).join('\n');
+      try{return JSON.stringify(result)}catch(e){return String(result)}
+    }
+    function parseMcpJson(result){
+      if(!result)return null;
+      // MCP can deliver structured data in several places. Try them in order.
+      // 1) structuredContent — newer MCP spec, already a parsed object.
+      if(result.structuredContent&&typeof result.structuredContent==='object')return result.structuredContent;
+      // 2) content[].json — some servers put parsed JSON in a 'json' field.
+      if(Array.isArray(result.content)){
+        for(const c of result.content){
+          if(c&&c.type==='json'&&c.json)return c.json;
+          if(c&&typeof c.json==='object'&&c.json)return c.json;
+        }
+      }
+      // 3) content[].text — text payload that may itself be JSON.
+      const text=extractMcpText(result).trim();
+      if(text){
+        const stripped=text.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+        try{return JSON.parse(stripped)}catch(e){}
+        const m=stripped.match(/[\{\[][\s\S]*[\}\]]/);
+        if(m){try{return JSON.parse(m[0])}catch(e){}}
+      }
+      return null; // signals: parser didn't recognize the shape
+    }
+
+    // ─── Domain state ────────────────────────────────────────────────────
+    const DEFAULT_CATEGORY_NAME='Shoes'; // preferred default if it exists on the tenant; otherwise we pick another
+    // null min/max = no completeness filter (so products without scores are included).
+    const SCORE_FILTERS={
+      all:    { min:null, max:null },
+      lt50:   { min:0,    max:49   },
+      lt80:   { min:0,    max:79   },
+      eq100:  { min:100,  max:100  }
+    };
+    let state={
+      products:[],         // [{ id, name, number, score }]
+      summary:null,        // { totalWithScores, atZero, partial, fullyComplete, averageScore }
+      filter:'all',
+      sort:'score-asc',
+      locale:'en',
+      contexts:[],         // [{ id, name, locale, isDefault }]
+      catalogs:[],         // [{ id, name }]
+      catalogId:null,      // currently selected catalog ID
+      catalogName:'',      // currently selected catalog display name
+      attrDefCache:{},     // definitionId → { name, dataType, unit, enumValues, dictionaryId }
+      current:null,        // currently-open product detail
+      dirty:{},            // definitionId → string|string[]|boolean
+      missingForCurrent:[],// requirements list
+      lastRawText:'',      // raw text of last search_products response (for Debug viewer)
+      lastParsed:null      // parsed JSON of last search_products response
+    };
+
+    function showDebug(){
+      const el=document.getElementById('debug-text');
+      const status=document.getElementById('debug-status');
+      const statusText=document.getElementById('debug-status-text');
+      if(!state.lastRawText){
+        el.textContent='(no search_products call yet — click Refresh first)';
+        status.className='modal-status';statusText.textContent='—';
+      }else{
+        // Pretty-print if parsed; else show raw.
+        if(state.lastParsed){
+          el.textContent=JSON.stringify(state.lastParsed,null,2);
+          status.className='modal-status ok';
+          statusText.textContent='Parsed as JSON  •  '+(state.products.length)+' products extracted  •  summary '+(state.summary?'found':'NOT found');
+        }else{
+          el.textContent=state.lastRawText;
+          status.className='modal-status err';
+          statusText.textContent='Could not parse as JSON — showing raw text';
+        }
+      }
+      document.getElementById('debug-modal').classList.add('open');
+    }
+    function copyDebug(){
+      const txt=document.getElementById('debug-text').textContent;
+      navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard','success'),()=>toast('Copy failed','error'));
+    }
+
+    // ─── Contexts (locales) ──────────────────────────────────────────────
+    async function loadContexts(){
+      try{
+        const result=await mcpCall('list_contexts');
+        const parsed=parseMcpJson(result);
+        let ctxs=[];
+        if(parsed){
+          if(Array.isArray(parsed))ctxs=parsed;
+          else if(Array.isArray(parsed.contexts))ctxs=parsed.contexts;
+          else if(Array.isArray(parsed.items))ctxs=parsed.items;
+        }
+        if(!ctxs.length){state.contexts=[{id:'en',name:'English',locale:'en',isDefault:true}];return}
+        state.contexts=ctxs.map(c=>({
+          id: c.id || c.contextId || c.code || c.locale || c.name,
+          name: c.name || c.label || c.locale || c.id,
+          locale: c.locale || c.code || c.id,
+          isDefault: !!(c.isDefault || c.default)
+        })).filter(c=>c.id);
+        const sel=document.getElementById('locale-select');
+        sel.innerHTML=state.contexts.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}${c.isDefault?' (default)':''}</option>`).join('');
+        const def=state.contexts.find(c=>c.isDefault)||state.contexts[0];
+        if(def){sel.value=def.id;state.locale=def.id;document.getElementById('kpi-avg-locale').textContent=def.id}
+      }catch(e){
+        console.warn('list_contexts failed — defaulting to en:',e.message);
+        state.contexts=[{id:'en',name:'English',locale:'en',isDefault:true}];
+      }
+    }
+
+    // ─── Catalogs ────────────────────────────────────────────────────────
+    async function loadCatalogs(){
+      const sel=document.getElementById('catalog-select');
+      try{
+        const result=await mcpCall('list_catalogs',{context:state.locale});
+        const parsed=parseMcpJson(result);
+        console.log('[pm-shoes] list_catalogs parsed:',parsed);
+        let list=[];
+        if(Array.isArray(parsed))list=parsed;
+        else if(Array.isArray(parsed?.catalogs))list=parsed.catalogs;
+        else if(Array.isArray(parsed?.items))list=parsed.items;
+        else if(Array.isArray(parsed?.data?.catalogs))list=parsed.data.catalogs;
+        state.catalogs=list.map(c=>({
+          id: c.id||c.catalogId||c._id||c.nodeId||'',
+          name: c.name||c.label||c.title||'(unnamed)'
+        })).filter(c=>c.id);
+        if(!state.catalogs.length){
+          sel.innerHTML=`<option value="">No catalogs found</option>`;
+          return;
+        }
+        // Prefer one whose name contains "shoe" (case-insensitive).
+        const shoes=state.catalogs.find(c=>/shoe/i.test(c.name)) || state.catalogs.find(c=>c.name===DEFAULT_CATEGORY_NAME) || state.catalogs[0];
+        state.catalogId=shoes.id;
+        state.catalogName=shoes.name;
+        sel.innerHTML=state.catalogs.map(c=>`<option value="${escapeHtml(c.id)}" ${c.id===state.catalogId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+        applyCatalogLabels();
+      }catch(e){
+        console.warn('[pm-shoes] list_catalogs failed:',e.message);
+        sel.innerHTML=`<option value="">— failed to load —</option>`;
+      }
+    }
+    document.getElementById('catalog-select').addEventListener('change',e=>{
+      const id=e.target.value;
+      const cat=state.catalogs.find(c=>c.id===id);
+      if(cat){state.catalogId=cat.id;state.catalogName=cat.name;applyCatalogLabels();loadProducts()}
+    });
+
+    // ─── Products + completeness scores ──────────────────────────────────
+    async function loadProducts(){
+      if(!settings.workerUrl||!settings.workerSecret){openSettings();return}
+      const rows=document.getElementById('rows');
+      rows.innerHTML=`<tr><td colspan="5"><div class="loading"><span class="spinner"></span>Loading ${escapeHtml(state.catalogName||'products')} and completeness scores…</div></td></tr>`;
+      setKpis({count:'—',avg:'—',gap:'—',ready:'—'});
+      const range=SCORE_FILTERS[state.filter];
+      const args={
+        categoryScope: 'catalog_with_subcategories',
+        context: state.locale,
+        completenessContext: state.locale,
+        includeCompletenessScores: true,
+        limit: 200
+      };
+      if(state.catalogId)args.categoryId=state.catalogId;
+      else args.categoryName=DEFAULT_CATEGORY_NAME;
+      if(range.min!=null)args.completenessScoreMin=range.min;
+      if(range.max!=null)args.completenessScoreMax=range.max;
+      try{
+        const result=await mcpCall('search_products',args);
+        state.lastRawText=extractMcpText(result);
+        const parsed=parseMcpJson(result);
+        state.lastParsed=parsed;
+        console.log('[pm-shoes] search_products raw text:',state.lastRawText);
+        console.log('[pm-shoes] search_products parsed:',parsed);
+        const products=extractProducts(parsed,result);
+        const summary=extractSummary(parsed);
+        console.log('[pm-shoes] extracted products:',products);
+        console.log('[pm-shoes] extracted summary:',summary);
+        state.products=products;
+        state.summary=summary;
+        renderKpis();
+        renderRows();
+        if(!products.length){
+          rows.innerHTML=`<tr><td colspan="5"><div class="empty">
+            <h2>No products in this filter</h2>
+            <p>Try a different filter, locale, or pick another catalog from the toolbar.</p>
+          </div></td></tr>`;
+        }
+      }catch(e){
+        rows.innerHTML=`<tr><td colspan="5"><div class="empty">
+          <h2>Couldn't load products</h2>
+          <p>${escapeHtml(e.message)}</p>
+        </div></td></tr>`;
+        toast('search_products failed: '+e.message,'error');
+      }
+    }
+    function extractProducts(parsed,raw){
+      // Try several common shapes for the products list.
+      if(!parsed)return [];
+      let list=null;
+      if(Array.isArray(parsed))list=parsed;
+      else if(Array.isArray(parsed.products))list=parsed.products;
+      else if(Array.isArray(parsed.items))list=parsed.items;
+      else if(parsed.data&&Array.isArray(parsed.data.products))list=parsed.data.products;
+      if(!list)return [];
+      return list.map(p=>({
+        id: p.id||p.productId||p._id||'',
+        name: p.name||p.productName||p.title||'(unnamed)',
+        number: p.number||p.sku||p.productNumber||'',
+        score: pickScore(p),
+        validationStatus: pickValidation(p)
+      })).filter(p=>p.id);
+    }
+    function pickScore(p){
+      const candidates=[
+        p.completenessScore, p.score, p.completeness,
+        p.completeness?.score, p.completeness?.percentage, p.completeness?.percent, p.completeness?.value,
+        p.completenessSummary?.score, p.completenessSummary?.averageScore,
+        p.quality?.score, p.qualityScore
+      ];
+      for(const c of candidates){
+        if(typeof c==='number')return Math.round(c<=1?c*100:c);
+        if(typeof c==='string'&&c.trim()){
+          const n=parseFloat(c);
+          if(!isNaN(n))return Math.round(n<=1?n*100:n);
+        }
+      }
+      // Per-context score arrays under various property names.
+      const arrCandidates=[p.completenessScores,p.scores,p.completeness?.scores,p.completeness?.byContext];
+      for(const arr of arrCandidates){
+        if(Array.isArray(arr)){
+          const match=arr.find(s=>(s.context||s.locale||s.contextId)===state.locale)||arr[0];
+          if(match){
+            const c=match.score??match.percentage??match.value;
+            if(typeof c==='number')return Math.round(c<=1?c*100:c);
+          }
+        }
+      }
+      return null;
+    }
+    function pickValidation(p){
+      return p.validationStatus||p.completeness?.validationStatus||p.completenessSummary?.validationStatus||p.status||null;
+    }
+    function extractSummary(parsed){
+      if(!parsed)return null;
+      const s=parsed.completenessSummary||parsed.summary||parsed.completeness||parsed.completenessStats||parsed.stats;
+      if(!s||typeof s!=='object'||Array.isArray(s))return null;
+      const out={
+        totalWithScores: s.totalWithScores ?? s.total ?? s.count ?? null,
+        atZero: s.atZero ?? s.zeroCount ?? null,
+        partial: s.partial ?? s.partialCount ?? null,
+        fullyComplete: s.fullyComplete ?? s.atFull ?? s.complete ?? s.fullCount ?? null,
+        averageScore: s.averageScore ?? s.average ?? s.avg ?? s.mean ?? null
+      };
+      // Reject a "summary" that's actually empty.
+      if(out.totalWithScores==null&&out.averageScore==null&&out.fullyComplete==null)return null;
+      return out;
+    }
+    function setKpis({count,avg,gap,ready}){
+      document.getElementById('kpi-count').textContent=count;
+      document.getElementById('kpi-avg').textContent=avg;
+      document.getElementById('kpi-gap').textContent=gap;
+      document.getElementById('kpi-ready').textContent=ready;
+    }
+    function renderKpis(){
+      const ps=state.products;
+      const scored=ps.filter(p=>typeof p.score==='number');
+      // Prefer server-supplied summary when filter is "all"; for filtered
+      // views we recompute from the page so the numbers reflect what the
+      // user is actually seeing.
+      const useSummary=state.filter==='all'&&state.summary;
+      const total=useSummary?(state.summary.totalWithScores??ps.length):ps.length;
+      let avg;
+      if(useSummary&&typeof state.summary.averageScore==='number'){
+        avg=Math.round(state.summary.averageScore<=1?state.summary.averageScore*100:state.summary.averageScore);
+      }else if(scored.length){
+        avg=Math.round(scored.reduce((a,p)=>a+p.score,0)/scored.length);
+      }else avg=null;
+      const below=scored.filter(p=>p.score<80).length;
+      const ready=useSummary&&typeof state.summary.fullyComplete==='number'?state.summary.fullyComplete:scored.filter(p=>p.score===100).length;
+      setKpis({
+        count: String(total),
+        avg: avg==null?'—':(avg+'%'),
+        gap: String(below),
+        ready: String(ready)
+      });
+      document.getElementById('kpi-count-sub').textContent=state.filter==='all'?'across the catalog':'matching filter';
+      document.getElementById('kpi-gap-sub').textContent=below===1?'1 product below 80%':below+' below publish bar';
+      document.getElementById('kpi-ready-sub').textContent=ready===1?'1 product at 100%':ready+' at 100%';
+      document.getElementById('kpi-avg-locale').textContent=state.locale;
+    }
+    function renderRows(){
+      const tbody=document.getElementById('rows');
+      const sorted=[...state.products].sort(sortFn(state.sort));
+      if(!sorted.length){
+        tbody.innerHTML=`<tr><td colspan="5"><div class="empty"><h2>No products</h2><p>Adjust filter or locale.</p></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML=sorted.map(p=>{
+        const s=p.score;
+        const q=s==null?'mid':(s<40?'low':s<80?'mid':'high');
+        const cls=s==null?'':(s<40?'low':s<80?'mid':'high');
+        const w=s==null?0:s;
+        const status=s==null?'<span class="pill gap"><span class="dot"></span>No score</span>'
+          : s===100?'<span class="pill ready"><span class="dot"></span>Ready</span>'
+          : s<40?'<span class="pill critical"><span class="dot"></span>Critical</span>'
+          : '<span class="pill gap"><span class="dot"></span>Has gaps</span>';
+        return `<tr data-id="${escapeHtml(p.id)}" onclick="openDrawer('${escapeHtml(p.id)}')">
+          <td><div class="product-name">${escapeHtml(p.name)}</div></td>
+          <td><div class="product-sku">${escapeHtml(p.number||'—')}</div></td>
+          <td><div class="quality-cell">
+            <div class="quality-bar"><div class="quality-fill" data-q="${q}" style="width:${w}%"></div></div>
+            <div class="quality-pct ${cls}">${s==null?'—':s+'%'}</div>
+          </div></td>
+          <td>${status}</td>
+          <td><span class="row-arrow">›</span></td>
+        </tr>`;
+      }).join('');
+    }
+    function sortFn(mode){
+      return (a,b)=>{
+        if(mode==='score-asc'){const sa=a.score??1000,sb=b.score??1000;return sa-sb||a.name.localeCompare(b.name)}
+        if(mode==='score-desc'){const sa=a.score??-1,sb=b.score??-1;return sb-sa||a.name.localeCompare(b.name)}
+        if(mode==='name-asc')return a.name.localeCompare(b.name);
+        if(mode==='name-desc')return b.name.localeCompare(a.name);
+        return 0;
+      };
+    }
+
+    // ─── Filter / sort / locale wiring ───────────────────────────────────
+    document.getElementById('filter-pills').addEventListener('click',e=>{
+      const pill=e.target.closest('.filter-pill');if(!pill)return;
+      document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+      pill.classList.add('active');
+      state.filter=pill.dataset.filter;
+      loadProducts();
+    });
+    document.getElementById('sort-select').addEventListener('change',e=>{state.sort=e.target.value;renderRows()});
+    document.getElementById('locale-select').addEventListener('change',e=>{state.locale=e.target.value;loadProducts()});
+
+    // ─── Drawer — product detail + gap-filler ────────────────────────────
+    async function openDrawer(productId){
+      const p=state.products.find(x=>x.id===productId);
+      if(!p)return;
+      state.current=p;
+      state.dirty={};
+      state.missingForCurrent=[];
+      document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('selected',tr.dataset.id===productId));
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('drawer-backdrop').classList.add('open');
+      document.getElementById('drawer-name').textContent=p.name;
+      document.getElementById('drawer-sku').textContent=p.number||p.id;
+      document.getElementById('drawer-save').disabled=true;
+      document.getElementById('drawer-body').innerHTML=`<div class="loading"><span class="spinner"></span>Fetching completeness detail…</div>`;
+      try{
+        const result=await mcpCall('get_product_completeness_detail',{productId:p.id,productName:p.name,context:state.locale});
+        const parsed=parseMcpJson(result);
+        const reqs=extractRequirements(parsed);
+        await renderDrawerBody(p,parsed,reqs);
+      }catch(e){
+        document.getElementById('drawer-body').innerHTML=`<div class="empty"><h2>Couldn't load detail</h2><p>${escapeHtml(e.message)}</p></div>`;
+      }
+    }
+    function closeDrawer(){
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('drawer-backdrop').classList.remove('open');
+      document.querySelectorAll('#rows tr.selected').forEach(tr=>tr.classList.remove('selected'));
+      state.current=null;
+    }
+    function extractRequirements(parsed){
+      if(!parsed)return [];
+      let list=null;
+      if(Array.isArray(parsed.requirements))list=parsed.requirements;
+      else if(Array.isArray(parsed.checks))list=parsed.checks;
+      else if(Array.isArray(parsed.items))list=parsed.items;
+      else if(Array.isArray(parsed))list=parsed;
+      else if(parsed.data&&Array.isArray(parsed.data.requirements))list=parsed.data.requirements;
+      if(!list)return [];
+      return list.map(r=>{
+        const raw=r.attributeName||r.name||r.attribute?.name||r.label||'';
+        // Some MCP responses use a sentence like 'Attribute "Brand" must have a value'.
+        // Pull just the attribute name out if it's wrapped in quotes.
+        const m=raw.match(/Attribute\s+["“]([^"”]+)["”]/i);
+        const cleanName=m?m[1]:raw;
+        return {
+          type: r.type||r.kind||'',
+          definitionId: r.definitionId||r.attributeDefinitionId||r.attribute?.definitionId||null,
+          attributeName: cleanName,
+          rawLabel: raw,
+          label: r.label||'',
+          status: (r.status||r.result||(r.passed===true?'PASSED':r.passed===false?'FAILED':'')).toUpperCase(),
+          unresolved: !!r.unresolved
+        };
+      });
+    }
+    async function renderDrawerBody(p,parsed,reqs){
+      const score=pickScoreFromDetail(parsed)??p.score;
+      const validation=parsed?.validationStatus||p.validationStatus||null;
+      const failed=reqs.filter(r=>r.status==='FAILED');
+      const passed=reqs.filter(r=>r.status==='PASSED');
+      // Fixable = any failed requirement that has a definitionId (we can call
+      // set_product_attribute against it). Unfixable = everything else
+      // (typically MINIMUM_MEDIA_WITH_LABEL, which has no definitionId).
+      // The exact type string varies between MCP server versions, so we key
+      // off the presence of definitionId rather than a string match.
+      const fixable=failed.filter(r=>!!r.definitionId&&!/MEDIA/i.test(r.type||''));
+      const unfixable=failed.filter(r=>!(!!r.definitionId&&!/MEDIA/i.test(r.type||'')));
+      state.missingForCurrent=fixable;
+
+      const q=score==null?'mid':(score<40?'low':score<80?'mid':'high');
+      const cls=score==null?'':(score<40?'low':score<80?'mid':'high');
+
+      let html=`
+        <div class="score-block">
+          <div class="score-num ${cls}">${score==null?'—':score+'%'}</div>
+          <div class="score-meta">
+            <div class="quality-bar"><div class="quality-fill" data-q="${q}" style="width:${score==null?0:score}%"></div></div>
+            <div class="score-cap">Completeness in <strong>${escapeHtml(state.locale)}</strong></div>
+            ${validation?`<div class="score-validation ${validation==='INVALID'?'invalid':''}">Validation status: <strong>${escapeHtml(validation)}</strong></div>`:''}
+          </div>
+        </div>`;
+
+      if(!reqs.length){
+        html+=`<div class="empty"><h2>No completeness requirements returned</h2><p>The product may have no completeness rules defined for this locale.</p></div>`;
+        document.getElementById('drawer-body').innerHTML=html;
+        return;
+      }
+
+      // Failing requirements summary
+      if(failed.length){
+        html+=`<div class="section-cap">Missing <span class="count">${failed.length}</span></div>`;
+        html+=`<ul class="req-list">${failed.map(r=>{
+          const isMedia=/MEDIA/i.test(r.type||'')||!r.definitionId;
+          return `<li class="req-item ${isMedia?'media':'fail'}">
+            <span class="req-icon">${isMedia?'⌘':'✕'}</span>
+            <span class="req-name">${escapeHtml(r.attributeName||r.label||r.type||'Requirement')}</span>
+            <span class="req-tag">${escapeHtml(isMedia?'media':'attribute')}</span>
+          </li>`;
+        }).join('')}</ul>`;
+      }
+
+      // Fixable form
+      if(fixable.length){
+        html+=`<div class="section-cap">Fill in to raise the score</div><div id="fix-fields"><div class="loading"><span class="spinner"></span>Loading field types…</div></div>`;
+      }
+
+      // Unfixable (media) note
+      if(unfixable.length){
+        html+=`<div class="unfixable" style="margin-top:14px">
+          <strong>${unfixable.length} requirement${unfixable.length===1?'':'s'}</strong> can't be fixed from this UI (media uploads).
+          Use the main Bluestone PIM admin for: ${unfixable.map(r=>escapeHtml(r.attributeName||r.label||r.type||'unnamed')).join(', ')}.
+        </div>`;
+      }
+
+      // Passed requirements (collapsed for the curious)
+      if(passed.length){
+        html+=`<div class="section-cap" style="margin-top:18px">Already met <span class="count">${passed.length}</span></div>`;
+        html+=`<ul class="req-list">${passed.map(r=>`
+          <li class="req-item pass">
+            <span class="req-icon">✓</span>
+            <span class="req-name">${escapeHtml(r.attributeName||r.label||r.type||'Requirement')}</span>
+          </li>`).join('')}</ul>`;
+      }
+
+      document.getElementById('drawer-body').innerHTML=html;
+
+      if(fixable.length){
+        await renderFixFields(fixable);
+        document.getElementById('drawer-save').disabled=fixable.length===0;
+      }
+    }
+    function pickScoreFromDetail(parsed){
+      if(!parsed)return null;
+      const cs=[parsed.score,parsed.completenessScore,parsed.completeness?.score,parsed.completeness?.percentage];
+      for(const c of cs){
+        if(typeof c==='number')return Math.round(c<=1?c*100:c);
+      }
+      return null;
+    }
+
+    // Render input controls for each fixable missing requirement, looking up
+    // the attribute definition to know what control to render.
+    async function renderFixFields(fixable){
+      const container=document.getElementById('fix-fields');
+      const defs=await Promise.all(fixable.map(r=>fetchAttrDef(r.definitionId).catch(()=>null)));
+      const html=fixable.map((r,i)=>{
+        const def=defs[i];
+        return renderFieldControl(r,def);
+      }).join('');
+      container.innerHTML=html;
+    }
+    async function fetchAttrDef(definitionId){
+      if(!definitionId)return null;
+      if(state.attrDefCache[definitionId])return state.attrDefCache[definitionId];
+      const result=await mcpCall('get_attribute_definition',{definitionId,context:state.locale});
+      const parsed=parseMcpJson(result);
+      const def=normalizeAttrDef(parsed,definitionId);
+      state.attrDefCache[definitionId]=def;
+      return def;
+    }
+    function normalizeAttrDef(parsed,definitionId){
+      if(!parsed)return {definitionId,dataType:'text'};
+      const src=parsed.attributeDefinition||parsed.definition||parsed;
+      return {
+        definitionId,
+        name: src.name||src.label||'',
+        dataType: String(src.dataType||src.type||'text').toLowerCase(),
+        unit: src.unit||null,
+        enumValues: Array.isArray(src.enumValues)?src.enumValues:Array.isArray(src.values)?src.values:[],
+        dictionaryId: src.dictionaryId||null
+      };
+    }
+    function renderFieldControl(r,def){
+      const definitionId=r.definitionId;
+      const safeKey='f_'+definitionId;
+      // Prefer the canonical name from get_attribute_definition.
+      const label=escapeHtml(def?.name||r.attributeName||'Attribute');
+      const unit=def?.unit?` <span style="color:var(--muted);font-weight:500;text-transform:none">(${escapeHtml(def.unit)})</span>`:'';
+      const statusId='st_'+definitionId;
+      const labelHtml=`<label><span class="req-dot"></span>${label}${unit}<span class="field-status" id="${statusId}"></span></label>`;
+      const dt=(def?.dataType||'text').toLowerCase();
+
+      // Dictionary-backed selects: list_dictionary_values is currently broken
+      // on the live MAPI (see mcp-tools.md known issues). Fall back to a text
+      // input with a hint.
+      if(dt.includes('dictionary')||def?.dictionaryId){
+        return `<div class="field">${labelHtml}
+          <input type="text" placeholder="Type the dictionary value ID or label" oninput="setDirty('${definitionId}',this.value,'dictionary')">
+          <div class="hint">Dictionary attribute — paste the value ID from Bluestone PIM, or set this field via the main PIM UI. (<code>list_dictionary_values</code> is currently returning 400 on the live MCP.)</div>
+        </div>`;
+      }
+      if(dt.includes('bool')){
+        return `<div class="field">${labelHtml}
+          <label class="toggle">
+            <input type="checkbox" onchange="setDirty('${definitionId}',this.checked,'boolean')">
+            <span class="toggle-track"><span class="toggle-knob"></span></span>
+            <span class="toggle-label">Yes</span>
+          </label>
+        </div>`;
+      }
+      if((dt.includes('select')||dt.includes('enum'))&&def?.enumValues?.length){
+        const opts=def.enumValues.map(v=>{
+          const id=v.id||v.valueId||v.value;
+          const lbl=v.label||v.name||v.value||id;
+          return `<option value="${escapeHtml(id)}">${escapeHtml(lbl)}</option>`;
+        }).join('');
+        return `<div class="field">${labelHtml}
+          <select onchange="setDirty('${definitionId}',this.value,'enum')">
+            <option value="">— select —</option>${opts}
+          </select>
+        </div>`;
+      }
+      if(dt.includes('int')||dt.includes('number')||dt.includes('decimal')||dt.includes('float')){
+        const step=dt.includes('int')?'1':'0.01';
+        return `<div class="field">${labelHtml}
+          <input type="number" step="${step}" min="0" oninput="setDirty('${definitionId}',this.value,'number')">
+        </div>`;
+      }
+      if(dt.includes('text')&&(def?.name||'').toLowerCase().match(/description|story|copy|details/)){
+        return `<div class="field">${labelHtml}
+          <textarea oninput="setDirty('${definitionId}',this.value,'text')"></textarea>
+        </div>`;
+      }
+      return `<div class="field">${labelHtml}
+        <input type="text" oninput="setDirty('${definitionId}',this.value,'text')">
+      </div>`;
+    }
+    function setDirty(definitionId,value,kind){
+      if(value===''||value===null||value===undefined){delete state.dirty[definitionId]}
+      else if(kind==='boolean'){state.dirty[definitionId]=value?['true']:['false']}
+      else{state.dirty[definitionId]=[String(value)]}
+      const anyDirty=Object.keys(state.dirty).length>0;
+      document.getElementById('drawer-save').disabled=!anyDirty;
+    }
+    function setFieldStatus(definitionId,kind,text){
+      const el=document.getElementById('st_'+definitionId);
+      if(!el)return;
+      el.className='field-status '+(kind||'');
+      el.innerHTML=kind==='saving'?`<span class="spinner"></span> saving…`
+        :kind==='ok'?`✓ ${text||'saved'}`
+        :kind==='err'?`✗ ${escapeHtml(text||'failed')}`
+        :'';
+    }
+
+    // ─── Save: set_product_attribute for each dirty field, then re-fetch score
+    async function saveDrawer(){
+      const p=state.current;
+      if(!p)return;
+      const entries=Object.entries(state.dirty);
+      if(!entries.length)return;
+      const btn=document.getElementById('drawer-save');
+      btn.disabled=true;
+      btn.textContent='Saving…';
+      const results=await Promise.allSettled(entries.map(async([definitionId,values])=>{
+        setFieldStatus(definitionId,'saving');
+        try{
+          await mcpCall('set_product_attribute',{
+            productId:p.id,
+            definitionId,
+            values: Array.isArray(values)?values:[String(values)],
+            productName:p.name
+          });
+          setFieldStatus(definitionId,'ok');
+          return {ok:true,definitionId};
+        }catch(e){
+          setFieldStatus(definitionId,'err',e.message.slice(0,40));
+          return {ok:false,definitionId,err:e.message};
+        }
+      }));
+      const ok=results.filter(r=>r.value&&r.value.ok).length;
+      const fail=results.length-ok;
+      btn.textContent='Save & refresh score';
+      btn.disabled=false;
+      if(fail===0){
+        toast(`✓ ${ok} attribute${ok===1?'':'s'} written for ${p.name}`,'success');
+        state.dirty={};
+        await refreshSingleScore(p.id);
+        // Re-open with fresh detail so the missing list reflects what was just saved.
+        await openDrawer(p.id);
+      }else{
+        toast(`${ok} saved, ${fail} failed — see field statuses`,'error');
+      }
+    }
+    async function refreshSingleScore(productId){
+      try{
+        const result=await mcpCall('list_product_completeness_scores',{
+          productIds:[productId],
+          contexts:[state.locale]
+        });
+        const parsed=parseMcpJson(result);
+        const newScore=pickScoreFromList(parsed,productId);
+        if(typeof newScore==='number'){
+          const p=state.products.find(x=>x.id===productId);
+          if(p){p.score=newScore;renderRows();renderKpis()}
+        }
+      }catch(e){console.warn('refresh score failed:',e.message)}
+    }
+    function pickScoreFromList(parsed,productId){
+      if(!parsed)return null;
+      let list=null;
+      if(Array.isArray(parsed))list=parsed;
+      else if(Array.isArray(parsed.scores))list=parsed.scores;
+      else if(Array.isArray(parsed.items))list=parsed.items;
+      else if(Array.isArray(parsed.products))list=parsed.products;
+      else if(parsed.data&&Array.isArray(parsed.data.scores))list=parsed.data.scores;
+      if(!list)return null;
+      const row=list.find(r=>(r.productId||r.id)===productId)||list[0];
+      if(!row)return null;
+      const candidates=[row.score,row.completenessScore,row.percentage];
+      for(const c of candidates){
+        if(typeof c==='number')return Math.round(c<=1?c*100:c);
+      }
+      // Per-context array on the row.
+      if(Array.isArray(row.scores)){
+        const ctxMatch=row.scores.find(s=>(s.context||s.locale)===state.locale)||row.scores[0];
+        if(ctxMatch&&typeof ctxMatch.score==='number')return Math.round(ctxMatch.score<=1?ctxMatch.score*100:ctxMatch.score);
+      }
+      return null;
+    }
+
+    // ─── Defensive: also attach handlers programmatically in case the
+    //     embedding environment blocks inline onclick attributes for some
+    //     reason. Idempotent — if the inline handler also runs, it's just a
+    //     double call to the same function.
+    function bind(sel,ev,fn){const el=typeof sel==='string'?document.querySelector(sel):sel;if(el)el.addEventListener(ev,fn)}
+    bind('button[onclick="openSettings()"]','click',e=>{e.preventDefault();openSettings()});
+    document.querySelectorAll('#settings-modal .btn').forEach(b=>{
+      const txt=b.textContent.trim();
+      b.addEventListener('click',e=>{
+        e.preventDefault();
+        if(txt==='Test')testBackend();
+        else if(txt==='Save')saveSettings();
+        else if(txt==='Close')closeSettings();
+      });
+    });
+    document.querySelectorAll('#debug-modal .btn').forEach(b=>{
+      const txt=b.textContent.trim();
+      b.addEventListener('click',e=>{e.preventDefault();if(txt==='Copy')copyDebug();else if(txt==='Close')document.getElementById('debug-modal').classList.remove('open')});
+    });
+    document.querySelectorAll('.toolbar .btn').forEach(b=>{
+      const txt=b.textContent.trim();
+      b.addEventListener('click',e=>{e.preventDefault();if(/Refresh/.test(txt))loadProducts();else if(/Debug/.test(txt))showDebug()});
+    });
+    bind('#drawer-backdrop','click',closeDrawer);
+    bind('.drawer-close','click',closeDrawer);
+    bind('#drawer-save','click',e=>{e.preventDefault();saveDrawer()});
+
+    // Also make the inline "⚙ Settings" hint in the empty state clickable.
+    document.addEventListener('click',e=>{
+      const code=e.target.closest('code');
+      if(code&&/⚙\s*Settings/.test(code.textContent))openSettings();
+    });
+
+    // ─── Boot ────────────────────────────────────────────────────────────
+    refreshLiveBanner();
+    (async function init(){
+      if(!settings.workerSecret){
+        // Worker URL is baked in — only the secret is missing. Auto-open
+        // Settings, pre-fill the URL, and focus the secret field.
+        document.getElementById('rows').innerHTML=`<tr><td colspan="5"><div class="empty">
+          <h2>Almost there — paste your shared secret</h2>
+          <p>Worker URL is already configured. Click <code>⚙ Settings</code> and paste your <code>SHARED_SECRET</code> passphrase, then Save.</p>
+        </div></td></tr>`;
+        openSettings();
+        setTimeout(()=>{const el=document.getElementById('worker-secret');if(el)el.focus()},50);
+        return;
+      }
+      await loadContexts();
+      await loadCatalogs();
+      await loadProducts();
+    })();
+  </script>
+</body>
+</html>
