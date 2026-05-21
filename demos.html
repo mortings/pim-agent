@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bluestone PIM LABS — Fit-for-purpose UIs on the PIM MCP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#050D1F; --surface:#0C1829; --surface2:#111F35;
+      --border:rgba(255,255,255,0.08);
+      --blue:#3D74F4; --electric:#0F05CC;
+      --green:#34D399; --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --orange:#EC672B;
+      --white:#fff; --muted:rgba(255,255,255,0.45); --text:rgba(255,255,255,0.85);
+      --radius:10px;
+    }
+    html,body{min-height:100%;font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+    body{background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(61,116,244,0.08),transparent 60%),var(--bg)}
+
+    #header{display:flex;align-items:center;gap:14px;padding:0 24px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+    .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--white)}
+    .logo svg{width:24px;height:24px}
+    .pim-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);font-size:11px;font-weight:600;color:var(--green);letter-spacing:0.2px}
+    .pim-badge .pim-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 2.4s ease-in-out infinite}
+    @keyframes pimPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+    .header-spacer{flex:1}
+    .header-link{color:var(--muted);font-size:12px;text-decoration:none;font-weight:500}
+    .header-link:hover{color:var(--text)}
+
+    main{max-width:1180px;margin:0 auto;padding:80px 24px 40px}
+
+    .hero{text-align:center;margin-bottom:56px}
+    .hero .eyebrow{display:inline-block;font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;background:rgba(61,116,244,0.1);padding:6px 14px;border-radius:100px;border:1px solid rgba(61,116,244,0.25);margin-bottom:22px}
+    .hero h1{font-size:48px;font-weight:800;color:var(--white);line-height:1.1;letter-spacing:-0.02em;margin-bottom:18px;max-width:820px;margin-left:auto;margin-right:auto}
+    .hero h1 .accent{background:linear-gradient(90deg,#5687f5,#A78BFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero p{font-size:16px;color:rgba(255,255,255,0.65);max-width:680px;margin:0 auto;line-height:1.55}
+
+    .pitch{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:880px;margin:0 auto 60px;padding:0 8px}
+    .pitch-item{text-align:center;padding:0 8px}
+    .pitch-item .pitch-icon{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+    .pitch-item h3{font-size:12px;font-weight:700;color:var(--white);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+    .pitch-item p{font-size:12px;color:var(--muted);line-height:1.5}
+
+    .section-cap{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;text-align:center;margin-bottom:18px}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:48px}
+    .card{
+      background:var(--surface);border:1px solid var(--border);border-radius:14px;
+      overflow:hidden;display:flex;flex-direction:column;
+      transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s;
+      text-decoration:none;color:inherit;
+    }
+    .card:hover{transform:translateY(-2px);border-color:rgba(61,116,244,0.4);box-shadow:0 12px 32px rgba(0,0,0,0.35)}
+    .card-accent{height:5px}
+    .card-accent.blue{background:linear-gradient(90deg,var(--blue),var(--electric))}
+    .card-accent.green{background:linear-gradient(90deg,var(--green),#10b981)}
+    .card-accent.purple{background:linear-gradient(90deg,var(--purple),#8b5cf6)}
+    .card-body{padding:24px;display:flex;flex-direction:column;flex:1}
+    .card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:20px}
+    .card-icon.blue{background:rgba(61,116,244,0.12);color:var(--blue)}
+    .card-icon.green{background:rgba(52,211,153,0.12);color:var(--green)}
+    .card-icon.purple{background:rgba(167,139,255,0.12);color:var(--purple)}
+    .card-persona{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+    .card h2{font-size:20px;font-weight:700;color:var(--white);line-height:1.25;margin-bottom:8px}
+    .card-desc{font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;flex:1}
+    .card-points{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px}
+    .card-points li{font-size:12px;color:rgba(255,255,255,0.65);display:flex;gap:8px;line-height:1.45}
+    .card-points li::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-top:7px;flex-shrink:0}
+    .pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:18px}
+    .tool-pill{font-size:10px;font-weight:600;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:100px;font-family:'Menlo','SF Mono',monospace}
+    .card-cta{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border)}
+    .card-cta .open{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.6px}
+    .card-cta .arrow{color:var(--blue);font-size:16px;transition:transform 0.15s}
+    .card:hover .card-cta .arrow{transform:translateX(4px)}
+
+    .how{
+      background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;
+      max-width:880px;margin:0 auto 48px;
+    }
+    .how h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:8px}
+    .how p{font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px}
+    .how-arch{font-family:'Menlo','SF Mono',monospace;font-size:11px;line-height:1.7;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;white-space:pre;overflow-x:auto}
+    .how-arch .b{color:var(--blue);font-weight:600}
+    .how-arch .g{color:var(--green);font-weight:600}
+    .how-arch .p{color:var(--purple);font-weight:600}
+
+    .footnote{text-align:center;font-size:12px;color:var(--muted);padding:24px 0 12px;border-top:1px solid var(--border);margin-top:40px}
+    .footnote a{color:var(--blue);text-decoration:none}
+    .footnote a:hover{text-decoration:underline}
+
+    @media (max-width:720px){
+      main{padding:48px 18px 24px}
+      .hero h1{font-size:34px}
+      .hero p{font-size:14px}
+      .pitch{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header id="header">
+    <div class="logo">
+      <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg)"/><defs><linearGradient id="lg" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#3D74F4"/><stop offset="100%" stop-color="#0F05CC"/></linearGradient></defs></svg>
+      Bluestone PIM Labs
+    </div>
+    <div class="pim-badge" title="Live-connected to Bluestone PIM LABS via MCP">
+      <span class="pim-dot"></span>
+      Bluestone PIM LABS
+    </div>
+    <div class="header-spacer"></div>
+    <a class="header-link" href="https://github.com/mortings/pim-agent" target="_blank" rel="noopener">View source ↗</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Fit-for-purpose UIs on the PIM MCP</span>
+      <h1>SaaS is becoming a toolbox. <span class="accent">One PIM, many UIs.</span></h1>
+      <p>The UI a vendor ships is <em>one</em> possible UI, not the only one. With an event-driven, API-only product like Bluestone PIM and an MCP server in front of it, every role in a retail organization can have a UI shaped to their job — built in an afternoon, talking to the same live tenant.</p>
+    </section>
+
+    <section class="pitch">
+      <div class="pitch-item">
+        <div class="pitch-icon">⚡</div>
+        <h3>Event-driven, API-only</h3>
+        <p>No fixed UI is the headline. The API surface is the product.</p>
+      </div>
+      <div class="pitch-item">
+        <div class="pitch-icon">🔌</div>
+        <h3>MCP as universal adapter</h3>
+        <p>One protocol — humans, agents, custom UIs all speak it.</p>
+      </div>
+      <div class="pitch-item">
+        <div class="pitch-icon">⏱</div>
+        <h3>Built in an afternoon</h3>
+        <p>Vibecoded UIs are credible UIs. A working session, live data.</p>
+      </div>
+    </section>
+
+    <div class="section-cap">Three personas, one backend</div>
+
+    <section class="grid">
+      <a class="card" href="index.html">
+        <div class="card-accent blue"></div>
+        <div class="card-body">
+          <div class="card-icon blue">🤖</div>
+          <div class="card-persona">Agent / Power user</div>
+          <h2>The AI PIM</h2>
+          <p class="card-desc">Chat-driven product information management — describe what you want, and an agent executes it against Bluestone PIM. Reference shell with full catalog, attributes, audit log, and AI enrichment side-panel.</p>
+          <ul class="card-points">
+            <li>Natural-language commands route to MCP tools</li>
+            <li>Live <code>create_product</code> writes against the tenant</li>
+            <li>Side-by-side standard PIM &amp; agent worldview</li>
+          </ul>
+          <div class="pill-row">
+            <span class="tool-pill">create_product</span>
+            <span class="tool-pill">list_catalogs</span>
+            <span class="tool-pill">+ chat shell</span>
+          </div>
+          <div class="card-cta">
+            <span class="open">Open demo</span>
+            <span class="arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="supplier-intake.html">
+        <div class="card-accent green"></div>
+        <div class="card-body">
+          <div class="card-icon green">📦</div>
+          <div class="card-persona">External supplier</div>
+          <h2>Supplier Intake</h2>
+          <p class="card-desc">"Here's the queue of products that need your data — fill these fields." Replaces the spreadsheet-by-email workflow with a focused web UI that writes attributes straight into PIM, one product at a time.</p>
+          <ul class="card-points">
+            <li>One product per screen, slide-out card UX</li>
+            <li>Material, color, size, weight — written live via MCP</li>
+            <li>Per-field save status with optimistic UI</li>
+          </ul>
+          <div class="pill-row">
+            <span class="tool-pill">list_products_in_category</span>
+            <span class="tool-pill">set_product_attribute</span>
+          </div>
+          <div class="card-cta">
+            <span class="open">Open demo</span>
+            <span class="arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="pm-shoes.html">
+        <div class="card-accent purple"></div>
+        <div class="card-body">
+          <div class="card-icon purple">📊</div>
+          <div class="card-persona">Product Manager / Category owner</div>
+          <h2>PM Scorecard &amp; Gap-Filler</h2>
+          <p class="card-desc">A catalog-level view of completeness — KPIs at the top, low-scoring products surfaced first, drill-in drawer that lists exactly what's missing and lets the PM fix it inline. Score updates live after each save.</p>
+          <ul class="card-points">
+            <li>Server-side filtering by completeness range</li>
+            <li>Per-attribute control type (text / select / number / toggle)</li>
+            <li>Single-row score refresh after writes</li>
+          </ul>
+          <div class="pill-row">
+            <span class="tool-pill">search_products</span>
+            <span class="tool-pill">get_product_completeness_detail</span>
+            <span class="tool-pill">set_product_attribute</span>
+            <span class="tool-pill">list_product_completeness_scores</span>
+          </div>
+          <div class="card-cta">
+            <span class="open">Open demo</span>
+            <span class="arrow">→</span>
+          </div>
+        </div>
+      </a>
+    </section>
+
+    <section class="how">
+      <h3>How it's wired</h3>
+      <p>Each demo is a single self-contained HTML file. The browser only knows a Worker URL and a shared passphrase. Bluestone credentials live as Wrangler secrets on the Worker — the page never sees them.</p>
+<pre class="how-arch"><span class="b">Browser</span>  ─►  <span class="g">Cloudflare Worker</span>  ─►  <span class="p">Bluestone PIM MCP</span>  ─►  Bluestone PIM
+demo.html      pim-agent-proxy        jsonrpc 2.0           tenant
+shared-secret  3 Bluestone headers    tools/call</pre>
+    </section>
+
+    <p class="footnote">
+      Built with the <a href="https://github.com/mortings/pim-agent" target="_blank" rel="noopener">bluestone-pim-ui</a> Claude skill on top of the Bluestone PIM MCP — see <a href="https://labs.bluestonepim.com" target="_blank" rel="noopener">labs.bluestonepim.com</a>.
+    </p>
+  </main>
+</body>
+</html>
