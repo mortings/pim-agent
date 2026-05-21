@@ -835,7 +835,8 @@
 
       if(fixable.length){
         await renderFixFields(fixable);
-        document.getElementById('drawer-save').disabled=fixable.length===0;
+        // Start disabled; setDirty() flips it on as soon as anything is typed.
+        document.getElementById('drawer-save').disabled=true;
       }
     }
     function pickScoreFromDetail(parsed){
@@ -956,7 +957,8 @@
       const p=state.current;
       if(!p)return;
       const entries=Object.entries(state.dirty);
-      if(!entries.length)return;
+      if(!entries.length){toast('Type a value into a field first','error');return}
+      const oldScore=p.score;
       const btn=document.getElementById('drawer-save');
       btn.disabled=true;
       btn.textContent='Saving…';
@@ -978,18 +980,60 @@
       }));
       const ok=results.filter(r=>r.value&&r.value.ok).length;
       const fail=results.length-ok;
-      btn.textContent='Save & refresh score';
-      btn.disabled=false;
-      if(fail===0){
-        toast(`✓ ${ok} attribute${ok===1?'':'s'} written for ${p.name}`,'success');
-        state.dirty={};
-        await refreshSingleScore(p.id);
-        // Re-open with fresh detail so the missing list reflects what was just saved.
-        await openDrawer(p.id);
-      }else{
+      if(fail!==0){
+        btn.textContent='Save & refresh score';btn.disabled=false;
         toast(`${ok} saved, ${fail} failed — see field statuses`,'error');
+        return;
       }
+      // Writes succeeded. Bluestone recomputes completeness asynchronously, so
+      // the first poll often still returns the old score. Show progress and
+      // retry until the score actually changes (or we give up after ~21s).
+      toast(`✓ ${ok} attribute${ok===1?'':'s'} written — recomputing score…`,'success');
+      state.dirty={};
+      btn.textContent='Updating score…';
+      const newScore=await pollScoreUntilChanged(p.id,oldScore);
+      const changed=typeof newScore==='number'&&newScore!==oldScore;
+      if(changed){
+        const prod=state.products.find(x=>x.id===p.id);
+        if(prod){prod.score=newScore;renderRows();renderKpis()}
+        const delta=(oldScore==null||typeof oldScore!=='number')?'':' (was '+oldScore+'%)';
+        toast(`✓ Score is now ${newScore}%${delta}`,'success');
+      }else{
+        // Save happened, but the recompute is still running on Bluestone's side.
+        toast('Saved. Score will refresh on next page reload (Bluestone is still recomputing).','success');
+      }
+      btn.textContent='Save & refresh score';btn.disabled=true;
+      // Re-open with fresh detail so the missing list reflects what was just saved.
+      await openDrawer(p.id);
     }
+
+    // Poll list_product_completeness_scores until the score actually changes
+    // from `oldScore`, or we run out of attempts. Bluestone recomputes
+    // completeness asynchronously — empirically can take 5-15s after a
+    // set_product_attribute write. Exponential-ish backoff so we don't
+    // hammer the API but still surface the new score reasonably fast.
+    async function pollScoreUntilChanged(productId,oldScore){
+      const delays=[1000,1500,2500,4000,6000,6000]; // total ~21s
+      let last=null;
+      for(let i=0;i<delays.length;i++){
+        await new Promise(r=>setTimeout(r,delays[i]));
+        try{
+          const result=await mcpCall('list_product_completeness_scores',{
+            productIds:[productId],
+            contexts:[state.locale]
+          });
+          const parsed=parseMcpJson(result);
+          const s=pickScoreFromList(parsed,productId);
+          if(typeof s==='number'){
+            last=s;
+            console.log('[pm-shoes] poll '+(i+1)+'/'+delays.length+' → '+s+'% (old '+oldScore+'%)');
+            if(s!==oldScore)return s;
+          }
+        }catch(e){console.warn('[pm-shoes] poll attempt '+(i+1)+' failed:',e.message)}
+      }
+      return last; // could equal oldScore if no change after full poll window
+    }
+    // Kept for callers that want a one-shot non-polling refresh.
     async function refreshSingleScore(productId){
       try{
         const result=await mcpCall('list_product_completeness_scores',{
