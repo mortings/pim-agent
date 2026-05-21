@@ -88,6 +88,7 @@
     .quality-pct.high{color:var(--green)}
     .row-arrow{color:var(--muted);font-size:18px;transition:transform 0.15s}
     tbody tr:hover .row-arrow{color:var(--blue);transform:translateX(3px)}
+    .pending-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 6px var(--blue);margin-left:6px;vertical-align:middle;animation:pimPulse 1.4s ease-in-out infinite}
     .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:0.2px}
     .pill.ready{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.3)}
     .pill.gap{background:rgba(251,231,77,0.08);color:var(--yellow);border:1px solid rgba(251,231,77,0.3)}
@@ -775,6 +776,10 @@
       const fixable=failed.filter(r=>!!r.definitionId&&!/MEDIA/i.test(r.type||''));
       const unfixable=failed.filter(r=>!(!!r.definitionId&&!/MEDIA/i.test(r.type||'')));
       state.missingForCurrent=fixable;
+      // Snapshot req counts so saveDrawer can compute an optimistic score
+      // (passed + successful writes) / total, without waiting for Bluestone's
+      // async recompute.
+      state.currentReqCounts={passed:passed.length,failed:failed.length,total:reqs.length};
 
       const q=score==null?'mid':(score<40?'low':score<80?'mid':'high');
       const cls=score==null?'':(score<40?'low':score<80?'mid':'high');
@@ -985,34 +990,52 @@
         toast(`${ok} saved, ${fail} failed — see field statuses`,'error');
         return;
       }
-      // Writes succeeded. Bluestone recomputes completeness asynchronously, so
-      // the first poll often still returns the old score. Show progress and
-      // retry until the score actually changes (or we give up after ~21s).
-      toast(`✓ ${ok} attribute${ok===1?'':'s'} written — recomputing score…`,'success');
+      // Writes succeeded. Don't block on Bluestone's async recompute — show
+      // an optimistic score immediately (we know how many requirements just
+      // got satisfied), close the drawer, and verify in the background.
       state.dirty={};
-      btn.textContent='Updating score…';
-      const newScore=await pollScoreUntilChanged(p.id,oldScore);
-      const changed=typeof newScore==='number'&&newScore!==oldScore;
-      if(changed){
-        const prod=state.products.find(x=>x.id===p.id);
-        if(prod){prod.score=newScore;renderRows();renderKpis()}
-        const delta=(oldScore==null||typeof oldScore!=='number')?'':' (was '+oldScore+'%)';
-        toast(`✓ Score is now ${newScore}%${delta}`,'success');
-      }else{
-        // Save happened, but the recompute is still running on Bluestone's side.
-        toast('Saved. Score will refresh on next page reload (Bluestone is still recomputing).','success');
+      const counts=state.currentReqCounts||{passed:0,failed:0,total:0};
+      const optimistic=counts.total>0
+        ? Math.round(((counts.passed+ok)/counts.total)*100)
+        : null;
+      const prod=state.products.find(x=>x.id===p.id);
+      if(prod&&typeof optimistic==='number'){
+        prod.score=optimistic;
+        renderRows();renderKpis();
+        markRowPending(p.id); // small visual indicator while we verify
       }
+      const delta=(typeof oldScore==='number')?' (was '+oldScore+'%)':'';
+      toast(typeof optimistic==='number'
+        ? `✓ Saved — score is ${optimistic}%${delta}`
+        : `✓ ${ok} attribute${ok===1?'':'s'} written`,'success');
       btn.textContent='Save & refresh score';btn.disabled=true;
-      // Re-open with fresh detail so the missing list reflects what was just saved.
-      await openDrawer(p.id);
+      closeDrawer();
+      // Background verification — don't await. If Bluestone's eventual score
+      // differs from optimistic, we silently correct the row.
+      verifyScoreInBackground(p.id,oldScore,optimistic);
     }
 
-    // Poll list_product_completeness_scores until the score actually changes
-    // from `oldScore`, or we run out of attempts. Bluestone recomputes
-    // completeness asynchronously — empirically can take 5-15s after a
-    // set_product_attribute write. Exponential-ish backoff so we don't
-    // hammer the API but still surface the new score reasonably fast.
-    async function pollScoreUntilChanged(productId,oldScore){
+    // Mark a row as "Bluestone-confirming…" while we wait for the async
+    // recompute to catch up with our optimistic update.
+    function markRowPending(productId){
+      const row=document.querySelector('#rows tr[data-id="'+productId+'"]');
+      if(!row)return;
+      const pct=row.querySelector('.quality-pct');
+      if(pct&&!pct.querySelector('.pending-dot'))pct.insertAdjacentHTML('beforeend','<span class="pending-dot" title="Verifying with Bluestone…"></span>');
+    }
+    function clearRowPending(productId){
+      const row=document.querySelector('#rows tr[data-id="'+productId+'"]');
+      if(!row)return;
+      const dot=row.querySelector('.pending-dot');
+      if(dot)dot.remove();
+    }
+
+    // Verify the optimistic score against Bluestone's eventually-consistent
+    // recompute. Runs in the background — doesn't block the user. Polls
+    // list_product_completeness_scores with exponential-ish backoff up to
+    // ~21s. If the eventual real score differs from our optimistic guess,
+    // silently correct the row and KPIs and surface a small toast.
+    async function verifyScoreInBackground(productId,oldScore,optimistic){
       const delays=[1000,1500,2500,4000,6000,6000]; // total ~21s
       let last=null;
       for(let i=0;i<delays.length;i++){
@@ -1026,12 +1049,27 @@
           const s=pickScoreFromList(parsed,productId);
           if(typeof s==='number'){
             last=s;
-            console.log('[pm-shoes] poll '+(i+1)+'/'+delays.length+' → '+s+'% (old '+oldScore+'%)');
-            if(s!==oldScore)return s;
+            console.log('[pm-shoes] verify '+(i+1)+'/'+delays.length+' → '+s+'% (optimistic '+optimistic+'%, old '+oldScore+'%)');
+            // Once we see the recompute land (changed from oldScore), we have
+            // Bluestone's authoritative answer.
+            if(s!==oldScore){
+              clearRowPending(productId);
+              const prod=state.products.find(x=>x.id===productId);
+              if(prod){prod.score=s;renderRows();renderKpis()}
+              if(typeof optimistic==='number'&&s!==optimistic){
+                toast(`Score corrected to ${s}% (we guessed ${optimistic}%)`,'success');
+              }
+              return;
+            }
           }
-        }catch(e){console.warn('[pm-shoes] poll attempt '+(i+1)+' failed:',e.message)}
+        }catch(e){console.warn('[pm-shoes] verify attempt '+(i+1)+' failed:',e.message)}
       }
-      return last; // could equal oldScore if no change after full poll window
+      // Gave up — leave optimistic in place but drop the spinner.
+      clearRowPending(productId);
+      if(last!==null&&last!==oldScore){
+        const prod=state.products.find(x=>x.id===productId);
+        if(prod){prod.score=last;renderRows();renderKpis()}
+      }
     }
     // Kept for callers that want a one-shot non-polling refresh.
     async function refreshSingleScore(productId){
