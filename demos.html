@@ -58,11 +58,13 @@
     .card-accent.blue{background:linear-gradient(90deg,var(--blue),var(--electric))}
     .card-accent.green{background:linear-gradient(90deg,var(--green),#10b981)}
     .card-accent.purple{background:linear-gradient(90deg,var(--purple),#8b5cf6)}
+    .card-accent.orange{background:linear-gradient(90deg,var(--orange),#f57a3f)}
     .card-body{padding:24px;display:flex;flex-direction:column;flex:1}
     .card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:20px}
     .card-icon.blue{background:rgba(61,116,244,0.12);color:var(--blue)}
     .card-icon.green{background:rgba(52,211,153,0.12);color:var(--green)}
     .card-icon.purple{background:rgba(167,139,255,0.12);color:var(--purple)}
+    .card-icon.orange{background:rgba(236,103,43,0.12);color:var(--orange)}
     .card-persona{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
     .card h2{font-size:20px;font-weight:700;color:var(--white);line-height:1.25;margin-bottom:8px}
     .card-desc{font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;flex:1}
@@ -138,7 +140,7 @@
       </div>
     </section>
 
-    <div class="section-cap">Three personas, one backend</div>
+    <div class="section-cap">Four personas, one backend</div>
 
     <section class="grid">
       <a class="card" href="index.html">
@@ -205,6 +207,30 @@
             <span class="tool-pill">get_product_completeness_detail</span>
             <span class="tool-pill">set_product_attribute</span>
             <span class="tool-pill">list_product_completeness_scores</span>
+          </div>
+          <div class="card-cta">
+            <span class="open">Open demo</span>
+            <span class="arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="store-floor.html">
+        <div class="card-accent orange"></div>
+        <div class="card-body">
+          <div class="card-icon orange">👟</div>
+          <div class="card-persona">Store associate / Floor staff</div>
+          <h2>Store Floor Lookup</h2>
+          <p class="card-desc">PIM goes to the sales floor — a phone-sized lookup for the associate standing next to a customer. Search the SKU, see the shoe, see the other colors in that style, see what sizes are in stock. Three taps, three seconds.</p>
+          <ul class="card-points">
+            <li>Published-catalog only — no drafts leak to the floor</li>
+            <li>Variant-parent pivot: "other colors in this style"</li>
+            <li>Recent SKUs cached locally for the next customer</li>
+          </ul>
+          <div class="pill-row">
+            <span class="tool-pill">list_published_catalogs</span>
+            <span class="tool-pill">list_published_products_in_category</span>
+            <span class="tool-pill">get_product</span>
           </div>
           <div class="card-cta">
             <span class="open">Open demo</span>
