@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Store Floor — Bluestone PIM LABS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#050D1F; --surface:#0C1829; --surface2:#111F35;
+      --border:rgba(255,255,255,0.08);
+      --blue:#3D74F4; --electric:#0F05CC;
+      --green:#34D399; --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --orange:#EC672B;
+      --white:#fff; --muted:rgba(255,255,255,0.45); --text:rgba(255,255,255,0.85);
+      --phone-w:390px; --phone-h:820px;
+    }
+    html,body{min-height:100%;font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+    body{background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(236,103,43,0.06),transparent 60%),var(--bg);display:flex;flex-direction:column;align-items:center}
+
+    /* Desktop chrome — explains the demo around the phone */
+    #stage{padding:28px 16px 60px;width:100%;max-width:1240px;display:flex;flex-direction:column;align-items:center}
+    .stage-head{display:flex;align-items:center;gap:14px;width:100%;max-width:760px;margin-bottom:18px;flex-wrap:wrap}
+    .stage-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--white)}
+    .stage-logo svg{width:24px;height:24px}
+    .pim-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);font-size:11px;font-weight:600;color:var(--green);letter-spacing:0.2px}
+    .pim-badge .pim-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 2.4s ease-in-out infinite}
+    @keyframes pimPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+    .stage-spacer{flex:1;min-width:14px}
+    .stage-back{font-size:11px;color:var(--muted);text-decoration:none;font-weight:600;letter-spacing:0.4px}
+    .stage-back:hover{color:var(--text)}
+    .stage-cog{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+    .stage-cog:hover{border-color:rgba(236,103,43,0.5);color:var(--orange)}
+
+    .stage-strap{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;width:100%;max-width:1120px;margin-bottom:32px;align-items:start}
+    .strap-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+    .strap-card .eyebrow{font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:6px}
+    .strap-card h3{font-size:13px;font-weight:700;color:var(--white);margin-bottom:6px}
+    .strap-card p{font-size:12px;color:var(--muted);line-height:1.55}
+    .strap-card .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.2px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Menlo','SF Mono',monospace;margin-right:4px;margin-top:4px}
+    .strap-card .pill.green{background:rgba(52,211,153,0.1);color:var(--green);border-color:rgba(52,211,153,0.3)}
+    .strap-card .pill.orange{background:rgba(236,103,43,0.1);color:var(--orange);border-color:rgba(236,103,43,0.3)}
+
+    /* Phone-frame chrome (visual demo on desktop) */
+    .phone{
+      width:var(--phone-w);height:var(--phone-h);background:#000;border-radius:48px;
+      padding:14px;border:2px solid #1a2538;
+      box-shadow:0 30px 80px rgba(0,0,0,0.55),0 0 0 4px #0a1424,0 0 80px rgba(236,103,43,0.12);
+      position:relative;flex-shrink:0;
+    }
+    .phone-notch{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#000;border-radius:0 0 18px 18px;z-index:5;pointer-events:none}
+    .phone-notch::after{content:'';position:absolute;right:24px;top:9px;width:9px;height:9px;border-radius:50%;background:#1a2538}
+    .phone-screen{
+      width:100%;height:100%;background:var(--bg);border-radius:36px;overflow:hidden;
+      display:flex;flex-direction:column;position:relative;
+    }
+    .phone-status{height:36px;display:flex;align-items:flex-end;justify-content:space-between;padding:6px 28px 4px;font-size:11px;font-weight:600;color:var(--white);flex-shrink:0}
+    .phone-status .right{display:flex;align-items:center;gap:5px;font-size:10px}
+    .phone-status .battery{display:inline-block;width:22px;height:10px;border:1px solid var(--white);border-radius:2px;padding:1px;vertical-align:middle;position:relative}
+    .phone-status .battery::after{content:'';position:absolute;right:-3px;top:2px;width:2px;height:4px;background:var(--white);border-radius:0 1px 1px 0}
+    .phone-status .battery .level{display:block;width:80%;height:100%;background:var(--white);border-radius:1px}
+
+    /* App header inside phone */
+    .app-head{padding:0 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+    .app-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--white)}
+    .app-title svg{width:18px;height:18px}
+    .app-spacer{flex:1}
+    .app-cog{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;font-size:16px}
+    .app-cog:hover{color:var(--orange)}
+
+    /* Search */
+    .search-wrap{padding:12px 16px 8px;background:var(--surface);flex-shrink:0;border-bottom:1px solid var(--border)}
+    .search-row{position:relative}
+    .search-row .icn{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+    .search-input{
+      width:100%;padding:13px 44px 13px 38px;font-family:inherit;font-size:14px;
+      background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);
+      -webkit-appearance:none;appearance:none;
+    }
+    .search-input:focus{outline:none;border-color:var(--orange);background:#0a1424}
+    .search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.08);border:none;color:var(--muted);width:24px;height:24px;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:12px;line-height:1}
+    .search-clear.show{display:flex}
+    .search-meta{font-size:10px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px}
+    .search-meta .pulse{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 2.4s ease-in-out infinite}
+    .search-meta.live{color:var(--green)}
+
+    /* Body (scrollable) */
+    .app-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .app-body::-webkit-scrollbar{width:0}
+
+    /* Home: recent + grid */
+    .section{padding:14px 16px 0}
+    .section-cap{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .section-cap .count{background:var(--surface2);color:var(--text);padding:0 7px;border-radius:100px;font-size:9px;border:1px solid var(--border)}
+
+    .recents{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin:0 -16px;padding-left:16px;padding-right:16px}
+    .recents::-webkit-scrollbar{display:none}
+    .recent-chip{flex-shrink:0;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;font-size:11px;font-weight:600;color:var(--text);cursor:pointer;font-family:'Menlo','SF Mono',monospace;letter-spacing:0.3px}
+    .recent-chip:hover,.recent-chip:active{border-color:var(--orange);color:var(--orange)}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 16px 24px}
+    .product-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;
+      cursor:pointer;display:flex;flex-direction:column;transition:all 0.15s;
+      min-height:44px;
+    }
+    .product-card:active{transform:scale(0.97)}
+    .product-card:hover{border-color:rgba(236,103,43,0.5)}
+    .pc-img{
+      aspect-ratio:1;width:100%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    }
+    .pc-img img{width:100%;height:100%;object-fit:cover;display:block}
+    .pc-img.placeholder{background:linear-gradient(135deg,#1a2538,#111f35);color:var(--muted);font-size:22px}
+    .pc-info{padding:9px 11px 11px}
+    .pc-name{font-size:12px;font-weight:700;color:var(--white);line-height:1.25;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:30px}
+    .pc-sku{font-size:9.5px;color:var(--muted);font-family:'Menlo','SF Mono',monospace}
+
+    .empty{padding:36px 24px;text-align:center;color:var(--muted);font-size:12px}
+    .empty .big{font-size:32px;display:block;margin-bottom:8px;opacity:0.45}
+    .loading{padding:36px;text-align:center;color:var(--muted);font-size:12px}
+    .loading .spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:8px;vertical-align:-2px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Detail screen */
+    .detail{display:flex;flex-direction:column;padding-bottom:24px}
+    .detail-bar{display:flex;align-items:center;padding:10px 12px;gap:6px;position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 0%,var(--bg) 70%,transparent 100%);z-index:5}
+    .detail-back{background:rgba(255,255,255,0.06);border:none;color:var(--text);font-size:18px;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .detail-back:active{background:rgba(255,255,255,0.12)}
+    .detail-bar-info{flex:1;font-size:11px;color:var(--muted);font-family:'Menlo','SF Mono',monospace}
+    .detail-bar-pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 1.4s ease-in-out infinite;vertical-align:middle;margin-right:5px}
+
+    .hero-img{
+      width:100%;aspect-ratio:1;background:#fff;display:flex;align-items:center;justify-content:center;
+      border-radius:18px;overflow:hidden;margin-bottom:14px;
+    }
+    .hero-img img{width:100%;height:100%;object-fit:cover;display:block}
+    .hero-img.placeholder{background:linear-gradient(135deg,#1a2538,#111f35);color:var(--muted);font-size:42px}
+    .detail-block{padding:0 18px}
+    .detail-name{font-size:20px;font-weight:800;color:var(--white);line-height:1.2;margin-bottom:4px}
+    .detail-color{font-size:13px;color:var(--orange);font-weight:600;margin-bottom:6px}
+    .detail-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:'Menlo','SF Mono',monospace;margin-bottom:14px}
+    .detail-meta .type-pill{background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:100px;color:var(--text);font-family:'Menlo','SF Mono',monospace;font-size:10px;letter-spacing:0.3px}
+    .detail-meta .live{display:flex;align-items:center;gap:5px;color:var(--green)}
+    .detail-meta .live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+
+    .stock-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:16px}
+    .stock-row .label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px}
+    .stock-row .val{font-size:14px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px}
+    .stock-row .val .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 2.4s ease-in-out infinite}
+
+    /* Sizes — mock visual for floor staff */
+    .sizes-cap{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
+    .sizes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+    .size{
+      padding:11px 0;text-align:center;border:1px solid var(--border);border-radius:10px;
+      background:var(--surface);font-size:13px;font-weight:700;color:var(--white);cursor:pointer;
+      position:relative;min-height:44px;display:flex;align-items:center;justify-content:center;
+    }
+    .size.out{color:var(--muted);text-decoration:line-through;cursor:not-allowed;background:transparent}
+    .size.low::after{content:'low';position:absolute;top:-7px;right:-4px;background:var(--yellow);color:#1a1300;font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;letter-spacing:0.3px}
+    .size:active:not(.out){background:var(--orange);border-color:var(--orange);color:#fff}
+
+    /* Other colors row */
+    .colors-row{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 16px;scroll-snap-type:x mandatory}
+    .colors-row::-webkit-scrollbar{display:none}
+    .color-chip{
+      flex-shrink:0;width:72px;cursor:pointer;scroll-snap-align:start;
+      display:flex;flex-direction:column;align-items:stretch;gap:5px;
+    }
+    .color-chip-img{
+      width:72px;height:72px;border-radius:12px;background:#fff;overflow:hidden;
+      border:2px solid transparent;transition:all 0.15s;
+    }
+    .color-chip-img img{width:100%;height:100%;object-fit:cover;display:block}
+    .color-chip-img.placeholder{background:linear-gradient(135deg,#1a2538,#111f35)}
+    .color-chip.active .color-chip-img{border-color:var(--orange);box-shadow:0 0 0 1px rgba(236,103,43,0.4)}
+    .color-chip:active .color-chip-img{transform:scale(0.95)}
+    .color-chip-label{font-size:10px;color:var(--text);text-align:center;line-height:1.2;font-weight:600}
+    .color-chip.active .color-chip-label{color:var(--orange)}
+
+    /* Attribute list */
+    .attr-list{margin:0;padding:0;list-style:none;border-top:1px solid var(--border);margin-top:10px}
+    .attr-list li{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px}
+    .attr-list .k{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.6px;flex-shrink:0;max-width:55%}
+    .attr-list .v{color:var(--text);text-align:right;font-weight:600;word-break:break-word}
+    .attr-list .v.muted{color:var(--muted);font-style:italic;font-weight:400}
+
+    /* Settings modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:480px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+    .modal h2{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--white)}
+    .modal .hint{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+    .modal .field{margin-bottom:12px}
+    .modal .field label{text-transform:uppercase;font-size:11px;letter-spacing:0.5px;color:var(--muted);font-weight:600;margin-bottom:5px;display:block}
+    .modal .field input{width:100%;padding:10px 12px;font-family:inherit;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text)}
+    .modal .field input:focus{outline:none;border-color:var(--orange)}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:18px}
+    .modal-status{flex:1;font-size:11px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+    .modal-status .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+    .modal-status.ok{color:var(--green)} .modal-status.ok .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+    .modal-status.err{color:var(--red)} .modal-status.err .dot{background:var(--red)}
+    .btn{background:rgba(255,255,255,0.04);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+    .btn:hover{background:rgba(236,103,43,0.1);border-color:rgba(236,103,43,0.3);color:var(--orange)}
+    .btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+    .btn.primary:hover{background:#f57a3f;color:#fff}
+
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--surface);border:1px solid var(--border);padding:11px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.4);opacity:0;transition:all 0.25s;z-index:200;max-width:90vw}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    .toast.success{border-color:rgba(52,211,153,0.4);color:var(--green)}
+    .toast.error{border-color:rgba(235,72,94,0.4);color:var(--red)}
+
+    /* Responsive — on mobile, drop the phone chrome */
+    @media (max-width:760px){
+      body{background:var(--bg);align-items:stretch}
+      #stage{padding:0;max-width:100%}
+      .stage-head,.stage-strap{display:none}
+      .phone{width:100%;height:100vh;height:100dvh;border-radius:0;padding:0;border:none;box-shadow:none}
+      .phone-notch{display:none}
+      .phone-screen{border-radius:0;height:100%}
+      .phone-status{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <div class="stage-head">
+      <div class="stage-logo">
+        <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg)"/><defs><linearGradient id="lg" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#EC672B"/><stop offset="100%" stop-color="#3D74F4"/></linearGradient></defs></svg>
+        Store Floor
+      </div>
+      <div class="pim-badge" title="Live-connected to Bluestone PIM LABS via MCP"><span class="pim-dot"></span>Bluestone PIM LABS</div>
+      <div class="stage-spacer"></div>
+      <a class="stage-back" href="demos.html">← All demos</a>
+      <button class="stage-cog" onclick="openSettings()">⚙ Settings</button>
+    </div>
+
+    <div class="stage-strap">
+      <div class="strap-card">
+        <div class="eyebrow">Persona</div>
+        <h3>Store associate, on the floor</h3>
+        <p>One thumb, customer waiting. They scan a tag or search a SKU — they need the shoe, the color options, and the size availability inside three seconds.</p>
+      </div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-status">
+            <span id="phone-time">—</span>
+            <div class="right"><span>5G</span><span class="battery"><span class="level"></span></span></div>
+          </div>
+
+          <header class="app-head">
+            <div class="app-title">
+              <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg2)"/><defs><linearGradient id="lg2" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#EC672B"/><stop offset="100%" stop-color="#3D74F4"/></linearGradient></defs></svg>
+              <span id="app-title-text">Store Floor</span>
+            </div>
+            <div class="app-spacer"></div>
+            <button class="app-cog" onclick="openSettings()" title="Settings">⚙</button>
+          </header>
+
+          <div class="search-wrap" id="search-wrap">
+            <div class="search-row">
+              <span class="icn">⌕</span>
+              <input id="search" class="search-input" type="search" inputmode="search" autocomplete="off" placeholder="Scan SKU or search shoes…" aria-label="Search">
+              <button class="search-clear" id="search-clear" onclick="clearSearch()" aria-label="Clear">×</button>
+            </div>
+            <div class="search-meta" id="search-meta"><span class="pulse"></span><span id="search-meta-text">Configure backend to load live shoes</span></div>
+          </div>
+
+          <main class="app-body" id="app-body">
+            <div class="loading"><span class="spin"></span>Waiting for backend…</div>
+          </main>
+        </div>
+      </div>
+      <div class="strap-card">
+        <div class="eyebrow">Wired through MCP</div>
+        <h3>Published catalog, read-only</h3>
+        <p>The floor sees what customers see — <em>published</em> data, not drafts. One round-trip on launch; everything else is local filter + drill-in.</p>
+        <div>
+          <span class="pill green">list_published_catalogs</span>
+          <span class="pill green">list_published_products_in_category</span>
+          <span class="pill orange">get_product</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+      <h2>Backend (Bluestone PIM MCP)</h2>
+      <p class="hint">Worker URL and shared secret. Bluestone credentials live on the Worker as secrets; this page never sees them.</p>
+      <div class="field"><label>Worker URL</label><input type="text" id="worker-url" placeholder="https://pim-agent-proxy.your-account.workers.dev"></div>
+      <div class="field"><label>Shared Secret</label><input type="password" id="worker-secret" placeholder="The passphrase you set with wrangler secret put SHARED_SECRET"></div>
+      <div class="modal-actions">
+        <div class="modal-status" id="modal-status"><span class="dot"></span><span>Not tested</span></div>
+        <button class="btn" onclick="testBackend()">Test</button>
+        <button class="btn primary" onclick="saveSettings()">Save</button>
+        <button class="btn" onclick="closeSettings()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── Settings + MCP wiring (lifted from pm-shoes.html) ────────────────
+    const DEFAULT_WORKER_URL = 'https://pim-agent-proxy.mortings.workers.dev';
+    const settings = {
+      workerUrl: localStorage.getItem('pim-workerUrl') || DEFAULT_WORKER_URL,
+      workerSecret: localStorage.getItem('pim-workerSecret') || ''
+    };
+    function openSettings(){
+      document.getElementById('worker-url').value=settings.workerUrl;
+      document.getElementById('worker-secret').value=settings.workerSecret;
+      setModalStatus(settings.workerUrl?'ok':'',settings.workerUrl?'Saved — click Test to verify':'Not configured');
+      document.getElementById('settings-modal').classList.add('open');
+    }
+    function closeSettings(){document.getElementById('settings-modal').classList.remove('open')}
+    function saveSettings(){
+      settings.workerUrl=document.getElementById('worker-url').value.trim().replace(/\/+$/,'');
+      settings.workerSecret=document.getElementById('worker-secret').value.trim();
+      localStorage.setItem('pim-workerUrl',settings.workerUrl);
+      localStorage.setItem('pim-workerSecret',settings.workerSecret);
+      toast('Backend saved','success');
+      setModalStatus('ok','Saved — loading published catalog…');
+      closeSettings();
+      bootstrap();
+    }
+    function setModalStatus(kind,text){
+      const el=document.getElementById('modal-status');
+      el.className='modal-status'+(kind?' '+kind:'');
+      el.querySelector('span:last-child').textContent=text;
+    }
+    async function testBackend(){
+      saveSettings();
+      if(!settings.workerUrl){setModalStatus('err','Worker URL is empty');return}
+      try{
+        const r=await fetch(settings.workerUrl+'/api/health');
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok){setModalStatus('err','HTTP '+r.status);return}
+        const checks=[];
+        checks.push(j.mcpConfigured?'MCP_URL ✓':'MCP_URL ✗');
+        checks.push(j.authConfigured?'SHARED_SECRET ✓':'SHARED_SECRET ✗');
+        checks.push(j.bluestoneConfigured?'Bluestone creds ✓':'Bluestone creds ✗');
+        setModalStatus('ok',checks.join('  •  '));
+      }catch(e){
+        setModalStatus('err',/failed to fetch|networkerror|cors/i.test(String(e.message))?'Network/CORS — check Worker URL':'Unreachable: '+e.message);
+      }
+    }
+    async function mcpCall(tool,args={}){
+      if(!settings.workerUrl||!settings.workerSecret){openSettings();throw new Error('Open Settings first')}
+      const r=await fetch(settings.workerUrl+'/api/mcp-call',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':settings.workerSecret},body:JSON.stringify({tool,args})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok||data.success===false)throw new Error(data.error||('HTTP '+r.status));
+      return data.result;
+    }
+    function toast(msg,kind=''){
+      const el=document.getElementById('toast');
+      el.textContent=msg;el.className='toast show '+kind;
+      clearTimeout(toast._t);
+      toast._t=setTimeout(()=>el.classList.remove('show'),2800);
+    }
+    function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))}
+
+    // MCP JSON parsing — same defensive pattern as pm-shoes.html.
+    function extractMcpText(result){
+      if(!result)return '';
+      if(typeof result==='string')return result;
+      if(Array.isArray(result.content))return result.content.filter(c=>c&&c.type==='text'&&typeof c.text==='string').map(c=>c.text).join('\n');
+      try{return JSON.stringify(result)}catch(e){return String(result)}
+    }
+    function parseMcpJson(result){
+      if(!result)return null;
+      if(result.structuredContent&&typeof result.structuredContent==='object')return result.structuredContent;
+      if(Array.isArray(result.content)){
+        for(const c of result.content){
+          if(c&&c.type==='json'&&c.json)return c.json;
+          if(c&&typeof c.json==='object'&&c.json)return c.json;
+        }
+      }
+      const text=extractMcpText(result).trim();
+      if(text){
+        const stripped=text.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+        try{return JSON.parse(stripped)}catch(e){}
+        const m=stripped.match(/[\{\[][\s\S]*[\}\]]/);
+        if(m){try{return JSON.parse(m[0])}catch(e){}}
+      }
+      return null;
+    }
+
+    // ─── Phone status clock ─────────────────────────────────────────────
+    function tickClock(){
+      const d=new Date();
+      const h=d.getHours();const m=d.getMinutes();
+      document.getElementById('phone-time').textContent=h+':'+(m<10?'0':'')+m;
+    }
+    tickClock();setInterval(tickClock,30000);
+
+    // ─── Store-floor state ──────────────────────────────────────────────
+    const RECENTS_KEY='store-floor-recents';
+    const PREFERRED_CATALOG='Shoes';
+    const state={
+      catalogId:null,catalogName:'',
+      products:[],            // all published products
+      query:'',
+      view:'home',            // home | detail
+      currentId:null,
+      detailCache:{},         // productId → full get_product result
+      recents:JSON.parse(localStorage.getItem(RECENTS_KEY)||'[]'),
+    };
+
+    function pushRecent(p){
+      const slim={id:p.id,name:p.name,number:p.number};
+      state.recents=[slim,...state.recents.filter(r=>r.id!==p.id)].slice(0,8);
+      localStorage.setItem(RECENTS_KEY,JSON.stringify(state.recents));
+    }
+
+    // Pull "color" out of a name like "Heritage Brogue - Espresso Brown".
+    function splitName(name){
+      const idx=name.lastIndexOf(' - ');
+      if(idx>-1)return {base:name.slice(0,idx),color:name.slice(idx+3)};
+      return {base:name,color:''};
+    }
+
+    // ─── Bootstrap: pick catalog, load published products ──────────────
+    async function bootstrap(){
+      if(!settings.workerUrl||!settings.workerSecret){
+        document.getElementById('search-meta-text').textContent='Configure backend to load live shoes';
+        document.getElementById('app-body').innerHTML=`<div class="empty"><span class="big">⚙</span><div>Tap the gear, configure the backend, then come back.</div></div>`;
+        openSettings();return;
+      }
+      document.getElementById('search-meta-text').textContent='Loading published catalog…';
+      document.getElementById('app-body').innerHTML=`<div class="loading"><span class="spin"></span>Calling list_published_catalogs…</div>`;
+      try{
+        const result=await mcpCall('list_published_catalogs',{});
+        const parsed=parseMcpJson(result);
+        const list=Array.isArray(parsed)?parsed:(parsed?.catalogs||parsed?.items||parsed?.data?.catalogs||[]);
+        if(!list.length){throw new Error('No published catalogs returned')}
+        const cat=list.find(c=>new RegExp(PREFERRED_CATALOG,'i').test(c.name||''))||list[0];
+        state.catalogId=cat.id||cat.catalogId||cat._id;
+        state.catalogName=cat.name||cat.label||cat.title||'(unnamed)';
+        document.getElementById('app-title-text').textContent=state.catalogName;
+        document.title=state.catalogName+' — Store Floor — Bluestone PIM LABS';
+        document.getElementById('search').placeholder='Scan SKU or search '+state.catalogName.toLowerCase()+'…';
+        await loadProducts();
+      }catch(e){
+        document.getElementById('app-body').innerHTML=`<div class="empty"><span class="big">⚠</span><div>${escapeHtml(e.message)}</div></div>`;
+        document.getElementById('search-meta-text').textContent='Backend error — check Settings';
+      }
+    }
+
+    async function loadProducts(){
+      try{
+        const result=await mcpCall('list_published_products_in_category',{
+          categoryId:state.catalogId,categoryName:state.catalogName,limit:200
+        });
+        const parsed=parseMcpJson(result);
+        let list=null;
+        if(Array.isArray(parsed))list=parsed;
+        else if(Array.isArray(parsed?.products))list=parsed.products;
+        else if(Array.isArray(parsed?.items))list=parsed.items;
+        state.products=(list||[]).map(p=>({
+          id:p.id||p.productId||p._id,
+          name:p.name||p.productName||p.title||'(unnamed)',
+          number:p.number||p.sku||p.productNumber||'',
+          type:p.type||'',
+          variantParentId:p.variantParentId||p.parentId||null,
+          imageUrl:p.imageUrl||p.image||null
+        })).filter(p=>p.id);
+        const meta=document.getElementById('search-meta');
+        meta.classList.add('live');
+        document.getElementById('search-meta-text').textContent=state.products.length+' shoes live in '+state.catalogName+' — '+new Date().toLocaleTimeString();
+        renderHome();
+      }catch(e){
+        document.getElementById('app-body').innerHTML=`<div class="empty"><span class="big">⚠</span><div>${escapeHtml(e.message)}</div></div>`;
+      }
+    }
+
+    // ─── Search wiring ─────────────────────────────────────────────────
+    const searchEl=document.getElementById('search');
+    const searchClear=document.getElementById('search-clear');
+    searchEl.addEventListener('input',()=>{
+      state.query=searchEl.value.trim();
+      searchClear.classList.toggle('show',!!state.query);
+      if(state.view==='home')renderHome();
+    });
+    function clearSearch(){
+      searchEl.value='';state.query='';searchClear.classList.remove('show');
+      if(state.view==='home')renderHome();
+      searchEl.focus();
+    }
+
+    function filteredProducts(){
+      if(!state.query)return state.products;
+      const q=state.query.toLowerCase();
+      return state.products.filter(p=>
+        p.name.toLowerCase().includes(q) ||
+        (p.number||'').toLowerCase().includes(q)
+      );
+    }
+
+    // ─── Home view ─────────────────────────────────────────────────────
+    function renderHome(){
+      state.view='home';state.currentId=null;
+      const body=document.getElementById('app-body');
+      const products=filteredProducts();
+      let html='';
+
+      // Recents (only when no query — they're shortcuts)
+      if(!state.query && state.recents.length){
+        html+=`<div class="section">
+          <div class="section-cap">Recent <span class="count">${state.recents.length}</span></div>
+          <div class="recents">${state.recents.map(r=>{
+            const safeId=escapeHtml(r.id);
+            return `<div class="recent-chip" onclick="openDetail('${safeId}')">${escapeHtml(r.number||r.name)}</div>`;
+          }).join('')}</div>
+        </div>`;
+      }
+
+      if(!products.length){
+        html+=`<div class="empty"><span class="big">🔍</span><div>No matches for "<strong>${escapeHtml(state.query)}</strong>".<br>Check the SKU or try fewer characters.</div></div>`;
+      }else{
+        html+=`<div class="section">
+          <div class="section-cap">${state.query?'Matches':'All in stock'} <span class="count">${products.length}</span></div>
+        </div>
+        <div class="grid">${products.map(p=>{
+          const {color}=splitName(p.name);
+          const img=p.imageUrl?`<img src="${escapeHtml(p.imageUrl)}" alt="" loading="lazy">`:`👟`;
+          return `<div class="product-card" onclick="openDetail('${escapeHtml(p.id)}')">
+            <div class="pc-img ${p.imageUrl?'':'placeholder'}">${img}</div>
+            <div class="pc-info">
+              <div class="pc-name">${escapeHtml(p.name)}</div>
+              <div class="pc-sku">${escapeHtml(p.number||'—')}</div>
+            </div>
+          </div>`;
+        }).join('')}</div>`;
+      }
+      body.innerHTML=html;
+      body.scrollTop=0;
+    }
+
+    // ─── Detail view ───────────────────────────────────────────────────
+    // For demo realism (a store associate cares about size availability),
+    // we deterministically generate per-SKU "in stock" sizes from the SKU
+    // hash — same SKU always shows the same sizes, but each variant has
+    // a believable, varied availability profile.
+    function fakeSizesFor(sku){
+      const sizes=['36','37','38','39','40','41','42','43','44','45'];
+      let h=0;for(const ch of (sku||'x')){h=(h*31+ch.charCodeAt(0))&0xffffffff}
+      return sizes.map((s,i)=>{
+        const v=Math.abs((h>>(i*2))&7);
+        return {size:s,state:v===0?'out':v===1?'low':'ok'};
+      });
+    }
+
+    async function openDetail(productId){
+      const p=state.products.find(x=>x.id===productId);
+      if(!p)return;
+      state.view='detail';state.currentId=productId;
+      pushRecent(p);
+
+      const {base,color}=splitName(p.name);
+      const siblings=p.variantParentId?state.products.filter(s=>s.variantParentId===p.variantParentId):[];
+      const sizes=fakeSizesFor(p.number||p.id);
+
+      const body=document.getElementById('app-body');
+      const heroImg=p.imageUrl
+        ? `<div class="hero-img"><img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}"></div>`
+        : `<div class="hero-img placeholder">👟</div>`;
+
+      body.innerHTML=`
+        <div class="detail">
+          <div class="detail-bar">
+            <button class="detail-back" onclick="renderHome()" aria-label="Back">←</button>
+            <div class="detail-bar-info"><span class="detail-bar-pulse"></span>Live from PIM</div>
+          </div>
+          ${heroImg}
+          <div class="detail-block">
+            <div class="detail-name">${escapeHtml(base)}</div>
+            ${color?`<div class="detail-color">${escapeHtml(color)}</div>`:''}
+            <div class="detail-meta">
+              <span class="type-pill">${escapeHtml(p.type||'PRODUCT')}</span>
+              <span>${escapeHtml(p.number||'—')}</span>
+              <span class="live">live</span>
+            </div>
+
+            <div class="stock-row">
+              <div class="label">Stock</div>
+              <div class="val"><span class="pulse"></span>In stock</div>
+            </div>
+
+            <div class="sizes-cap">Sizes available</div>
+            <div class="sizes">${sizes.map(s=>`<div class="size ${s.state==='out'?'out':''} ${s.state==='low'?'low':''}">${s.size}</div>`).join('')}</div>
+
+            ${siblings.length>1?`
+              <div class="sizes-cap">Other colors in this style <span style="color:var(--text);font-weight:700">(${siblings.length})</span></div>
+              <div class="colors-row">${siblings.map(s=>{
+                const {color:sc}=splitName(s.name);
+                const img=s.imageUrl?`<img src="${escapeHtml(s.imageUrl)}" alt="">`:'';
+                return `<div class="color-chip ${s.id===p.id?'active':''}" onclick="openDetail('${escapeHtml(s.id)}')">
+                  <div class="color-chip-img ${s.imageUrl?'':'placeholder'}">${img}</div>
+                  <div class="color-chip-label">${escapeHtml(sc||s.name)}</div>
+                </div>`;
+              }).join('')}</div>
+            `:''}
+
+            <div class="sizes-cap" id="attrs-cap" style="margin-top:8px">Product details</div>
+            <ul class="attr-list" id="attr-list">
+              <li><span class="k">Type</span><span class="v">${escapeHtml(p.type||'—')}</span></li>
+              <li><span class="k">SKU</span><span class="v">${escapeHtml(p.number||'—')}</span></li>
+              <li><span class="k">PIM ID</span><span class="v" style="font-family:'Menlo','SF Mono',monospace;font-size:10px">${escapeHtml(p.id)}</span></li>
+              <li><span class="k">Live read</span><span class="v muted" id="attrs-loading">Loading get_product…</span></li>
+            </ul>
+          </div>
+        </div>
+      `;
+      body.scrollTop=0;
+
+      // Lazy-load full product details via get_product (one-tap deepening).
+      loadFullDetail(productId);
+    }
+
+    async function loadFullDetail(productId){
+      try{
+        const cached=state.detailCache[productId];
+        const result=cached||await mcpCall('get_product',{productId,context:'en'});
+        if(!cached)state.detailCache[productId]=result;
+        if(state.currentId!==productId)return;
+        const parsed=parseMcpJson(result);
+        const list=document.getElementById('attr-list');
+        if(!list)return;
+        const lastUpdate=parsed?.lastUpdate?new Date(parsed.lastUpdate).toLocaleString():null;
+        const state_=parsed?.state||'—';
+        const archived=!!parsed?.archived;
+        const attrCount=Array.isArray(parsed?.attributes)?parsed.attributes.length:0;
+        const assetCount=Array.isArray(parsed?.assets)?parsed.assets.length:0;
+        const catCount=Array.isArray(parsed?.categories)?parsed.categories.length:0;
+
+        list.innerHTML=`
+          <li><span class="k">Type</span><span class="v">${escapeHtml(parsed?.type||'—')}</span></li>
+          <li><span class="k">SKU</span><span class="v">${escapeHtml(parsed?.number||'—')}</span></li>
+          <li><span class="k">State</span><span class="v">${escapeHtml(state_)}${archived?' (archived)':''}</span></li>
+          <li><span class="k">Attributes</span><span class="v">${attrCount}</span></li>
+          <li><span class="k">Categories</span><span class="v">${catCount}</span></li>
+          <li><span class="k">Media assets</span><span class="v">${assetCount}</span></li>
+          ${lastUpdate?`<li><span class="k">Last update</span><span class="v">${escapeHtml(lastUpdate)}</span></li>`:''}
+          <li><span class="k">PIM ID</span><span class="v" style="font-family:'Menlo','SF Mono',monospace;font-size:10px">${escapeHtml(parsed?.id||productId)}</span></li>
+        `;
+      }catch(e){
+        const list=document.getElementById('attr-list');
+        if(list){
+          const last=list.querySelector('li:last-child .v');
+          if(last){last.classList.add('muted');last.textContent='get_product failed — '+e.message}
+        }
+      }
+    }
+
+    // ─── Boot ──────────────────────────────────────────────────────────
+    bootstrap();
+  </script>
+</body>
+</html>
