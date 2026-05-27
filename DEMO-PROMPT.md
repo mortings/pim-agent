@@ -1,77 +1,106 @@
-# Gartner demo — the build-a-UI-while-you-talk prompt
+# Gartner demo — the transparent build-along
 
-This prompt lets you start a Claude Code session at the **beginning** of a Gartner analyst meeting, switch back to the analyst, and have a working fit-for-purpose UI deployed by the **end** of the meeting (~10–15 min later). You don't watch Claude work — Claude works autonomously while you keep presenting.
+This prompt lets you build a fit-for-purpose UI **live in front of the analyst**, with your Claude Code window on screen the whole time. You don't disappear and run a script — the analyst watches Claude actually plan, read docs, call MCP, write code, test, and ship.
 
-## How to use it
+The proof point you're selling is *"a working UI in an afternoon, on top of our MCP."* The visible execution **is** the demo.
 
-### Option A — slash command (recommended)
+## How to run the demo
 
-If you're in this repo, the slash command is already installed:
+### The pitch (your spoken intro, ~30 seconds)
+
+> "Before I show you our regular PIM, I want to show you something different. This is the **Bluestone PIM UI skill** — a Claude Code skill that knows how to build UIs on top of our MCP server. I'm going to ask Claude to build a fit-for-purpose UI for a specific role right now. You'll watch it happen. By the end of our conversation, we'll have a working, deployed UI to look at — talking to live data on our real tenant."
+
+### The command
+
+In Claude Code, in this repo, type:
 
 ```
 /build-demo-ui merchandiser quick-edit
 ```
 
-or just:
+or just `/build-demo-ui` (defaults to merchandiser, which contrasts most with the three demos already deployed).
 
-```
-/build-demo-ui
-```
+Press Enter. The analyst sees the prompt expand inline — they can read what you're asking for, including the constraints.
 
-(no argument → defaults to Merchandiser quick-edit, the persona that visually contrasts most with what's already deployed.)
+### What happens next (visible to the analyst)
 
-### Option B — paste the prompt
+Claude will, **in this exact order, visibly**:
 
-If you're not in this repo (e.g. fresh demo machine), copy the contents of [`.claude/commands/build-demo-ui.md`](.claude/commands/build-demo-ui.md) and paste it as your first message in Claude Code. Replace `$ARGUMENTS` with the persona name (or just delete that line to take the default).
+1. **Post a 2-sentence plan** — what it's going to build and why this persona.
+2. **Create a checklist** with TaskCreate — 6-8 concrete steps. The analyst sees the project plan crystallize.
+3. **Read the skill's persona recipes** — *"Reading the merchandiser quick-edit recipe to confirm the layout."* The Read tool calls are visible.
+4. **Call the live MCP** — *"Calling `list_catalogs` to see what's on this tenant."* Real network activity, real data comes back.
+5. **Surface findings** — *"Tenant has 5 catalogs: Clothes, Skincare, Outputs, Intake-ERP, Enrichment Structure. Using Clothes."*
+6. **Write the HTML file** — Edit/Write tool calls scroll by, code is visible.
+7. **Test it on a preview server** — opens a browser, exercises the flow, screenshots if needed.
+8. **Update demos.html** — the landing page gets a 4th card.
+9. **Commit + push** — Git commands visible, GitHub Pages auto-deploys.
+10. **Post a 5-line summary** — file name, URL, persona, one-sentence demo script, caveats.
 
-## What happens
+Your job during this is to **narrate** as you point at the screen. Easy talking points:
 
-1. You say to the analyst: *"This is the Bluestone PIM UI skill on top of our MCP server. Watch how easy it is to build a fit-for-purpose UI for a specific role."*
-2. You start a Claude Code session, paste/type the command, hit Enter.
-3. You switch back to the analyst and keep presenting whatever you had planned.
-4. Claude autonomously:
-   - Reads the skill's persona recipes + tool catalog + the existing `pm-shoes.html` as a reference (which has every production pattern figured out — defensive MCP parsing, optimistic save with background polling, CORS-correct port, etc.)
-   - Picks a sensible persona if you didn't specify one
-   - Writes a single self-contained HTML file
-   - Tests it on `localhost:8000` against your real Bluestone tenant
-   - Updates `demos.html` to surface the new UI
-   - Commits and pushes to `main` (GitHub Pages auto-deploys)
-   - Replies with a 5-line summary: file name, deployed URL, persona, one-sentence demo script, caveats
-5. By the end of your demo (10–15 min), the URL is live at `https://mortings.github.io/pim-agent/<file>.html`.
-6. You click back to your Claude Code screen, read the 5-line summary, then switch to the deployed URL and show the analyst:
-   *"While we've been talking, Claude built this fit-for-purpose UI on top of our MCP. Real data, live tenant, single file, ~10 minutes."*
+- *"See — Claude's reading the skill's documentation. The skill encodes how to build a PIM UI."*
+- *"Now it's calling our MCP server to see what's on the tenant. That's a real API call."*
+- *"It's writing the file. This isn't a template — it's adapting to what it found."*
+- *"It's testing the UI in a real browser before declaring it done."*
+- *"Pushing to GitHub. The site will auto-deploy."*
 
-## What the prompt bakes in (so you don't get interrupted)
+### When Claude is done
 
-Every gotcha from the session that produced `pm-shoes.html` is baked into the prompt:
+Claude posts the 5-line summary. You read it aloud, switch tabs to the deployed URL, and demo the result:
 
-| Gotcha (and what it cost last time) | How the prompt handles it |
+> *"Here it is — a merchandiser-shaped UI for the Clothes category, built start-to-finish in the time we've been talking. Same PIM tenant, same MCP, completely different shape. Watch — I can change a price right here and it lands in Bluestone."*
+
+## Backup: conversational mode (if the analyst wants Q&A during the build)
+
+Sometimes the analyst will interrupt with questions: *"Why that persona?"*, *"How does the skill work?"*, *"What if we wanted X?"* — these are good interruptions to lean into.
+
+To handle that, **pause Claude** at any time:
+
+- Use Ctrl-C / Esc to interrupt the current turn
+- Answer the analyst's question
+- Resume with: *"OK Claude, continue from where you were — keep the same plan."*
+
+Claude will pick up where it left off. The TaskCreate checklist is your safety net — it knows what's pending.
+
+You can also actively involve the analyst:
+
+- *"Claude, what catalogs did you find?"* → Claude shows the list, you discuss with the analyst
+- *"Claude, why did you pick that recipe?"* → Claude explains; the analyst sees real reasoning
+- *"Show the analyst the code you just wrote."* → Claude opens the file
+
+These interruptions don't break the demo — they make it more credible.
+
+## What the prompt bakes in so you don't get interrupted by Claude
+
+| Past gotcha (from the session that produced pm-shoes.html) | Pre-empted by |
 |---|---|
-| Claude asks "which catalog?" | Auto-discover, default to first / one matching the persona |
-| KPIs blank because field names don't match | Defensive parsing with multiple candidate paths + regex extract from prose |
-| "Save" appears to do nothing for 15s | Optimistic score update + background polling, never blocks UI |
-| CORS error on `localhost:8765` | Use port 8000 (the Worker's allow-list) |
-| Worker URL prompts every time | Baked in; only the secret is interactive |
-| Drawer fields rendered as "unfixable" | Bucket by `definitionId` presence, not strict type-string match |
-| Page title hardcoded to one persona | Catalog-agnostic from the start |
-| Generic "Settings button does not work" | Defensive `addEventListener` alongside inline handlers |
-
-## Tweaking the persona
-
-The prompt template's default is **Merchandiser quick-edit** (grid view, inline editing). Other strong demo personas from the skill:
-
-- `/build-demo-ui store associate phone-sized lookup` — touch-target search, scan barcodes, product detail. Phone-shape contrast is dramatic.
-- `/build-demo-ui agentic command bar` — slash-style `/list`, `/create`, `/setattr`. Looks most overtly "agentic" — strong for AI-focused analysts.
-- `/build-demo-ui content enrichment workbench` — Original vs Suggested copy side-by-side, accept/reject AI suggestions. Best if the analyst is into the AI-augmentation angle.
-- `/build-demo-ui buyer dashboard` — KPI-heavy executive view. Best for buyer/CFO conversations.
-
-You can also just write your own persona description in your own words — the prompt is robust to that.
+| Claude asks "which catalog?" | Auto-discover, default to one fitting persona |
+| KPIs blank because field names don't match | Defensive parser baked in via pm-shoes.html reference |
+| Save appears to do nothing for 15s | Optimistic update + background poll baked in |
+| CORS error on localhost:8765 | Prompt explicitly says port 8000 |
+| Worker URL prompts every time | Baked into HTML |
+| Drawer fields rendered as "unfixable" | Bucket by `definitionId`, not strict type-string |
+| Hardcoded persona/catalog names | Catalog-agnostic from start |
+| Settings button mystery | `addEventListener` redundancy alongside `onclick` |
 
 ## Pre-demo checklist (do this once, ahead of the meeting)
 
 - [ ] Clone the repo to your demo machine
-- [ ] Confirm your browser's `localStorage` has the secret saved on `https://mortings.github.io` — paste `localStorage.getItem('pim-workerSecret')` in DevTools console on the existing demo to check
-- [ ] Open Claude Code in this repo
-- [ ] Type `/build-demo-ui` and Tab — confirm the command shows up
+- [ ] Open it in Claude Code; type `/build-demo-ui` and Tab — confirm the command shows up
+- [ ] Confirm your browser has the shared secret in localStorage for the GitHub Pages origin (paste `localStorage.getItem('pim-workerSecret')` in DevTools on the existing demo to check)
+- [ ] **Do one dry run** with a persona you won't use in the real demo, e.g. `/build-demo-ui buyer dashboard`. This both warms you up and lets you discover any environment quirk *before* an analyst is watching.
+- [ ] When the dry-run UI is deployed, delete the dry-run HTML file + its demos.html card so the real demo starts from a clean state.
 
-That's it. On the day of the demo, you only need to type one command and switch tabs.
+## Other personas to try
+
+Anything from the skill's `persona-recipes.md` works. Strong choices:
+
+- `/build-demo-ui store associate phone lookup` — touch-target search, mobile shape. Most dramatic visual contrast.
+- `/build-demo-ui agentic command bar` — slash-style `/list`, `/create`, `/setattr`. Best for AI-curious analysts.
+- `/build-demo-ui content enrichment workbench` — Original vs Suggested copy side-by-side. Best for AI-augmentation narrative.
+- `/build-demo-ui buyer dashboard` — KPI-heavy exec view. Best for CFO / category-director audiences.
+
+The default is `merchandiser quick-edit` which contrasts most strongly with the existing three demos.
+
+You can also write a custom persona in your own words: `/build-demo-ui in-store kiosk for self-checkout with our PIM as the backend` — the prompt is robust to free-form descriptions.
