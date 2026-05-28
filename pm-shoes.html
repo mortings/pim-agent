@@ -283,7 +283,7 @@
       <h2>Backend (Bluestone PIM MCP)</h2>
       <p class="hint">Worker URL and shared secret. Bluestone credentials live on the Worker as secrets; this page never sees them.</p>
       <div class="field"><label>Worker URL</label><input type="text" id="worker-url" placeholder="https://pim-agent-proxy.your-account.workers.dev"></div>
-      <div class="field"><label>Shared Secret</label><input type="password" id="worker-secret" placeholder="The passphrase you set with wrangler secret put SHARED_SECRET"></div>
+      <div class="field"><label>Shared Secret</label><input type="text" id="worker-secret" placeholder="The passphrase you set with wrangler secret put SHARED_SECRET"></div>
       <div class="modal-actions">
         <div class="modal-status" id="modal-status"><span class="dot"></span><span>Not tested</span></div>
         <button class="btn" onclick="testBackend()">Test</button>
