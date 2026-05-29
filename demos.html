@@ -60,12 +60,14 @@
     .card-accent.green{background:linear-gradient(90deg,var(--green),#10b981)}
     .card-accent.purple{background:linear-gradient(90deg,var(--purple),#8b5cf6)}
     .card-accent.orange{background:linear-gradient(90deg,var(--orange),#f57a3f)}
+    .card-accent.red{background:linear-gradient(90deg,var(--red),#b91c1c)}
     .card-body{padding:24px;display:flex;flex-direction:column;flex:1}
     .card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:20px}
     .card-icon.blue{background:rgba(61,116,244,0.12);color:var(--blue)}
     .card-icon.green{background:rgba(52,211,153,0.12);color:var(--green)}
     .card-icon.purple{background:rgba(167,139,255,0.12);color:var(--purple)}
     .card-icon.orange{background:rgba(236,103,43,0.12);color:var(--orange)}
+    .card-icon.red{background:rgba(235,72,94,0.12);color:var(--red)}
     .card-persona{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
     .card h2{font-size:20px;font-weight:700;color:var(--white);line-height:1.25;margin-bottom:8px}
     .card-desc{font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;flex:1}
@@ -142,7 +144,7 @@
       </div>
     </section>
 
-    <div class="section-cap">Four personas, one backend</div>
+    <div class="section-cap">Five personas, one PIM</div>
 
     <section class="grid">
       <a class="card" href="index.html">
@@ -236,6 +238,30 @@
           </div>
           <div class="card-cta">
             <span class="open">Open demo</span>
+            <span class="arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="https://mortings.github.io/supplier-onboarding/" target="_blank" rel="noopener">
+        <div class="card-accent red"></div>
+        <div class="card-body">
+          <div class="card-icon red">📥</div>
+          <div class="card-persona">Buyer / Data ops</div>
+          <h2>Supplier Onboarding · Drop</h2>
+          <p class="card-desc">Drop a new supplier's catalog — CSV, JSON, or XLSX — and the demo auto-detects the schema, suggests an attribute mapping, validates the first ten rows, then commits the import. Replaces spreadsheet ping-pong with a guided four-step flow.</p>
+          <ul class="card-points">
+            <li>Drag-and-drop CSV / JSON / XLSX, auto-detected schema</li>
+            <li>AI suggests the right Bluestone attribute per source column</li>
+            <li>Preview &amp; validate before any writes hit PIM</li>
+          </ul>
+          <div class="pill-row">
+            <span class="tool-pill">Bluestone PAPI</span>
+            <span class="tool-pill">AI schema map</span>
+            <span class="tool-pill">+ batch ingest</span>
+          </div>
+          <div class="card-cta">
+            <span class="open">Open demo ↗</span>
             <span class="arrow">→</span>
           </div>
         </div>
