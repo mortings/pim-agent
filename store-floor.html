@@ -415,22 +415,26 @@
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="${c}"/><g fill="${fg}" opacity="0.92"><path d="M30 130 q-2 -18 14 -22 l28 -4 q10 -1 16 -8 l24 -22 q6 -5 14 -3 l28 6 q14 3 14 18 v8 q0 8 -8 12 l-90 22 q-12 3 -22 -2 z"/><circle cx="60" cy="138" r="4"/><circle cx="80" cy="135" r="3"/><circle cx="100" cy="131" r="3"/><circle cx="120" cy="127" r="3"/></g></svg>`
       );
     }
+    // Real shoe photos from Unsplash. Mapped loosely by colour to each
+    // variant name; the colour-tinted SVG silhouette is kept as an onerror
+    // fallback so the demo still works if any URL ever goes away.
+    const UNSPLASH=id=>`https://images.unsplash.com/photo-${id}?w=600&h=600&fit=crop&q=75`;
     const DEMO_PRODUCTS=[
-      // Heritage Brogue
-      {id:'demo-brg-esp',name:'Heritage Brogue - Espresso Brown',number:'BRG-ESP-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Espresso Brown')},
-      {id:'demo-brg-blk',name:'Heritage Brogue - Black Onyx',number:'BRG-BLK-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Black Onyx')},
-      {id:'demo-brg-tan',name:'Heritage Brogue - Tan Caramel',number:'BRG-TAN-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Tan Caramel')},
-      {id:'demo-brg-oxb',name:'Heritage Brogue - Oxblood',number:'BRG-OXB-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Oxblood')},
-      // Marathon Runner
-      {id:'demo-mar-blt',name:'Marathon Runner - Bolt Yellow',number:'MAR-BLT-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Bolt Yellow')},
-      {id:'demo-mar-stl',name:'Marathon Runner - Stealth Black',number:'MAR-STL-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Stealth Black')},
-      {id:'demo-mar-mnt',name:'Marathon Runner - Mint Green',number:'MAR-MNT-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Mint Green')},
-      {id:'demo-mar-cor',name:'Marathon Runner - Coral Pink',number:'MAR-COR-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Coral Pink')},
-      // Court Classic
-      {id:'demo-crt-wht',name:'Court Classic - Arctic White',number:'CRT-WHT-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Arctic White')},
-      {id:'demo-crt-nvy',name:'Court Classic - Navy',number:'CRT-NVY-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Navy')},
-      {id:'demo-crt-grn',name:'Court Classic - Forest Green',number:'CRT-GRN-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Forest Green')},
-      {id:'demo-crt-bur',name:'Court Classic - Burgundy',number:'CRT-BUR-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Burgundy')},
+      // Heritage Brogue — leather-tone sneakers
+      {id:'demo-brg-esp',name:'Heritage Brogue - Espresso Brown',number:'BRG-ESP-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:UNSPLASH('1549298916-b41d501d3772'),imageFallback:shoeSvg('Espresso Brown')},
+      {id:'demo-brg-blk',name:'Heritage Brogue - Black Onyx',number:'BRG-BLK-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:UNSPLASH('1605348532760-6753d2c43329'),imageFallback:shoeSvg('Black Onyx')},
+      {id:'demo-brg-tan',name:'Heritage Brogue - Tan Caramel',number:'BRG-TAN-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:UNSPLASH('1542219550-37153d387c27'),imageFallback:shoeSvg('Tan Caramel')},
+      {id:'demo-brg-oxb',name:'Heritage Brogue - Oxblood',number:'BRG-OXB-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:UNSPLASH('1525966222134-fcfa99b8ae77'),imageFallback:shoeSvg('Oxblood')},
+      // Marathon Runner — athletic
+      {id:'demo-mar-blt',name:'Marathon Runner - Bolt Yellow',number:'MAR-BLT-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:UNSPLASH('1606107557195-0e29a4b5b4aa'),imageFallback:shoeSvg('Bolt Yellow')},
+      {id:'demo-mar-stl',name:'Marathon Runner - Stealth Black',number:'MAR-STL-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:UNSPLASH('1491553895911-0055eca6402d'),imageFallback:shoeSvg('Stealth Black')},
+      {id:'demo-mar-mnt',name:'Marathon Runner - Mint Green',number:'MAR-MNT-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:UNSPLASH('1539185441755-769473a23570'),imageFallback:shoeSvg('Mint Green')},
+      {id:'demo-mar-cor',name:'Marathon Runner - Coral Pink',number:'MAR-COR-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:UNSPLASH('1551107696-a4b0c5a0d9a2'),imageFallback:shoeSvg('Coral Pink')},
+      // Court Classic — low-top everyday
+      {id:'demo-crt-wht',name:'Court Classic - Arctic White',number:'CRT-WHT-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:UNSPLASH('1608231387042-66d1773070a5'),imageFallback:shoeSvg('Arctic White')},
+      {id:'demo-crt-nvy',name:'Court Classic - Navy',number:'CRT-NVY-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:UNSPLASH('1460353581641-37baddab0fa2'),imageFallback:shoeSvg('Navy')},
+      {id:'demo-crt-grn',name:'Court Classic - Pastel Bloom',number:'CRT-PAS-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:UNSPLASH('1595950653106-6c9ebd614d3a'),imageFallback:shoeSvg('Mint Green')},
+      {id:'demo-crt-red',name:'Court Classic - Crimson',number:'CRT-CRI-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:UNSPLASH('1542291026-7eec264c27ff'),imageFallback:shoeSvg('Oxblood')},
     ];
     const DEMO_STYLE_MATERIAL={
       'demo-brg':{material:'Full-grain leather',sole:'Goodyear-welted rubber',gender:'Unisex',weight:'490 g'},
@@ -463,6 +467,21 @@
       const idx=name.lastIndexOf(' - ');
       if(idx>-1)return {base:name.slice(0,idx),color:name.slice(idx+3)};
       return {base:name,color:''};
+    }
+
+    // Build an <img> tag for a product. If the product carries an
+    // `imageFallback` (the colour-tinted SVG silhouette we ship with the
+    // demo data), wire it as the onerror handler so a flaky remote URL
+    // never leaves the user with a broken-image icon.
+    function imgTag(p,opts){
+      opts=opts||{};
+      const src=escapeHtml(p.imageUrl);
+      const alt=escapeHtml(opts.alt||'');
+      const lazy=opts.lazy?' loading="lazy"':'';
+      const fb=p.imageFallback
+        ?` data-fallback="${escapeHtml(p.imageFallback)}" onerror="this.onerror=null;this.src=this.dataset.fallback"`
+        :'';
+      return `<img src="${src}" alt="${alt}"${lazy}${fb}>`;
     }
 
     // ─── Demo-mode helpers ─────────────────────────────────────────────
@@ -618,7 +637,7 @@
         </div>
         <div class="grid">${products.map(p=>{
           const {color}=splitName(p.name);
-          const img=p.imageUrl?`<img src="${escapeHtml(p.imageUrl)}" alt="" loading="lazy">`:`👟`;
+          const img=p.imageUrl?imgTag(p,{lazy:true}):`👟`;
           return `<div class="product-card" onclick="openDetail('${escapeHtml(p.id)}')">
             <div class="pc-img ${p.imageUrl?'':'placeholder'}">${img}</div>
             <div class="pc-info">
@@ -658,7 +677,7 @@
 
       const body=document.getElementById('app-body');
       const heroImg=p.imageUrl
-        ? `<div class="hero-img"><img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}"></div>`
+        ? `<div class="hero-img">${imgTag(p,{alt:p.name})}</div>`
         : `<div class="hero-img placeholder">👟</div>`;
 
       body.innerHTML=`
@@ -689,7 +708,7 @@
               <div class="sizes-cap">Other colors in this style <span style="color:var(--text);font-weight:700">(${siblings.length})</span></div>
               <div class="colors-row">${siblings.map(s=>{
                 const {color:sc}=splitName(s.name);
-                const img=s.imageUrl?`<img src="${escapeHtml(s.imageUrl)}" alt="">`:'';
+                const img=s.imageUrl?imgTag(s,{}):'';
                 return `<div class="color-chip ${s.id===p.id?'active':''}" onclick="openDetail('${escapeHtml(s.id)}')">
                   <div class="color-chip-img ${s.imageUrl?'':'placeholder'}">${img}</div>
                   <div class="color-chip-label">${escapeHtml(sc||s.name)}</div>
