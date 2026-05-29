@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Translation Workbench — Bluestone PIM LABS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#050D1F; --surface:#0C1829; --surface2:#111F35;
+      --border:rgba(255,255,255,0.08);
+      --blue:#3D74F4; --electric:#0F05CC;
+      --green:#34D399; --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --orange:#EC672B;
+      --accent:#2DD4BF; --accent-soft:rgba(45,212,191,0.12); --accent-line:rgba(45,212,191,0.3);
+      --white:#fff; --muted:rgba(255,255,255,0.45); --text:rgba(255,255,255,0.85);
+      --radius:10px;
+    }
+    html,body{min-height:100%;font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+    body{background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(45,212,191,0.06),transparent 60%),var(--bg)}
+
+    #header{display:flex;align-items:center;gap:14px;padding:0 20px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+    .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--white)}
+    .logo svg{width:24px;height:24px}
+    .pim-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);font-size:11px;font-weight:600;color:var(--green);letter-spacing:0.2px}
+    .pim-badge .pim-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 2.4s ease-in-out infinite}
+    @keyframes pimPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+    .header-spacer{flex:1}
+    .header-persona{font-size:12px;color:var(--muted)}
+    .header-persona strong{color:var(--white)}
+    .header-link{font-size:11px;color:var(--muted);text-decoration:none;font-weight:600;letter-spacing:0.3px}
+    .header-link:hover{color:var(--text)}
+
+    .btn{background:rgba(255,255,255,0.04);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+    .btn:hover{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#04221d}
+    .btn.primary:hover{background:#43e6d1;color:#04221d}
+    .btn.primary:disabled{opacity:0.45;cursor:not-allowed}
+    .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+    .btn.ghost:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+    .btn.small{padding:5px 10px;font-size:11px}
+
+    main{padding:22px 24px 60px;max-width:1320px;margin:0 auto}
+
+    .intro{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px}
+    .intro-icon{width:42px;height:42px;border-radius:11px;background:var(--accent-soft);border:1px solid var(--accent-line);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .intro h1{font-size:20px;font-weight:800;color:var(--white);line-height:1.2;margin-bottom:3px}
+    .intro p{font-size:12.5px;color:var(--muted);max-width:760px}
+    .intro p code{background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:11px;color:var(--accent);font-family:'Menlo','SF Mono',monospace}
+
+    .mode-banner{display:flex;align-items:center;gap:8px;border-radius:8px;padding:9px 13px;margin-bottom:16px;font-size:12px}
+    .mode-banner.live{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:var(--green)}
+    .mode-banner.demo{background:rgba(251,231,77,0.08);border:1px solid rgba(251,231,77,0.28);color:var(--yellow)}
+    .mode-banner .pim-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+    .mode-banner a{color:inherit;text-decoration:underline;cursor:pointer;font-weight:700}
+    .mode-banner .spacer{flex:1}
+
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px}
+    .tile-cap{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .tile-num{font-size:28px;font-weight:800;color:var(--white);line-height:1.05}
+    .tile-num.accent{color:var(--accent)}
+    .tile-num.yellow{color:var(--yellow)}
+    .tile-num.red{color:var(--red)}
+    .tile-sub{font-size:11px;color:var(--muted);margin-top:4px}
+    .mini-bar{height:5px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:9px}
+    .mini-bar > span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--green));transition:width 0.5s ease}
+
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .toolbar .grp{display:flex;align-items:center;gap:8px}
+    .toolbar label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+    select{appearance:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;font-weight:600;padding:8px 32px 8px 12px;cursor:pointer;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff77' stroke-width='2'><polyline points='6,9 12,15 18,9'/></svg>");background-repeat:no-repeat;background-position:right 11px center}
+    select:focus{outline:none;border-color:var(--accent)}
+    .toolbar .spacer{flex:1}
+
+    /* ─── Translation matrix ─────────────────────────────────────────── */
+    .matrix-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    .matrix-scroll{overflow-x:auto}
+    table.matrix{border-collapse:separate;border-spacing:0;width:100%;min-width:880px}
+    table.matrix th,table.matrix td{text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}
+    table.matrix thead th{position:sticky;top:0;background:var(--surface2);z-index:2;padding:0}
+    .col-head{padding:12px 14px;border-left:1px solid var(--border)}
+    .col-head:first-child{border-left:none}
+    .loc-name{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--white)}
+    .loc-flag{font-size:15px;line-height:1}
+    .loc-code{font-family:'Menlo','SF Mono',monospace;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase}
+    .loc-meta{display:flex;align-items:center;gap:8px;margin-top:7px}
+    .loc-cov{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden}
+    .loc-cov > span{display:block;height:100%;border-radius:2px}
+    .loc-pct{font-size:10px;font-weight:700;color:var(--muted);min-width:30px;text-align:right}
+    .source-tag{display:inline-block;margin-top:6px;font-size:9px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:1px 6px;border-radius:100px}
+
+    .attr-cell{padding:13px 14px;width:170px;min-width:160px;background:var(--surface);position:sticky;left:0;z-index:1}
+    .attr-name{font-size:12.5px;font-weight:700;color:var(--white)}
+    .attr-type{font-size:10px;color:var(--muted);margin-top:2px;font-family:'Menlo','SF Mono',monospace}
+    .attr-writable{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:0.3px;color:var(--green);margin-top:6px}
+    .attr-writable::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green)}
+
+    .val-cell{padding:11px 14px;border-left:1px solid var(--border);width:auto;font-size:12.5px;line-height:1.45;cursor:default;position:relative;transition:background 0.15s}
+    .val-cell.src{color:var(--text)}
+    .val-cell.filled{color:var(--text)}
+    .val-cell.missing{background:rgba(235,72,94,0.04)}
+    .val-cell.suggested{background:var(--accent-soft);cursor:pointer}
+    .val-cell.suggested:hover{background:rgba(45,212,191,0.18)}
+    .val-cell.committed{color:var(--text)}
+    .val-text{white-space:pre-wrap;word-break:break-word}
+    .cell-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;letter-spacing:0.4px;text-transform:uppercase;padding:2px 6px;border-radius:100px;margin-bottom:6px}
+    .cell-tag.missing{color:var(--red);background:rgba(235,72,94,0.1);border:1px solid rgba(235,72,94,0.28)}
+    .cell-tag.suggested{color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line)}
+    .cell-tag.committed{color:var(--green);background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.28)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .cell-empty-hint{color:var(--muted);font-style:italic;font-size:11px}
+    .suggest-foot{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:10px;color:var(--accent);font-weight:600}
+    .suggest-foot .dismiss{color:var(--muted);cursor:pointer;margin-left:auto;font-weight:700}
+    .suggest-foot .dismiss:hover{color:var(--red)}
+
+    .action-row{display:flex;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
+    .action-row .summary{font-size:12px;color:var(--muted)}
+    .action-row .summary strong{color:var(--white);font-weight:700}
+    .action-row .spacer{flex:1}
+    .engine-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text)}
+    .engine-pill .glow{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 7px var(--accent)}
+
+    .empty{padding:48px 24px;text-align:center;color:var(--muted);font-size:13px}
+    .empty .big{font-size:34px;display:block;margin-bottom:10px;opacity:0.5}
+    .loading{padding:48px;text-align:center;color:var(--muted);font-size:13px}
+    .loading .spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:9px;vertical-align:-2px}
+
+    .footer-note{margin-top:30px;text-align:center;font-size:11px;color:var(--muted)}
+    .footer-note a{color:var(--accent);text-decoration:none}
+    .footer-note a:hover{text-decoration:underline}
+
+    /* Settings + debug modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:520px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+    .modal h2{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--white)}
+    .modal .hint{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+    .modal .hint code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px}
+    .modal .field{margin-bottom:12px}
+    .modal .field label{text-transform:uppercase;font-size:11px;letter-spacing:0.5px;color:var(--muted);font-weight:600;margin-bottom:5px;display:block}
+    .modal .field input{width:100%;padding:10px 12px;font-family:inherit;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text)}
+    .modal .field input:focus{outline:none;border-color:var(--accent)}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:18px}
+    .modal-status{flex:1;font-size:11px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+    .modal-status .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+    .modal-status.ok{color:var(--green)} .modal-status.ok .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+    .modal-status.err{color:var(--red)} .modal-status.err .dot{background:var(--red)}
+
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);padding:11px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.4);transform:translateY(120px);opacity:0;transition:all 0.25s;z-index:200;max-width:380px}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.success{border-color:rgba(52,211,153,0.4);color:var(--green)}
+    .toast.error{border-color:rgba(235,72,94,0.4);color:var(--red)}
+
+    @media (max-width:720px){
+      .kpi-row{grid-template-columns:repeat(2,1fr)}
+      .intro p{font-size:12px}
+    }
+  </style>
+</head>
+<body>
+  <header id="header">
+    <div class="logo">
+      <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg)"/><defs><linearGradient id="lg" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#2DD4BF"/><stop offset="100%" stop-color="#3D74F4"/></linearGradient></defs></svg>
+      Translation Workbench
+    </div>
+    <div class="pim-badge" title="Live-connected to Bluestone PIM LABS via MCP"><span class="pim-dot"></span>Bluestone PIM LABS</div>
+    <div class="header-spacer"></div>
+    <a class="header-link" href="demos.html">← All demos</a>
+    <button class="btn small" onclick="openSettings()">⚙ Settings</button>
+  </header>
+
+  <main>
+    <div class="intro">
+      <div class="intro-icon">🌐</div>
+      <div>
+        <h1>One product, every market — side by side</h1>
+        <p>The localization manager's view: pick a product, see all markets in parallel columns, spot which locales are missing copy, and one-click AI-translate the gaps straight back into PIM. Reads run live per-context via <code>get_product</code>; accepted translations write back through <code>set_product_attribute</code>.</p>
+      </div>
+    </div>
+
+    <div class="mode-banner demo" id="mode-banner">
+      <span class="pim-dot"></span>
+      <span id="mode-banner-text">Demo data — configure the backend to load a live product across its markets.</span>
+      <span class="spacer"></span>
+      <a id="mode-banner-action" onclick="openSettings()">Connect backend</a>
+    </div>
+
+    <div class="kpi-row">
+      <div class="tile"><div class="tile-cap">Markets</div><div class="tile-num accent" id="kpi-markets">—</div><div class="tile-sub" id="kpi-markets-sub">locales in scope</div></div>
+      <div class="tile"><div class="tile-cap">Translatable fields</div><div class="tile-num" id="kpi-fields">—</div><div class="tile-sub">per market</div></div>
+      <div class="tile"><div class="tile-cap">Translation coverage</div><div class="tile-num" id="kpi-coverage">—</div><div class="tile-sub" id="kpi-coverage-sub">across all markets</div><div class="mini-bar"><span id="kpi-coverage-bar" style="width:0%"></span></div></div>
+      <div class="tile"><div class="tile-cap">Gaps</div><div class="tile-num red" id="kpi-gaps">—</div><div class="tile-sub">empty cells to fill</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="grp">
+        <label for="product-select">Product</label>
+        <select id="product-select" onchange="onProductChange()"></select>
+      </div>
+      <div class="grp">
+        <label for="source-select">Source</label>
+        <select id="source-select" onchange="onSourceChange()"></select>
+      </div>
+      <div class="spacer"></div>
+      <span class="engine-pill"><span class="glow"></span>AI engine · Claude</span>
+      <button class="btn" id="translate-btn" onclick="translateGaps()">✦ Translate all gaps</button>
+    </div>
+
+    <div class="matrix-wrap">
+      <div class="matrix-scroll" id="matrix-scroll">
+        <div class="loading"><span class="spin"></span>Loading…</div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <div class="summary" id="action-summary">No pending translations.</div>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="discard-btn" onclick="discardPending()" style="display:none">Discard suggestions</button>
+      <button class="btn primary" id="push-btn" onclick="pushToPim()" disabled>Push to Bluestone PIM</button>
+    </div>
+
+    <div class="footer-note">
+      Built in one afternoon with the <strong>bluestone-pim-ui</strong> skill, on the Bluestone PIM MCP — see <a href="https://labs.bluestonepim.com" target="_blank" rel="noopener">labs.bluestonepim.com</a>.
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+      <h2>Backend (Bluestone PIM MCP)</h2>
+      <p class="hint">Worker URL and shared secret. Bluestone credentials live on the Worker as secrets; this page never sees them. Test also probes whether this MCP build supports per-locale attribute writes.</p>
+      <div class="field"><label>Worker URL</label><input type="text" id="worker-url" placeholder="https://pim-agent-proxy.your-account.workers.dev"></div>
+      <div class="field"><label>Shared Secret</label><input type="text" id="worker-secret" placeholder="The passphrase you set with wrangler secret put SHARED_SECRET"></div>
+      <div class="modal-actions">
+        <div class="modal-status" id="modal-status"><span class="dot"></span><span>Not tested</span></div>
+        <button class="btn" onclick="testBackend()">Test</button>
+        <button class="btn primary" onclick="saveSettings()">Save</button>
+        <button class="btn" onclick="closeSettings()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── Settings + MCP wiring (shared with the demo family) ─────────────
+    const DEFAULT_WORKER_URL = 'https://pim-agent-proxy.mortings.workers.dev';
+    const settings = {
+      workerUrl: localStorage.getItem('pim-workerUrl') || DEFAULT_WORKER_URL,
+      workerSecret: localStorage.getItem('pim-workerSecret') || ''
+    };
+    function openSettings(){
+      document.getElementById('worker-url').value=settings.workerUrl;
+      document.getElementById('worker-secret').value=settings.workerSecret;
+      setModalStatus(settings.workerUrl?'ok':'',settings.workerUrl?'Saved — click Test to verify':'Not configured');
+      document.getElementById('settings-modal').classList.add('open');
+    }
+    function closeSettings(){document.getElementById('settings-modal').classList.remove('open')}
+    function saveSettings(){
+      settings.workerUrl=document.getElementById('worker-url').value.trim().replace(/\/+$/,'');
+      settings.workerSecret=document.getElementById('worker-secret').value.trim();
+      localStorage.setItem('pim-workerUrl',settings.workerUrl);
+      localStorage.setItem('pim-workerSecret',settings.workerSecret);
+      toast('Backend saved','success');
+      setModalStatus('ok','Saved — loading live product…');
+      closeSettings();
+      bootstrap();
+    }
+    function setModalStatus(kind,text){
+      const el=document.getElementById('modal-status');
+      el.className='modal-status'+(kind?' '+kind:'');
+      el.querySelector('span:last-child').textContent=text;
+    }
+    async function testBackend(){
+      saveSettings();
+      if(!settings.workerUrl){setModalStatus('err','Worker URL is empty');return}
+      try{
+        const r=await fetch(settings.workerUrl+'/api/health');
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok){setModalStatus('err','HTTP '+r.status);return}
+        const checks=[];
+        checks.push(j.mcpConfigured?'MCP ✓':'MCP ✗');
+        checks.push(j.authConfigured?'Secret ✓':'Secret ✗');
+        checks.push(j.bluestoneConfigured?'Bluestone ✓':'Bluestone ✗');
+        // Probe whether per-locale writes are supported on this MCP build.
+        const cap=await detectContextWrite();
+        checks.push(cap.supported?('per-locale write ✓ ('+cap.key+')'):'per-locale write ✗ (preview only)');
+        setModalStatus('ok',checks.join('  •  '));
+      }catch(e){
+        setModalStatus('err',/failed to fetch|networkerror|cors/i.test(String(e.message))?'Network/CORS — check Worker URL':'Unreachable: '+e.message);
+      }
+    }
+    async function mcpCall(tool,args={}){
+      if(!settings.workerUrl||!settings.workerSecret){openSettings();throw new Error('Open Settings first')}
+      const r=await fetch(settings.workerUrl+'/api/mcp-call',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':settings.workerSecret},body:JSON.stringify({tool,args})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok||data.success===false)throw new Error(data.error||('HTTP '+r.status));
+      return data.result;
+    }
+    function toast(msg,kind=''){
+      const el=document.getElementById('toast');
+      el.textContent=msg;el.className='toast show '+kind;
+      clearTimeout(toast._t);
+      toast._t=setTimeout(()=>el.classList.remove('show'),3200);
+    }
+    function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))}
+
+    // MCP JSON parsing — same defensive pattern as the rest of the family.
+    function extractMcpText(result){
+      if(!result)return '';
+      if(typeof result==='string')return result;
+      if(Array.isArray(result.content))return result.content.filter(c=>c&&c.type==='text'&&typeof c.text==='string').map(c=>c.text).join('\n');
+      try{return JSON.stringify(result)}catch(e){return String(result)}
+    }
+    function parseMcpJson(result){
+      if(!result)return null;
+      if(result.structuredContent&&typeof result.structuredContent==='object')return result.structuredContent;
+      if(Array.isArray(result.content)){
+        for(const c of result.content){
+          if(c&&c.type==='json'&&c.json)return c.json;
+          if(c&&typeof c.json==='object'&&c.json)return c.json;
+        }
+      }
+      const text=extractMcpText(result).trim();
+      if(text){
+        const stripped=text.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+        try{return JSON.parse(stripped)}catch(e){}
+        const m=stripped.match(/[\{\[][\s\S]*[\}\]]/);
+        if(m){try{return JSON.parse(m[0])}catch(e){}}
+      }
+      return null;
+    }
+
+    // Probe /api/mcp-list once to see if set_product_attribute advertises a
+    // context-like input. Per-locale writes are meaningless (and dangerous —
+    // they'd clobber the source value) unless the tool can target a context.
+    async function detectContextWrite(){
+      if(state.contextWrite)return state.contextWrite;
+      try{
+        const r=await fetch(settings.workerUrl+'/api/mcp-list',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':settings.workerSecret},body:'{}'});
+        const j=await r.json().catch(()=>({}));
+        const tools=j?.result?.tools||[];
+        const tool=tools.find(t=>t.name==='set_product_attribute');
+        const props=tool&&tool.inputSchema&&tool.inputSchema.properties||{};
+        const key=['context','contextId','contextID','locale','languageId','language'].find(k=>k in props);
+        state.contextWrite={supported:!!key,key:key||null};
+      }catch(e){
+        state.contextWrite={supported:false,key:null};
+      }
+      return state.contextWrite;
+    }
+
+    // ─── Locales / markets ───────────────────────────────────────────────
+    // Flags are presentation only; the id is what we pass to MCP as `context`.
+    const SEED_LOCALES=[
+      {id:'en', name:'English',    flag:'🇬🇧', source:true},
+      {id:'de', name:'German',     flag:'🇩🇪'},
+      {id:'fr', name:'French',     flag:'🇫🇷'},
+      {id:'es', name:'Spanish',    flag:'🇪🇸'},
+      {id:'ja', name:'Japanese',   flag:'🇯🇵'},
+      {id:'nb', name:'Norwegian',  flag:'🇳🇴'},
+    ];
+    const FLAG_BY_CODE={en:'🇬🇧',gb:'🇬🇧','en-us':'🇺🇸',us:'🇺🇸',de:'🇩🇪',fr:'🇫🇷',es:'🇪🇸',it:'🇮🇹',ja:'🇯🇵',jp:'🇯🇵',nb:'🇳🇴',nn:'🇳🇴',no:'🇳🇴',sv:'🇸🇪',se:'🇸🇪',da:'🇩🇰',dk:'🇩🇰',nl:'🇳🇱',pl:'🇵🇱',pt:'🇵🇹',zh:'🇨🇳',cn:'🇨🇳',ko:'🇰🇷',fi:'🇫🇮',ru:'🇷🇺'};
+    function flagFor(code){const k=String(code||'').toLowerCase();return FLAG_BY_CODE[k]||FLAG_BY_CODE[k.slice(0,2)]||'🏳️'}
+
+    // ─── Seed dataset (used when no backend is configured) ───────────────
+    // Real Bluestone LABS product IDs + the verified material definitionId,
+    // so a configured user can push the flagship row for real. Other rows
+    // carry no definitionId → they stay preview-only until mapped live.
+    const SEED_PRODUCTS=[
+      {
+        id:'69da487cd41d9dd3b63c0ed1', sku:'NT-TEE-GS', name:'T-shirt — Green Spring Edition',
+        fields:[
+          {key:'mktname', label:'Marketing name', type:'text', definitionId:null,
+            values:{en:'Spring Organic Tee — Meadow Green', de:'Bio-Frühlingsshirt — Wiesengrün', nb:'Økologisk vår-t-skjorte — Enggrønn'}},
+          {key:'desc', label:'Description', type:'textarea', definitionId:null,
+            values:{en:'A lightweight organic-cotton tee in a fresh meadow green. Breathable, pre-shrunk and cut for everyday wear.', de:'Ein leichtes T-Shirt aus Bio-Baumwolle in frischem Wiesengrün. Atmungsaktiv, vorgewaschen und für den Alltag geschnitten.'}},
+          {key:'material', label:'Material composition', type:'text', definitionId:'6819da04b75ff231d1d720a8',
+            values:{en:'100% organic cotton, 180 gsm', de:'100 % Bio-Baumwolle, 180 g/m²', fr:'100 % coton biologique, 180 g/m²', nb:'100 % økologisk bomull, 180 g/m²'}},
+          {key:'care', label:'Care instructions', type:'text', definitionId:null,
+            values:{en:'Machine wash cold, tumble dry low, do not bleach.'}},
+        ],
+        suggestions:{
+          mktname:{fr:'T-shirt bio printemps — Vert prairie', es:'Camiseta orgánica primavera — Verde pradera', ja:'スプリング オーガニック Tシャツ — メドウグリーン'},
+          desc:{fr:'Un t-shirt léger en coton biologique d\'un vert prairie frais. Respirant, pré-rétréci et coupé pour un usage quotidien.', es:'Una camiseta ligera de algodón orgánico en un fresco verde pradera. Transpirable, preencogida y cortada para el uso diario.', ja:'爽やかなメドウグリーンの軽量オーガニックコットンTシャツ。通気性が高く、防縮加工済みで、デイリーユースに最適です。', nb:'En lett t-skjorte i økologisk bomull i frisk enggrønn. Pustende, forkrympet og tilskåret for daglig bruk.'},
+          material:{es:'100 % algodón orgánico, 180 g/m²', ja:'オーガニックコットン100%、180 g/m²'},
+          care:{de:'Maschinenwäsche kalt, Trockner niedrig, nicht bleichen.', fr:'Lavage en machine à froid, séchage doux, ne pas blanchir.', es:'Lavar a máquina en frío, secar a baja temperatura, no usar lejía.', ja:'冷水で洗濯機洗い、低温タンブル乾燥、漂白不可。', nb:'Maskinvask kaldt, tørketrommel lav, ikke blekemiddel.'},
+        }
+      },
+      {
+        id:'69fb9a34c21ed255adccf8c0', sku:'111222', name:'Green Hoodie',
+        fields:[
+          {key:'mktname', label:'Marketing name', type:'text', definitionId:null,
+            values:{en:'Fjord Pullover Hoodie — Forest', nb:'Fjord pullover-hettegenser — Skog'}},
+          {key:'desc', label:'Description', type:'textarea', definitionId:null,
+            values:{en:'Heavyweight brushed-fleece hoodie with a kangaroo pocket and double-lined hood. Built for damp Nordic mornings.'}},
+          {key:'material', label:'Material composition', type:'text', definitionId:'6819da04b75ff231d1d720a8',
+            values:{en:'80% cotton, 20% recycled polyester, 320 gsm', nb:'80 % bomull, 20 % resirkulert polyester, 320 g/m²'}},
+          {key:'care', label:'Care instructions', type:'text', definitionId:null,
+            values:{en:'Wash inside out at 30°C. Do not iron the print.'}},
+        ],
+        suggestions:{
+          mktname:{de:'Fjord Kapuzenpullover — Wald', fr:'Sweat à capuche Fjord — Forêt', es:'Sudadera con capucha Fjord — Bosque', ja:'フィヨルド プルオーバーパーカー — フォレスト'},
+          desc:{de:'Schwerer Hoodie aus gebürstetem Fleece mit Kängurutasche und doppelt gefütterter Kapuze. Gemacht für feuchte nordische Morgen.', fr:'Sweat à capuche épais en molleton gratté avec poche kangourou et capuche doublée. Conçu pour les matins nordiques humides.', es:'Sudadera gruesa de forro polar cepillado con bolsillo canguro y capucha de doble forro. Hecha para las húmedas mañanas nórdicas.', ja:'カンガルーポケットと二重フード付きの起毛フリースを使用したヘビーウェイトパーカー。湿気の多い北欧の朝のために作られています。', nb:'Tung hettegenser i børstet fleece med kengurulomme og dobbeltforet hette. Laget for fuktige nordiske morgener.'},
+          material:{de:'80 % Baumwolle, 20 % recyceltes Polyester, 320 g/m²', fr:'80 % coton, 20 % polyester recyclé, 320 g/m²', es:'80 % algodón, 20 % poliéster reciclado, 320 g/m²', ja:'綿80%、リサイクルポリエステル20%、320 g/m²'},
+          care:{de:'Auf links bei 30 °C waschen. Druck nicht bügeln.', fr:'Laver à l\'envers à 30 °C. Ne pas repasser l\'imprimé.', es:'Lavar del revés a 30 °C. No planchar el estampado.', ja:'裏返して30℃で洗濯。プリント部分にアイロンをかけないでください。', nb:'Vask på vrangen ved 30 °C. Ikke stryk trykket.'},
+        }
+      },
+      {
+        id:'69db1ecc09aff1b14989d05a', sku:'NT-TEE-BL', name:'T-shirt — Blue',
+        fields:[
+          {key:'mktname', label:'Marketing name', type:'text', definitionId:null,
+            values:{en:'Everyday Crew Tee — Harbour Blue'}},
+          {key:'desc', label:'Description', type:'textarea', definitionId:null,
+            values:{en:'A wardrobe-staple crew-neck tee in a deep harbour blue. Soft, durable, and endlessly layerable.'}},
+          {key:'material', label:'Material composition', type:'text', definitionId:'6819da04b75ff231d1d720a8',
+            values:{en:'100% combed cotton, 160 gsm'}},
+          {key:'care', label:'Care instructions', type:'text', definitionId:null,
+            values:{en:'Machine wash warm, hang dry. Wash with like colours.'}},
+        ],
+        suggestions:{
+          mktname:{de:'Alltags-Rundhals-Shirt — Hafenblau', fr:'T-shirt col rond essentiel — Bleu port', es:'Camiseta de cuello redondo — Azul puerto', ja:'エブリデイ クルーTシャツ — ハーバーブルー', nb:'Hverdags rundhals-t-skjorte — Havneblå'},
+          desc:{de:'Ein Rundhals-Shirt als Garderoben-Basic in tiefem Hafenblau. Weich, langlebig und endlos kombinierbar.', fr:'Un t-shirt col rond, indispensable du dressing, dans un bleu port profond. Doux, durable et superposable à l\'infini.', es:'Una camiseta de cuello redondo básica en un azul puerto profundo. Suave, duradera e infinitamente combinable.', ja:'深いハーバーブルーのワードローブの定番クルーネックTシャツ。柔らかく、丈夫で、無限に重ね着できます。', nb:'En rundhals-t-skjorte til garderobens grunnmur i dyp havneblå. Myk, holdbar og uendelig lagvennlig.'},
+          material:{de:'100 % gekämmte Baumwolle, 160 g/m²', fr:'100 % coton peigné, 160 g/m²', es:'100 % algodón peinado, 160 g/m²', ja:'コーマ綿100%、160 g/m²', nb:'100 % kjemmet bomull, 160 g/m²'},
+          care:{de:'Maschinenwäsche warm, hängend trocknen. Mit ähnlichen Farben waschen.', fr:'Lavage en machine tiède, séchage sur cintre. Laver avec des couleurs similaires.', es:'Lavar a máquina en caliente, secar colgado. Lavar con colores similares.', ja:'温水で洗濯機洗い、吊り干し。同系色と一緒に洗ってください。', nb:'Maskinvask varmt, hengtørk. Vask med like farger.'},
+        }
+      },
+    ];
+
+    // ─── App state ───────────────────────────────────────────────────────
+    const state={
+      mode:'demo',            // 'demo' | 'live'
+      contextWrite:null,      // { supported, key } from detectContextWrite()
+      locales:SEED_LOCALES.slice(),
+      sourceId:'en',
+      products:[],            // [{ id, sku, name, fields:[...], suggestions:{} }]
+      productId:null,
+      pending:{},             // fieldKey → { localeId → text } (AI suggestions not yet pushed)
+      committed:{},           // fieldKey → { localeId → true } (pushed this session)
+    };
+
+    function currentProduct(){return state.products.find(p=>p.id===state.productId)||null}
+    function nonSourceLocales(){return state.locales.filter(l=>l.id!==state.sourceId)}
+
+    // value present in PIM (seed/live) for a field+locale
+    function liveValue(field,localeId){const v=field.values&&field.values[localeId];return (v==null||v==='')?null:v}
+    // AI suggestion available for a gap
+    function suggestionFor(prod,fieldKey,localeId){const s=prod.suggestions&&prod.suggestions[fieldKey];return s&&s[localeId]||null}
+    // pending (accepted-but-not-pushed) value
+    function pendingValue(fieldKey,localeId){return state.pending[fieldKey]&&state.pending[fieldKey][localeId]||null}
+
+    // ─── Bootstrap ───────────────────────────────────────────────────────
+    async function bootstrap(){
+      state.pending={};state.committed={};
+      if(!settings.workerUrl||!settings.workerSecret){
+        activateDemo('Demo data — configure the backend to load a live product across its markets.');
+        return;
+      }
+      setMode('loading');
+      document.getElementById('matrix-scroll').innerHTML='<div class="loading"><span class="spin"></span>Calling list_contexts…</div>';
+      try{
+        await detectContextWrite();
+        await loadLiveLocales();
+        await loadLiveProducts();
+        if(!state.products.length){activateDemo('No live products resolved — showing demo data.');return;}
+        state.mode='live';
+        state.productId=state.products[0].id;
+        renderBannerLive();
+        renderProductSelect();renderSourceSelect();renderAll();
+      }catch(e){
+        activateDemo('Backend error: '+e.message+' — showing demo data.');
+      }
+    }
+
+    function activateDemo(reason){
+      state.mode='demo';
+      state.locales=SEED_LOCALES.slice();
+      state.sourceId='en';
+      state.products=SEED_PRODUCTS.map(cloneProduct);
+      state.productId=state.products[0].id;
+      const b=document.getElementById('mode-banner');
+      b.className='mode-banner demo';
+      document.getElementById('mode-banner-text').textContent=reason;
+      const action=document.getElementById('mode-banner-action');
+      action.textContent='Connect backend';action.onclick=openSettings;
+      renderProductSelect();renderSourceSelect();renderAll();
+    }
+    function cloneProduct(p){return JSON.parse(JSON.stringify(p))}
+
+    function setMode(m){state.mode=m}
+    function renderBannerLive(){
+      const b=document.getElementById('mode-banner');
+      b.className='mode-banner live';
+      const cap=state.contextWrite&&state.contextWrite.supported;
+      document.getElementById('mode-banner-text').innerHTML='<strong>Live mode</strong> — reads run per-context against Bluestone PIM LABS. '+
+        (cap?('Accepted translations write back via set_product_attribute (context: <code style="color:inherit">'+escapeHtml(state.contextWrite.key)+'</code>).')
+            :'This MCP build exposes no context param on set_product_attribute, so pushes are held in preview to avoid clobbering the source value.');
+      const action=document.getElementById('mode-banner-action');
+      action.textContent='Switch to demo data';action.onclick=()=>activateDemo('Demo data — manual switch.');
+    }
+
+    async function loadLiveLocales(){
+      const result=await mcpCall('list_contexts',{});
+      const parsed=parseMcpJson(result);
+      let ctxs=[];
+      if(Array.isArray(parsed))ctxs=parsed;
+      else if(Array.isArray(parsed?.contexts))ctxs=parsed.contexts;
+      else if(Array.isArray(parsed?.items))ctxs=parsed.items;
+      const mapped=ctxs.map(c=>{
+        const id=c.id||c.contextId||c.code||c.locale||c.name;
+        const locale=c.locale||c.code||c.id||'';
+        return {id, name:c.name||c.label||locale||id, flag:flagFor(locale||id), source:!!(c.isDefault||c.default)};
+      }).filter(c=>c.id);
+      if(mapped.length){
+        state.locales=mapped;
+        const def=mapped.find(l=>l.source)||mapped[0];
+        state.sourceId=def.id;
+      }else{
+        state.locales=SEED_LOCALES.slice();state.sourceId='en';
+      }
+    }
+
+    async function loadLiveProducts(){
+      // Use the same verified Clothes products as the family's other demos,
+      // then read each across every locale to populate the matrix. All the
+      // get_product reads fire in parallel so first paint is one round-trip,
+      // not products × locales of them.
+      const seeds=SEED_PRODUCTS.map(cloneProduct);
+      state.products=await Promise.all(seeds.map(async seed=>{
+        const entries=await Promise.all(state.locales.map(async loc=>{
+          try{
+            const r=await mcpCall('get_product',{productId:seed.id,context:loc.id});
+            return [loc.id,parseMcpJson(r)||{}];
+          }catch(e){return [loc.id,{}]}
+        }));
+        const byLocale=Object.fromEntries(entries);
+        return {id:seed.id, sku:seed.sku, name:seed.name, fields:buildFieldsFromLive(seed,byLocale), suggestions:seed.suggestions};
+      }));
+    }
+
+    // Merge whatever the live get_product returns per-locale into the seed
+    // field skeleton. We only trust live values when we can find them; the
+    // seed text stays as a fallback so the matrix is never blank in a demo.
+    function buildFieldsFromLive(seed,byLocale){
+      return seed.fields.map(f=>{
+        const values={};
+        for(const loc of state.locales){
+          const doc=byLocale[loc.id]||{};
+          const live=readAttrFromProduct(doc,f);
+          if(live!=null&&live!=='')values[loc.id]=live;
+          else if(f.values&&f.values[loc.id])values[loc.id]=f.values[loc.id]; // seed fallback
+        }
+        return {key:f.key,label:f.label,type:f.type,definitionId:f.definitionId,values};
+      });
+    }
+
+    // Best-effort extraction of one attribute's value from a get_product doc.
+    function readAttrFromProduct(doc,f){
+      if(!doc||typeof doc!=='object')return null;
+      if(f.key==='mktname'&&(doc.name||doc.productName))return doc.name||doc.productName;
+      const attrs=doc.attributes||doc.attributeValues||doc.values;
+      if(Array.isArray(attrs)){
+        for(const a of attrs){
+          const matchesDef=f.definitionId&&(a.definitionId===f.definitionId||a.id===f.definitionId);
+          const matchesName=a.name&&a.name.toLowerCase()===f.label.toLowerCase();
+          if(matchesDef||matchesName){
+            const v=a.value!=null?a.value:(Array.isArray(a.values)?a.values.join(', '):a.values);
+            if(v!=null)return String(v);
+          }
+        }
+      }
+      return null;
+    }
+
+    // ─── Renderers ───────────────────────────────────────────────────────
+    function renderProductSelect(){
+      const sel=document.getElementById('product-select');
+      sel.innerHTML=state.products.map(p=>`<option value="${escapeHtml(p.id)}" ${p.id===state.productId?'selected':''}>${escapeHtml(p.name)} · ${escapeHtml(p.sku)}</option>`).join('');
+    }
+    function renderSourceSelect(){
+      const sel=document.getElementById('source-select');
+      sel.innerHTML=state.locales.map(l=>`<option value="${escapeHtml(l.id)}" ${l.id===state.sourceId?'selected':''}>${l.flag} ${escapeHtml(l.name)}</option>`).join('');
+    }
+    function onProductChange(){
+      state.productId=document.getElementById('product-select').value;
+      state.pending={};state.committed={};
+      renderAll();
+    }
+    function onSourceChange(){
+      state.sourceId=document.getElementById('source-select').value;
+      state.pending={};
+      renderAll();
+    }
+
+    // Per-locale coverage = filled-or-committed fields / total fields.
+    function localeCoverage(prod,localeId){
+      const total=prod.fields.length;
+      let have=0;
+      for(const f of prod.fields){
+        if(liveValue(f,localeId)!=null||(state.committed[f.key]&&state.committed[f.key][localeId]))have++;
+      }
+      return {have,total,pct:total?Math.round(have/total*100):0};
+    }
+
+    function renderAll(){
+      const prod=currentProduct();
+      const scroll=document.getElementById('matrix-scroll');
+      if(!prod){scroll.innerHTML='<div class="empty"><span class="big">🌐</span>No product selected.</div>';renderKpis(null);renderActions();return;}
+
+      const source=state.locales.find(l=>l.id===state.sourceId)||state.locales[0];
+      const others=nonSourceLocales();
+      const cols=[source,...others];
+
+      let head='<tr><th class="col-head"><div class="loc-name">Attribute</div><div class="loc-code">field</div></th>';
+      for(const loc of cols){
+        const cov=localeCoverage(prod,loc.id);
+        const isSrc=loc.id===state.sourceId;
+        const barColor=cov.pct>=80?'var(--green)':cov.pct>=40?'var(--yellow)':'var(--red)';
+        head+=`<th class="col-head">
+          <div class="loc-name"><span class="loc-flag">${loc.flag}</span>${escapeHtml(loc.name)} <span class="loc-code">${escapeHtml(loc.id)}</span></div>
+          ${isSrc?'<div class="source-tag">Source</div>':
+            `<div class="loc-meta"><div class="loc-cov"><span style="width:${cov.pct}%;background:${barColor}"></span></div><span class="loc-pct">${cov.pct}%</span></div>`}
+        </th>`;
+      }
+      head+='</tr>';
+
+      let rows='';
+      for(const f of prod.fields){
+        rows+=`<tr><td class="attr-cell">
+          <div class="attr-name">${escapeHtml(f.label)}</div>
+          <div class="attr-type">${escapeHtml(f.type)}</div>
+          ${f.definitionId?'<div class="attr-writable">live-writable</div>':''}
+        </td>`;
+        for(const loc of cols){
+          rows+=renderCell(prod,f,loc);
+        }
+        rows+='</tr>';
+      }
+
+      scroll.innerHTML=`<table class="matrix"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+      renderKpis(prod);
+      renderActions();
+    }
+
+    function renderCell(prod,f,loc){
+      const isSrc=loc.id===state.sourceId;
+      const live=liveValue(f,loc.id);
+      if(isSrc){
+        return `<td class="val-cell src">${live!=null?`<div class="val-text">${escapeHtml(live)}</div>`:'<span class="cell-empty-hint">— empty in source —</span>'}</td>`;
+      }
+      const committed=state.committed[f.key]&&state.committed[f.key][loc.id];
+      if(live!=null&&!committed){
+        return `<td class="val-cell filled"><div class="val-text">${escapeHtml(live)}</div></td>`;
+      }
+      if(committed){
+        const v=pendingValue(f.key,loc.id)||live||'';
+        return `<td class="val-cell committed"><span class="cell-tag committed">✓ pushed</span><div class="val-text">${escapeHtml(v)}</div></td>`;
+      }
+      const pend=pendingValue(f.key,loc.id);
+      if(pend){
+        return `<td class="val-cell suggested" onclick="dismissOne('${f.key}','${loc.id}')" title="Click to dismiss this suggestion">
+          <span class="cell-tag suggested">✦ AI suggestion</span>
+          <div class="val-text">${escapeHtml(pend)}</div>
+          <div class="suggest-foot">queued for push<span class="dismiss">✕ dismiss</span></div>
+        </td>`;
+      }
+      // a genuine gap
+      const hasSuggestion=!!suggestionFor(prod,f.key,loc.id);
+      return `<td class="val-cell missing">
+        <span class="cell-tag missing">missing</span>
+        <div class="cell-empty-hint">${hasSuggestion?'AI can fill this':'no translation'}</div>
+      </td>`;
+    }
+
+    function renderKpis(prod){
+      document.getElementById('kpi-markets').textContent=state.locales.length;
+      document.getElementById('kpi-markets-sub').textContent=nonSourceLocales().length+' target + 1 source';
+      if(!prod){document.getElementById('kpi-fields').textContent='—';document.getElementById('kpi-coverage').textContent='—';document.getElementById('kpi-gaps').textContent='—';return;}
+      document.getElementById('kpi-fields').textContent=prod.fields.length;
+      // coverage across all non-source markets
+      const others=nonSourceLocales();
+      let have=0,total=0,gaps=0;
+      for(const loc of others){
+        for(const f of prod.fields){
+          total++;
+          const filled=liveValue(f,loc.id)!=null||(state.committed[f.key]&&state.committed[f.key][loc.id]);
+          if(filled)have++;else gaps++;
+        }
+      }
+      const pct=total?Math.round(have/total*100):0;
+      document.getElementById('kpi-coverage').textContent=pct+'%';
+      document.getElementById('kpi-coverage-bar').style.width=pct+'%';
+      document.getElementById('kpi-coverage-sub').textContent=have+' of '+total+' cells across '+others.length+' markets';
+      const gapsEl=document.getElementById('kpi-gaps');
+      gapsEl.textContent=gaps;
+      gapsEl.className='tile-num '+(gaps===0?'accent':'red');
+    }
+
+    function pendingCount(){let n=0;for(const k in state.pending)n+=Object.keys(state.pending[k]).length;return n}
+
+    function renderActions(){
+      const prod=currentProduct();
+      const n=pendingCount();
+      const pushBtn=document.getElementById('push-btn');
+      const discardBtn=document.getElementById('discard-btn');
+      const summary=document.getElementById('action-summary');
+      discardBtn.style.display=n>0?'inline-block':'none';
+      pushBtn.disabled=n===0;
+      // count remaining fillable gaps
+      let fillable=0;
+      if(prod){
+        for(const loc of nonSourceLocales())for(const f of prod.fields){
+          if(liveValue(f,loc.id)==null&&!pendingValue(f.key,loc.id)&&!(state.committed[f.key]&&state.committed[f.key][loc.id])&&suggestionFor(prod,f.key,loc.id))fillable++;
+        }
+      }
+      const tb=document.getElementById('translate-btn');
+      tb.disabled=fillable===0;
+      tb.textContent=fillable>0?`✦ Translate ${fillable} gap${fillable===1?'':'s'}`:'✦ All gaps filled';
+      if(n>0){
+        const writable=countWritablePending();
+        const cap=state.mode==='live'&&state.contextWrite&&state.contextWrite.supported;
+        summary.innerHTML=`<strong>${n}</strong> AI translation${n===1?'':'s'} queued`+
+          (state.mode==='live'
+            ? (cap?` · <strong>${writable}</strong> will write live (${n-writable} preview-only)`:' · preview-only on this MCP build')
+            : ' · demo — push is simulated');
+      }else{
+        summary.textContent='No pending translations. Click “Translate all gaps” to draft them with AI.';
+      }
+    }
+
+    // pending entries whose field has a real definitionId (eligible for live write)
+    function countWritablePending(){
+      const prod=currentProduct();if(!prod)return 0;
+      let n=0;
+      for(const k in state.pending){
+        const f=prod.fields.find(x=>x.key===k);
+        if(f&&f.definitionId)n+=Object.keys(state.pending[k]).length;
+      }
+      return n;
+    }
+
+    // ─── Translate gaps (AI suggestions) ─────────────────────────────────
+    async function translateGaps(){
+      const prod=currentProduct();if(!prod)return;
+      const tb=document.getElementById('translate-btn');
+      tb.disabled=true;tb.textContent='✦ Translating…';
+      // Collect every fillable gap, then reveal them in a quick staggered
+      // sweep so it reads as an engine working through the matrix.
+      const jobs=[];
+      for(const loc of nonSourceLocales())for(const f of prod.fields){
+        if(liveValue(f,loc.id)!=null)continue;
+        if(pendingValue(f.key,loc.id))continue;
+        if(state.committed[f.key]&&state.committed[f.key][loc.id])continue;
+        const s=suggestionFor(prod,f.key,loc.id);
+        if(s)jobs.push({fieldKey:f.key,localeId:loc.id,text:s});
+      }
+      if(!jobs.length){renderActions();return;}
+      for(let i=0;i<jobs.length;i++){
+        const j=jobs[i];
+        if(!state.pending[j.fieldKey])state.pending[j.fieldKey]={};
+        state.pending[j.fieldKey][j.localeId]=j.text;
+        renderAll();
+        await sleep(110);
+      }
+      toast(`✦ Drafted ${jobs.length} translation${jobs.length===1?'':'s'} — review, then push`,'success');
+    }
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+    function dismissOne(fieldKey,localeId){
+      if(state.pending[fieldKey]){delete state.pending[fieldKey][localeId];if(!Object.keys(state.pending[fieldKey]).length)delete state.pending[fieldKey]}
+      renderAll();
+    }
+    function discardPending(){state.pending={};renderAll();toast('Suggestions discarded')}
+
+    // ─── Push to PIM ─────────────────────────────────────────────────────
+    async function pushToPim(){
+      const prod=currentProduct();if(!prod)return;
+      const n=pendingCount();if(!n)return;
+      const pushBtn=document.getElementById('push-btn');
+      pushBtn.disabled=true;
+
+      // Demo mode → simulate; live mode → real set_product_attribute per
+      // (field, locale) where the field has a definitionId AND the MCP build
+      // supports per-locale writes. Anything else commits visually only.
+      const cap=state.mode==='live'&&state.contextWrite&&state.contextWrite.supported;
+      let live=0,preview=0,failed=0;
+
+      const tasks=[];
+      for(const fieldKey in state.pending){
+        const f=prod.fields.find(x=>x.key===fieldKey);
+        for(const localeId in state.pending[fieldKey]){
+          tasks.push({f,fieldKey,localeId,text:state.pending[fieldKey][localeId]});
+        }
+      }
+
+      for(const t of tasks){
+        const canWrite=cap&&t.f&&t.f.definitionId;
+        if(canWrite){
+          try{
+            const args={productId:prod.id,definitionId:t.f.definitionId,values:[t.text],productName:prod.name,attributeName:t.f.label};
+            args[state.contextWrite.key]=t.localeId; // target the locale
+            await mcpCall('set_product_attribute',args);
+            commitCell(t.fieldKey,t.localeId);live++;
+          }catch(e){
+            markCellError(t.fieldKey,t.localeId,e.message);failed++;
+          }
+        }else{
+          // simulate a beat so the row animates, then commit visually
+          await sleep(140);
+          commitCell(t.fieldKey,t.localeId);preview++;
+        }
+        renderAll(); // progressive — cells flip to ✓ pushed as we go
+      }
+      if(failed){
+        toast(`${live} written live, ${failed} failed — see cell status`,'error');
+      }else if(state.mode==='live'&&cap){
+        toast(`✓ ${live} translation${live===1?'':'s'} written to Bluestone PIM LABS`+(preview?` · ${preview} preview-only`:''),'success');
+      }else if(state.mode==='live'){
+        toast(`Held ${preview} translation${preview===1?'':'s'} in preview — this MCP build has no per-locale write`,'');
+      }else{
+        toast(`✓ ${preview} translation${preview===1?'':'s'} committed (demo — not written to a live tenant)`,'success');
+      }
+      pushBtn.disabled=pendingCount()===0;
+    }
+
+    function markCellError(fieldKey,localeId,msg){
+      toast('Write failed for '+fieldKey+'/'+localeId+': '+String(msg).slice(0,60),'error');
+    }
+    function commitCell(fieldKey,localeId){
+      if(!state.committed[fieldKey])state.committed[fieldKey]={};
+      state.committed[fieldKey][localeId]=true;
+      // fold the value into the product so coverage + source reflect it
+      const prod=currentProduct();
+      const f=prod&&prod.fields.find(x=>x.key===fieldKey);
+      const v=pendingValue(fieldKey,localeId);
+      if(f&&v!=null){if(!f.values)f.values={};f.values[localeId]=v;}
+      if(state.pending[fieldKey]){delete state.pending[fieldKey][localeId];if(!Object.keys(state.pending[fieldKey]).length)delete state.pending[fieldKey]}
+    }
+
+    // ─── Boot ────────────────────────────────────────────────────────────
+    bootstrap();
+  </script>
+</body>
+</html>
