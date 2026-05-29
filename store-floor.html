@@ -398,6 +398,46 @@
     }
     tickClock();setInterval(tickClock,30000);
 
+    // ─── Demo dataset (used when the live PIM has no published shoes) ──
+    // 3 styles × 4 colors. variantParentId links siblings so "other colors
+    // in this style" works just like with live data.
+    const DEMO_COLOR_HEX={
+      'Espresso Brown':'#5b3a1e','Black Onyx':'#1a1a1a','Tan Caramel':'#c9924f','Oxblood':'#5e1a1f',
+      'Bolt Yellow':'#f5d000','Stealth Black':'#222','Mint Green':'#7ad6a8','Coral Pink':'#ff7d6b',
+      'Arctic White':'#f4f4f4','Navy':'#1a2a55','Forest Green':'#235a3a','Burgundy':'#722229'
+    };
+    function shoeSvg(name){
+      const c=DEMO_COLOR_HEX[name]||'#2a3550';
+      const dark=['Arctic White','Bolt Yellow','Mint Green','Coral Pink','Tan Caramel'].includes(name);
+      const fg=dark?'#222':'#fff';
+      // SVG shoe silhouette over a tinted background — looks like a product shot at thumb size.
+      return 'data:image/svg+xml;utf8,'+encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="${c}"/><g fill="${fg}" opacity="0.92"><path d="M30 130 q-2 -18 14 -22 l28 -4 q10 -1 16 -8 l24 -22 q6 -5 14 -3 l28 6 q14 3 14 18 v8 q0 8 -8 12 l-90 22 q-12 3 -22 -2 z"/><circle cx="60" cy="138" r="4"/><circle cx="80" cy="135" r="3"/><circle cx="100" cy="131" r="3"/><circle cx="120" cy="127" r="3"/></g></svg>`
+      );
+    }
+    const DEMO_PRODUCTS=[
+      // Heritage Brogue
+      {id:'demo-brg-esp',name:'Heritage Brogue - Espresso Brown',number:'BRG-ESP-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Espresso Brown')},
+      {id:'demo-brg-blk',name:'Heritage Brogue - Black Onyx',number:'BRG-BLK-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Black Onyx')},
+      {id:'demo-brg-tan',name:'Heritage Brogue - Tan Caramel',number:'BRG-TAN-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Tan Caramel')},
+      {id:'demo-brg-oxb',name:'Heritage Brogue - Oxblood',number:'BRG-OXB-001',type:'VARIANT',variantParentId:'demo-brg',imageUrl:shoeSvg('Oxblood')},
+      // Marathon Runner
+      {id:'demo-mar-blt',name:'Marathon Runner - Bolt Yellow',number:'MAR-BLT-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Bolt Yellow')},
+      {id:'demo-mar-stl',name:'Marathon Runner - Stealth Black',number:'MAR-STL-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Stealth Black')},
+      {id:'demo-mar-mnt',name:'Marathon Runner - Mint Green',number:'MAR-MNT-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Mint Green')},
+      {id:'demo-mar-cor',name:'Marathon Runner - Coral Pink',number:'MAR-COR-042',type:'VARIANT',variantParentId:'demo-mar',imageUrl:shoeSvg('Coral Pink')},
+      // Court Classic
+      {id:'demo-crt-wht',name:'Court Classic - Arctic White',number:'CRT-WHT-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Arctic White')},
+      {id:'demo-crt-nvy',name:'Court Classic - Navy',number:'CRT-NVY-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Navy')},
+      {id:'demo-crt-grn',name:'Court Classic - Forest Green',number:'CRT-GRN-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Forest Green')},
+      {id:'demo-crt-bur',name:'Court Classic - Burgundy',number:'CRT-BUR-203',type:'VARIANT',variantParentId:'demo-crt',imageUrl:shoeSvg('Burgundy')},
+    ];
+    const DEMO_STYLE_MATERIAL={
+      'demo-brg':{material:'Full-grain leather',sole:'Goodyear-welted rubber',gender:'Unisex',weight:'490 g'},
+      'demo-mar':{material:'Engineered knit upper',sole:'EVA midsole + carbon plate',gender:'Unisex',weight:'215 g'},
+      'demo-crt':{material:'Canvas + leather toe cap',sole:'Vulcanised rubber',gender:'Unisex',weight:'340 g'},
+    };
+
     // ─── Store-floor state ──────────────────────────────────────────────
     const RECENTS_KEY='store-floor-recents';
     const PREFERRED_CATALOG='Shoes';
@@ -409,6 +449,7 @@
       currentId:null,
       detailCache:{},         // productId → full get_product result
       recents:JSON.parse(localStorage.getItem(RECENTS_KEY)||'[]'),
+      demoMode:false,         // true when state.products is DEMO_PRODUCTS
     };
 
     function pushRecent(p){
@@ -424,12 +465,44 @@
       return {base:name,color:''};
     }
 
+    // ─── Demo-mode helpers ─────────────────────────────────────────────
+    // When the tenant has no published shoes we fall back to a built-in
+    // sample set so the demo always has something to search and click on.
+    function setMetaHtml(html, live){
+      const meta=document.getElementById('search-meta');
+      meta.classList.toggle('live',!!live);
+      const span=document.getElementById('search-meta-text');
+      span.innerHTML=html;
+    }
+    function activateDemoMode(reason){
+      state.demoMode=true;
+      state.products=DEMO_PRODUCTS.slice();
+      state.catalogId=null;
+      state.catalogName='Sample shoes';
+      document.getElementById('app-title-text').textContent='Sample shoes';
+      document.title='Sample shoes — Store Floor — Bluestone PIM LABS';
+      document.getElementById('search').placeholder='Try BRG, MAR, CRT or "brogue"…';
+      const label=DEMO_PRODUCTS.length+' sample shoes loaded';
+      const sub=reason?'<span style="color:var(--muted)"> · '+escapeHtml(reason)+'</span>':'';
+      const link=' · <a href="#" onclick="event.preventDefault();retryLive()" style="color:var(--orange);text-decoration:underline">try live PIM</a>';
+      setMetaHtml(label+sub+link,true);
+      renderHome();
+    }
+    function retryLive(){
+      state.demoMode=false;
+      state.products=[];
+      state.detailCache={};
+      bootstrap();
+    }
+    function switchToDemo(){
+      activateDemoMode('manual switch');
+    }
+
     // ─── Bootstrap: pick catalog, load published products ──────────────
     async function bootstrap(){
       if(!settings.workerUrl||!settings.workerSecret){
-        document.getElementById('search-meta-text').textContent='Configure backend to load live shoes';
-        document.getElementById('app-body').innerHTML=`<div class="empty"><span class="big">⚙</span><div>Tap the gear, configure the backend, then come back.</div></div>`;
-        openSettings();return;
+        activateDemoMode('Backend not configured — tap ⚙ to wire to live PIM');
+        return;
       }
       document.getElementById('search-meta-text').textContent='Loading published catalog…';
       document.getElementById('app-body').innerHTML=`<div class="loading"><span class="spin"></span>Calling list_published_catalogs…</div>`;
@@ -437,31 +510,52 @@
         const result=await mcpCall('list_published_catalogs',{});
         const parsed=parseMcpJson(result);
         const list=Array.isArray(parsed)?parsed:(parsed?.catalogs||parsed?.items||parsed?.data?.catalogs||[]);
-        if(!list.length){throw new Error('No published catalogs returned')}
-        const cat=list.find(c=>new RegExp(PREFERRED_CATALOG,'i').test(c.name||''))||list[0];
-        state.catalogId=cat.id||cat.catalogId||cat._id;
-        state.catalogName=cat.name||cat.label||cat.title||'(unnamed)';
-        document.getElementById('app-title-text').textContent=state.catalogName;
-        document.title=state.catalogName+' — Store Floor — Bluestone PIM LABS';
-        document.getElementById('search').placeholder='Scan SKU or search '+state.catalogName.toLowerCase()+'…';
-        await loadProducts();
+        if(!list.length){activateDemoMode('No published catalogs on this tenant');return;}
+        const catalogs=list.map(c=>({
+          id:c.id||c.catalogId||c._id,
+          name:c.name||c.label||c.title||'(unnamed)'
+        })).filter(c=>c.id);
+        // Order: preferred name first, then the rest, so we probe the most
+        // likely candidate before falling through to other catalogs.
+        const preferredIdx=catalogs.findIndex(c=>new RegExp(PREFERRED_CATALOG,'i').test(c.name));
+        const ordered=preferredIdx>=0?[catalogs[preferredIdx],...catalogs.filter((_,i)=>i!==preferredIdx)]:catalogs;
+        // Try each catalog in order; stop at the first one that returns products.
+        for(let i=0;i<ordered.length;i++){
+          const c=ordered[i];
+          document.getElementById('search-meta-text').textContent='Probing '+c.name+'…';
+          const products=await probeCatalog(c.id,c.name);
+          if(products.length>0){
+            state.products=products;
+            state.catalogId=c.id;
+            state.catalogName=c.name;
+            state.demoMode=false;
+            document.getElementById('app-title-text').textContent=c.name;
+            document.title=c.name+' — Store Floor — Bluestone PIM LABS';
+            document.getElementById('search').placeholder='Scan SKU or search '+c.name.toLowerCase()+'…';
+            const link=' · <a href="#" onclick="event.preventDefault();switchToDemo()" style="color:var(--muted);text-decoration:underline">demo data</a>';
+            setMetaHtml(products.length+' shoes live in '+escapeHtml(c.name)+' — '+new Date().toLocaleTimeString()+link,true);
+            renderHome();
+            return;
+          }
+        }
+        // Every published catalog was empty — fall back to sample data.
+        activateDemoMode('No published products in any of the '+catalogs.length+' catalogs');
       }catch(e){
-        document.getElementById('app-body').innerHTML=`<div class="empty"><span class="big">⚠</span><div>${escapeHtml(e.message)}</div></div>`;
-        document.getElementById('search-meta-text').textContent='Backend error — check Settings';
+        activateDemoMode('Backend error: '+e.message);
       }
     }
 
-    async function loadProducts(){
+    async function probeCatalog(catalogId,catalogName){
       try{
         const result=await mcpCall('list_published_products_in_category',{
-          categoryId:state.catalogId,categoryName:state.catalogName,limit:200
+          categoryId:catalogId,categoryName:catalogName,limit:200
         });
         const parsed=parseMcpJson(result);
         let list=null;
         if(Array.isArray(parsed))list=parsed;
         else if(Array.isArray(parsed?.products))list=parsed.products;
         else if(Array.isArray(parsed?.items))list=parsed.items;
-        state.products=(list||[]).map(p=>({
+        return (list||[]).map(p=>({
           id:p.id||p.productId||p._id,
           name:p.name||p.productName||p.title||'(unnamed)',
           number:p.number||p.sku||p.productNumber||'',
@@ -469,12 +563,9 @@
           variantParentId:p.variantParentId||p.parentId||null,
           imageUrl:p.imageUrl||p.image||null
         })).filter(p=>p.id);
-        const meta=document.getElementById('search-meta');
-        meta.classList.add('live');
-        document.getElementById('search-meta-text').textContent=state.products.length+' shoes live in '+state.catalogName+' — '+new Date().toLocaleTimeString();
-        renderHome();
       }catch(e){
-        document.getElementById('app-body').innerHTML=`<div class="empty"><span class="big">⚠</span><div>${escapeHtml(e.message)}</div></div>`;
+        console.warn('[store-floor] probeCatalog failed for',catalogName,':',e.message);
+        return [];
       }
     }
 
@@ -623,6 +714,25 @@
     }
 
     async function loadFullDetail(productId){
+      // Demo products aren't in the live PIM — render canned attributes instead.
+      if(state.demoMode||String(productId).startsWith('demo-')){
+        const list=document.getElementById('attr-list');if(!list)return;
+        const p=state.products.find(x=>x.id===productId);
+        const {color}=splitName(p?.name||'');
+        const style=DEMO_STYLE_MATERIAL[p?.variantParentId]||{};
+        list.innerHTML=`
+          <li><span class="k">Type</span><span class="v">${escapeHtml(p?.type||'VARIANT')}</span></li>
+          <li><span class="k">SKU</span><span class="v">${escapeHtml(p?.number||'—')}</span></li>
+          <li><span class="k">State</span><span class="v">PUBLISHED <span class="v muted" style="font-weight:400">(sample)</span></span></li>
+          <li><span class="k">Color</span><span class="v">${escapeHtml(color||'—')}</span></li>
+          ${style.material?`<li><span class="k">Material</span><span class="v">${escapeHtml(style.material)}</span></li>`:''}
+          ${style.sole?`<li><span class="k">Sole</span><span class="v">${escapeHtml(style.sole)}</span></li>`:''}
+          ${style.gender?`<li><span class="k">Gender</span><span class="v">${escapeHtml(style.gender)}</span></li>`:''}
+          ${style.weight?`<li><span class="k">Weight</span><span class="v">${escapeHtml(style.weight)}</span></li>`:''}
+          <li><span class="k">Source</span><span class="v muted">sample data — not from PIM</span></li>
+        `;
+        return;
+      }
       try{
         const cached=state.detailCache[productId];
         const result=cached||await mcpCall('get_product',{productId,context:'en'});
