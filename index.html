@@ -5177,9 +5177,9 @@ async function testBackendConnection() {
 }
 
 // ============ SIDEBAR TOGGLE ============
-// Sidebar is open by default (shows categories on the welcome screen too);
-// only stays closed if the user explicitly collapsed it.
-let sidebarOpen = localStorage.getItem('pim-sidebar') !== 'false';
+// Sidebar starts closed on the welcome/first screen; dismissWelcome() opens it
+// automatically once the user enters the workspace.
+let sidebarOpen = false;
 
 function toggleSidebar() {
   sidebarOpen = !sidebarOpen;
