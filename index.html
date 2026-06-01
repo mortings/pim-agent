@@ -3326,12 +3326,23 @@ function mergeProductDetail(p, d) {
   const assets = d.assets || d.images || d.media;
   if (Array.isArray(assets) && assets.length) {
     const imgs = assets.map((a, i) => {
-      const url = typeof a === 'string' ? a : (a.url || a.href || a.src || (a.resource && a.resource.url) || '');
+      const raw = typeof a === 'string' ? a : (a && (a.url || a.href || a.src || (a.resource && a.resource.url))) || '';
+      const url = /^https?:\/\//i.test(raw) ? raw : assetIdToUrl(raw);
       return url ? { id: 'img_' + p.id + '_' + (i + 1), url, name: (p.sku || 'img') + '-' + (i + 1), primary: i === 0, size: '' } : null;
     }).filter(Boolean);
     if (imgs.length) p.images = imgs;
   }
   p.updated = new Date().toISOString();
+}
+
+// Bluestone's get_product returns image ASSET IDS, not URLs, and the MCP
+// exposes no asset→URL resolver. Until the tenant's media-CDN URL pattern is
+// confirmed we can't turn an asset id into a loadable image, so we skip it and
+// the card shows a clean category placeholder instead of a broken image.
+// Once the pattern is known this becomes a one-liner, e.g.:
+//   return MEDIA_BASE + '/' + id + '?w=600';
+function assetIdToUrl(id) {
+  return ''; // TODO: build from the confirmed Bluestone media CDN pattern
 }
 
 // ============ NEW PIM FEATURES ============
