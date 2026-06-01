@@ -1045,6 +1045,9 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function completeness(p) {
+  // Prefer the REAL Bluestone completeness score (fetched via MCP) so it
+  // matches the PIM; fall back to a local estimate offline / for seed data.
+  if (typeof p.liveScore === 'number') return p.liveScore;
   const fields = DB.attributes.filter(a => a.completeness).map(a => a.key);
   return fields.length ? Math.round(fields.filter(f => p[f] && String(p[f]).trim()).length / fields.length * 100) : 100;
 }
@@ -3484,6 +3487,53 @@ function publishBadge(p) {
     : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;background:rgba(251,231,77,0.12);color:var(--yellow)">○ Draft</span>';
 }
 
+// Fetch the REAL Bluestone completeness scores for the live catalog so the
+// AI PIM's % matches the PIM exactly (the local estimate never does). Batched
+// by product id (max 100 per call), context "en".
+async function hydrateCompleteness() {
+  if (!backendConfigured()) return;
+  try {
+    const ids = DB.products.map(p => p.pimId).filter(Boolean);
+    if (!ids.length) return;
+    const scoreMap = new Map();
+    for (let i = 0; i < ids.length; i += 100) {
+      try {
+        const parsed = parseMcpJson(await mcpCall('list_product_completeness_scores', { productIds: ids.slice(i, i + 100), contexts: ['en'] }));
+        for (const [k, v] of parseScoreEntries(parsed)) scoreMap.set(k, v);
+      } catch (e) { /* skip this chunk */ }
+    }
+    if (!scoreMap.size) return;
+    let n = 0;
+    for (const p of DB.products) { if (p.pimId && scoreMap.has(p.pimId)) { p.liveScore = scoreMap.get(p.pimId); n++; } }
+    if (n) {
+      render();
+      if (typeof currentMode !== 'undefined') { if (currentMode === 'data') renderDataGrid(); else if (currentMode === 'dam') renderDamGrid(); }
+    }
+  } catch (e) { console.warn('[ai-pim] completeness sync failed:', e && e.message); }
+}
+
+// Pull productId → score (0-100) out of a list_product_completeness_scores
+// response, tolerant of shape and of per-context score arrays.
+function parseScoreEntries(parsed) {
+  let list = [];
+  if (Array.isArray(parsed)) list = parsed;
+  else if (Array.isArray(parsed?.scores)) list = parsed.scores;
+  else if (Array.isArray(parsed?.items)) list = parsed.items;
+  else if (Array.isArray(parsed?.data?.scores)) list = parsed.data.scores;
+  const map = new Map();
+  for (const e of list) {
+    const pid = e.productId || e.id || e._id; if (!pid) continue;
+    let s = e.score ?? e.completenessScore ?? e.percentage ?? e.value;
+    if (s == null && Array.isArray(e.scores)) {
+      const m = e.scores.find(x => (x.context || x.contextId || x.locale) === 'en') || e.scores[0];
+      s = m && (m.score ?? m.percentage ?? m.value);
+    }
+    if (typeof s === 'string') s = parseFloat(s);
+    if (typeof s === 'number' && !isNaN(s)) map.set(pid, Math.round(s <= 1 ? s * 100 : s));
+  }
+  return map;
+}
+
 // Rebuild the welcome-screen suggestion chips from the LIVE catalog so they
 // don't keep pointing at seed-only products/categories (Heritage Brogue,
 // flowmeters, …). Called after a successful live sync.
@@ -5395,7 +5445,7 @@ render();
 
 // Bring the catalog in line with the live tenant, then attach real product
 // photos from the published data. Async so first paint isn't blocked.
-hydrateLiveCatalog().then(enrichImagesFromPublished);
+hydrateLiveCatalog().then(() => { enrichImagesFromPublished(); hydrateCompleteness(); });
 
 // Focus the welcome input
 setTimeout(() => {
