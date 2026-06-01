@@ -553,7 +553,7 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         <div class="welcome-hint" onclick="welcomeHint(this)">🎯 What to work on?</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">📊 Quality report</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">✏️ Find drafts</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Missing descriptions</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Find products missing a description</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">📋 Show attributes</div>
       </div>
     </div>
@@ -1536,7 +1536,7 @@ function parseCommand(input) {
   if (/^(how\s*many|count|total)\s*(products?|items?)/i.test(n)) return { type:'overview', raw };
   if (/^(what('?s| is| are)\s*(the|my|our)\s*(best|worst|top|lowest)\s*(quality|rated|scoring|complete))/i.test(n)) return { type:'quality', raw };
   if (/^(any|are there)\s*(incomplete|missing|empty|draft|problems?|issues?)/i.test(n)) return { type:'quality', raw };
-  if (/^(what\s*(do i|should i|can i)\s*(do|work on|fix|improve)\s*(next|first|now)?)/i.test(n)) return { type:'suggest_next', raw };
+  if (/^(what\s*(do i|should i|can i|to)\s*(do|work on|fix|improve)\s*(next|first|now)?|what'?s?\s*next)/i.test(n)) return { type:'suggest_next', raw };
   if (/^(show\s*me\s*everything|everything|all|give\s*me\s*everything)/i.test(n)) return { type:'show_all', raw };
   if (/^(how'?s?\s*(my|the|our)?\s*(data\s*)?quality)/i.test(n)) return { type:'quality', raw };
 
@@ -3494,7 +3494,7 @@ function refreshWelcomeHints() {
     .sort((a, b) => productsInCat(b.id).length - productsInCat(a.id).length).slice(0, 4);
   const hints = ['📦 Show all products', '🎯 What to work on?', '📊 Quality report', '✏️ Find drafts'];
   roots.forEach(c => hints.push('📁 Show products in ' + c.name));
-  hints.push('📋 Show attributes');
+  hints.push('🔍 Find products missing a description', '📋 Show attributes');
   wrap.innerHTML = hints.map(h => `<div class="welcome-hint" onclick="welcomeHint(this)">${esc(h)}</div>`).join('');
 }
 
@@ -5177,7 +5177,9 @@ async function testBackendConnection() {
 }
 
 // ============ SIDEBAR TOGGLE ============
-let sidebarOpen = localStorage.getItem('pim-sidebar') === 'true';
+// Sidebar is open by default (shows categories on the welcome screen too);
+// only stays closed if the user explicitly collapsed it.
+let sidebarOpen = localStorage.getItem('pim-sidebar') !== 'false';
 
 function toggleSidebar() {
   sidebarOpen = !sidebarOpen;
