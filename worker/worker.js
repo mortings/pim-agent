@@ -93,6 +93,28 @@ export default {
       }
     }
 
+    // ── Bluestone Public API (PAPI) proxy ─────────────────────────────────
+    // Read-only passthrough to the Public API, used to resolve media asset
+    // IDs (from get_product) into displayable image URLs — the MCP only
+    // returns asset IDs, not URLs. Runs server-side so the PAPI key never
+    // touches the browser, and from Cloudflare's egress (Bluestone's gateway
+    // blocks unknown datacenter IPs). Body: { path, header?, base?, key? }.
+    if (url.pathname === '/api/papi') {
+      const papiPath = (body.path || '').trim();
+      if (!papiPath) return json({ error: 'path is required' }, 400, cors);
+      const papiBase = (body.base || 'https://api.test.bluestonepim.com').replace(/\/+$/, '');
+      const headerName = (body.header || 'x-api-key').trim();
+      const key = body.key || env.BLUESTONE_PAPI_KEY;
+      if (!key) return json({ error: 'No PAPI key (set BLUESTONE_PAPI_KEY or pass key)' }, 500, cors);
+      try {
+        const res = await fetch(papiBase + papiPath, { headers: { [headerName]: key, 'Accept': 'application/json' } });
+        const text = await res.text();
+        return json({ success: true, status: res.status, contentType: res.headers.get('content-type') || '', body: text.slice(0, 60000) }, 200, cors);
+      } catch (e) {
+        return json({ error: e.message || 'PAPI request failed' }, 502, cors);
+      }
+    }
+
     // ── Legacy named route (unchanged) ────────────────────────────────────
     if (url.pathname === '/api/create-product') {
       const name = (body.name || '').trim();
