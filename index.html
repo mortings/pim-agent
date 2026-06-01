@@ -1372,6 +1372,7 @@ function openDetail(productId) {
     </div>
     <div class="detail-title">${esc(p.name)}</div>
     <div class="detail-sku">${esc(p.sku)}</div>
+    ${(p.liveOnly && !p.detailLoaded) ? `<div style="font-size:11px;color:var(--blue);margin-top:4px">⟳ Loading full detail from Bluestone PIM…</div>` : ''}
     <div class="detail-section">
       <div class="detail-section-title">Status & Quality</div>
       <div class="detail-field"><span class="lbl">Status</span><span class="status-badge status-${p.status}">${p.status}</span></div>
@@ -1420,6 +1421,10 @@ function openDetail(productId) {
   `;
   panel.classList.add('open');
   document.getElementById('detail-overlay').classList.add('open');
+
+  // Live-synced products carry only id/name/number — fetch full detail on first
+  // open, then this panel re-renders itself with price/description/images.
+  if (p.liveOnly && !p.detailLoaded && !p._detailLoading) hydrateProductDetail(p);
 }
 
 function closeDetail() {
@@ -3112,6 +3117,189 @@ function extractMcpText(result) {
   try { return JSON.stringify(result); } catch (e) { return String(result); }
 }
 
+// Generic MCP tool call through the Worker's /api/mcp-call route (added so the
+// catalog can be hydrated live, not just written to). Mirrors the helper used
+// by the other demos in this family.
+async function mcpCall(tool, args = {}) {
+  const r = await fetch(appSettings.workerUrl + '/api/mcp-call', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Demo-Secret': appSettings.workerSecret },
+    body: JSON.stringify({ tool, args })
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || data.success === false) throw new Error(data.error || ('HTTP ' + r.status));
+  return data.result;
+}
+
+// MCP tools often return their JSON inside a text content block. Pull it out.
+function parseMcpJson(result) {
+  if (!result) return null;
+  if (result.structuredContent && typeof result.structuredContent === 'object') return result.structuredContent;
+  if (Array.isArray(result.content)) {
+    for (const c of result.content) { if (c && c.type === 'json' && c.json) return c.json; }
+  }
+  const text = extractMcpText(result).trim();
+  if (text) {
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+    try { return JSON.parse(stripped); } catch (e) {}
+    const m = stripped.match(/[\[{][\s\S]*[\]}]/);
+    if (m) { try { return JSON.parse(m[0]); } catch (e) {} }
+  }
+  return null;
+}
+
+// ============ LIVE CATALOG HYDRATION ============
+// The seed array gives an instant, never-flakes first paint. This brings the
+// in-memory catalog in line with the live Bluestone tenant by ADDING any
+// products that exist in PIM but aren't in the seed (e.g. SKUs added after it
+// was authored). Additive + keyed by Bluestone product id — it never drops
+// seed products, so the curated variant families and relationship demos stay
+// intact. Any failure leaves the seed catalog exactly as-is.
+let liveSyncDone = false;
+async function hydrateLiveCatalog() {
+  if (liveSyncDone || !backendConfigured()) return;
+  try {
+    showToast('Syncing catalog from Bluestone PIM…', 'var(--blue)');
+
+    // Live top-level catalogs — fall back to the seed's root categories.
+    let roots = [];
+    try {
+      const cat = parseMcpJson(await mcpCall('list_catalogs', { context: 'en' }));
+      const list = Array.isArray(cat) ? cat : (cat?.catalogs || cat?.items || cat?.data?.catalogs || []);
+      roots = list.map(c => ({ id: c.id || c.catalogId || c._id || c.nodeId, name: c.name || c.label || c.title || '' })).filter(c => c.id);
+    } catch (e) { /* fall through to seed roots */ }
+    if (!roots.length) roots = DB.categories.filter(c => !c.parent).map(c => ({ id: c.id, name: c.name }));
+    if (!roots.length) return;
+
+    // Make sure every live root exists as a category so new products have a home.
+    roots.forEach(r => { if (!DB.categories.find(c => c.id === r.id)) DB.categories.push({ id: r.id, name: r.name || 'Catalog', parent: null }); });
+
+    // Pull each catalog's working-state product set (whole subtree) in parallel.
+    const lists = await Promise.all(roots.map(async root => {
+      try {
+        const parsed = parseMcpJson(await mcpCall('search_products', {
+          categoryId: root.id, categoryScope: 'catalog_with_subcategories', context: 'en', limit: 200
+        }));
+        return { root, items: extractLiveProducts(parsed) };
+      } catch (e) { return { root, items: null }; } // null = this catalog failed; skip it, keep the seed for it
+    }));
+
+    const byPimId = new Map();
+    DB.products.forEach(p => { if (p.pimId) byPimId.set(p.pimId, p); });
+    const seen = new Set();
+    let added = 0;
+    for (const { root, items } of lists) {
+      if (!items) continue;
+      for (const it of items) {
+        if (!it.id || seen.has(it.id)) continue;
+        seen.add(it.id);
+        if (byPimId.has(it.id)) continue; // already represented by a seed product
+        let cat = it.category;
+        if (!cat || !DB.categories.find(c => c.id === cat)) cat = root.id;
+        const prod = {
+          id: genId('prod'), sku: it.number || '—', name: it.name,
+          category: cat, price: 0, status: it.status || 'active',
+          brand: '', description: '', labels: [], weight: '', material: '', color: '', ean: '',
+          channels: [], pimId: it.id, pimType: it.type || 'SINGLE', parentSku: '',
+          images: [], created: new Date().toISOString(), updated: new Date().toISOString(), liveOnly: true
+        };
+        DB.products.push(prod);
+        DB.history[prod.id] = [{ time: prod.created, user: 'Bluestone PIM', action: 'synced', detail: 'Read live from Bluestone PIM LABS via MCP' }];
+        byPimId.set(it.id, prod);
+        added++;
+      }
+    }
+    liveSyncDone = true;
+    render();
+    showToast(added > 0 ? `✓ Synced ${added} live product${added === 1 ? '' : 's'} from Bluestone PIM` : '✓ Catalog in sync with Bluestone PIM', 'var(--green)');
+  } catch (e) {
+    console.warn('[ai-pim] live catalog hydration failed:', e && e.message);
+    // Seed catalog stays as-is — no user-facing breakage.
+  }
+}
+
+function extractLiveProducts(parsed) {
+  if (!parsed) return [];
+  let list = null;
+  if (Array.isArray(parsed)) list = parsed;
+  else if (Array.isArray(parsed.products)) list = parsed.products;
+  else if (Array.isArray(parsed.items)) list = parsed.items;
+  else if (parsed.data && Array.isArray(parsed.data.products)) list = parsed.data.products;
+  if (!list) return [];
+  return list.map(p => {
+    let cat = p.categoryId || p.category || (Array.isArray(p.categories) ? p.categories[0] : null);
+    if (cat && typeof cat === 'object') cat = cat.id || cat.categoryId || cat._id;
+    const st = p.status || p.state;
+    return {
+      id: p.id || p.productId || p._id || '',
+      name: p.name || p.productName || p.title || '(unnamed)',
+      number: p.number || p.sku || p.productNumber || '',
+      type: p.type || 'SINGLE',
+      status: /draft/i.test(String(st)) ? 'draft' : 'active',
+      category: cat || null
+    };
+  }).filter(p => p.id);
+}
+
+// Lazy per-product detail. Live-synced products arrive with only id/name/number
+// (the cheap list call). The full record — price, description, brand, images —
+// is fetched on demand via get_product the first time a card is opened, so we
+// never pay 200 get_product round-trips up front. Idempotent + fails soft.
+async function hydrateProductDetail(p) {
+  if (!p || !p.pimId || p.detailLoaded || p._detailLoading) return;
+  p._detailLoading = true;
+  try {
+    const parsed = parseMcpJson(await mcpCall('get_product', { productId: p.pimId, context: 'en' }));
+    if (parsed) mergeProductDetail(p, parsed);
+    p.detailLoaded = true;
+  } catch (e) {
+    console.warn('[ai-pim] get_product failed for', p.pimId, e && e.message);
+  } finally {
+    p._detailLoading = false;
+  }
+  // Refresh the panel only if it's still showing this product, then update grids.
+  if (convo.lastProduct === p && document.getElementById('detail-panel').classList.contains('open')) openDetail(p.id);
+  render();
+}
+
+// Pull one attribute value out of a get_product doc by matching its name.
+function attrVal(d, re) {
+  const attrs = d.attributes || d.attributeValues || d.values;
+  if (!Array.isArray(attrs)) return null;
+  for (const a of attrs) {
+    const nm = a.name || a.attributeName || a.label || '';
+    if (nm && re.test(nm)) {
+      const v = a.value != null ? a.value : (Array.isArray(a.values) ? a.values.join(', ') : a.values);
+      if (v != null && v !== '') return String(v);
+    }
+  }
+  return null;
+}
+
+// Merge a get_product doc into the in-memory product, best-effort across shapes.
+function mergeProductDetail(p, d) {
+  if (d.name || d.productName) p.name = d.name || d.productName;
+  if (d.number || d.sku) p.sku = d.number || d.sku;
+  const st = d.state || d.status; if (st) p.status = /draft/i.test(String(st)) ? 'draft' : 'active';
+  const desc = d.description || attrVal(d, /description|long.?text|marketing/i); if (desc) p.description = desc;
+  const brand = d.brand || attrVal(d, /brand|manufacturer|vendor/i); if (brand) p.brand = brand;
+  const priceRaw = d.price != null ? d.price : attrVal(d, /price|amount|cost|rrp/i);
+  if (priceRaw != null && priceRaw !== '') { const n = parseFloat(String(priceRaw).replace(/[^0-9.]/g, '')); if (!isNaN(n)) p.price = n; }
+  const weight = attrVal(d, /weight/i); if (weight) p.weight = weight;
+  const material = attrVal(d, /material|composition|fabric/i); if (material) p.material = material;
+  const color = attrVal(d, /colou?r/i); if (color) p.color = color;
+  const ean = attrVal(d, /ean|gtin|barcode|upc/i); if (ean) p.ean = ean;
+  const assets = d.assets || d.images || d.media;
+  if (Array.isArray(assets) && assets.length) {
+    const imgs = assets.map((a, i) => {
+      const url = typeof a === 'string' ? a : (a.url || a.href || a.src || (a.resource && a.resource.url) || '');
+      return url ? { id: 'img_' + p.id + '_' + (i + 1), url, name: (p.sku || 'img') + '-' + (i + 1), primary: i === 0, size: '' } : null;
+    }).filter(Boolean);
+    if (imgs.length) p.images = imgs;
+  }
+  p.updated = new Date().toISOString();
+}
+
 // ============ NEW PIM FEATURES ============
 
 function execExport() {
@@ -4653,7 +4841,7 @@ const appSettings = {
   showQualityInGrid: localStorage.getItem('pim-showQ') !== 'false',
   defaultView: localStorage.getItem('pim-defaultView') || 'chat',
   animationsEnabled: localStorage.getItem('pim-animations') !== 'false',
-  workerUrl: localStorage.getItem('pim-workerUrl') || '',
+  workerUrl: localStorage.getItem('pim-workerUrl') || 'https://pim-agent-proxy.mortings.workers.dev',
   workerSecret: localStorage.getItem('pim-workerSecret') || ''
 };
 function backendConfigured() { return !!(appSettings.workerUrl && appSettings.workerSecret); }
@@ -4911,6 +5099,10 @@ applyTheme(appSettings.theme);
 initSidebar();
 
 render();
+
+// Bring the catalog in line with the live tenant (additive; seed stays as the
+// offline fallback). Runs async so first paint isn't blocked.
+hydrateLiveCatalog();
 
 // Focus the welcome input
 setTimeout(() => {
