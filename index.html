@@ -2869,7 +2869,11 @@ function execEdit(query) {
     return;
   }
 
-  // Build edit modal dynamically from attribute registry
+  // Live products: edit their REAL Bluestone attributes (loaded from the
+  // tenant + data model), not the demo's generic seed fields.
+  if (product.pimId && backendConfigured()) { openLiveEditor(product); return; }
+
+  // Build edit modal dynamically from attribute registry (seed/offline mode)
   const editAttrs = getEditableAttrs();
   const inputStyle = 'width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:\'Montserrat\',sans-serif;font-size:13px;margin-top:4px';
   const labelStyle = 'font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase';
@@ -2944,6 +2948,140 @@ window.confirmEdit = function(previewId, productId, newValsJson) {
   if (el) el.outerHTML = `<div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:var(--radius);padding:12px;margin:8px 0">
     <p style="color:var(--green);font-weight:700">✓ ${esc(p.name)} updated successfully.</p></div>`;
   addAudit('update', `Updated ${p.sku}: ${Object.keys(newVals).join(', ')}`);
+};
+
+// ─── Live attribute editor (real Bluestone attributes via MCP) ──────────
+// For products that exist in the tenant (have a pimId) we edit their ACTUAL
+// attributes — loaded from get_product and resolved against the live data
+// model — instead of the demo's generic seed fields. Writes go straight back
+// through set_product_attribute.
+let ATTR_DEFS = null;
+async function ensureAttrDefs() {
+  if (ATTR_DEFS) return ATTR_DEFS;
+  const m = new Map();
+  let page = 1, more = true;
+  while (more && page <= 6) {
+    let parsed;
+    try { parsed = parseMcpJson(await mcpCall('list_attribute_definitions', { limit: 500, maxEnumValues: 100, page })); }
+    catch (e) { break; }
+    const defs = parsed?.definitions || parsed?.items || (Array.isArray(parsed) ? parsed : []);
+    for (const d of defs) {
+      const id = d.id || d.definitionId; if (!id) continue;
+      m.set(id, { id, name: d.name || id, group: d.group || 'Attributes', dataType: d.dataType || 'text', unit: d.unit || '', enumValues: (d.enum && d.enum.values) || [] });
+    }
+    more = !!parsed?.hasMore; page++;
+  }
+  ATTR_DEFS = m;
+  return m;
+}
+
+async function openLiveEditor(product) {
+  const labelStyle = 'font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase';
+  const inputStyle = 'width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:13px;margin-top:4px';
+  openModal(`
+    <h3 style="font-size:16px;font-weight:800;margin-bottom:4px">Edit ${esc(product.name)}</h3>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${esc(product.sku)} · live attributes from Bluestone PIM</div>
+    <div style="padding:30px;text-align:center;color:var(--muted);font-size:13px">Loading attributes from Bluestone PIM…</div>`);
+
+  let defs, doc;
+  try {
+    defs = await ensureAttrDefs();
+    doc = parseMcpJson(await mcpCall('get_product', { productId: product.pimId, context: 'en' }));
+  } catch (e) {
+    openModal(`<h3 style="font-size:16px;font-weight:800;margin-bottom:8px">Edit ${esc(product.name)}</h3>
+      <p style="color:var(--red);font-size:13px">Couldn't load live attributes: ${esc(e.message)}</p>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn btn-cancel" onclick="closeModal()">Close</button></div>`);
+    return;
+  }
+
+  const attrs = (doc && Array.isArray(doc.attributes)) ? doc.attributes : [];
+  const items = attrs.map(a => ({ a, def: defs.get(a.definitionId) })).filter(x => x.def);
+  items.sort((x, y) => (x.def.group || '').localeCompare(y.def.group || '') || x.def.name.localeCompare(y.def.name));
+  if (!items.length) {
+    openModal(`<h3 style="font-size:16px;font-weight:800;margin-bottom:8px">Edit ${esc(product.name)}</h3>
+      <p style="color:var(--muted);font-size:13px">No attributes on this product could be resolved against the data model.</p>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn btn-cancel" onclick="closeModal()">Close</button></div>`);
+    return;
+  }
+
+  let lastGroup = '';
+  const fieldsHtml = items.map(({ a, def }) => {
+    const cur = a.values || a.dictionary || [];
+    const fid = 'live-' + def.id;
+    const unit = def.unit ? ` <span style="color:var(--muted);text-transform:none;font-weight:500">(${esc(def.unit)})</span>` : '';
+    let control;
+    if (def.dataType === 'single_select') {
+      const opts = ['<option value="">— none —</option>'].concat(def.enumValues.map(v => `<option value="${esc(v.valueId)}" ${cur[0] === v.valueId ? 'selected' : ''}>${esc(v.value)}</option>`)).join('');
+      control = `<select id="${fid}" data-kind="select" style="${inputStyle}">${opts}</select>`;
+    } else if (def.dataType === 'multi_select') {
+      control = `<div id="${fid}" data-kind="multi" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">` +
+        def.enumValues.map(v => {
+          const on = cur.includes(v.valueId);
+          return `<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid ${on ? 'var(--blue)' : 'var(--border)'};border-radius:100px;font-size:12px;cursor:pointer;background:${on ? 'rgba(61,116,244,0.15)' : 'var(--surface2)'}"><input type="checkbox" value="${esc(v.valueId)}" ${on ? 'checked' : ''} style="margin:0">${esc(v.value)}</label>`;
+        }).join('') + `</div>`;
+    } else if (def.dataType === 'boolean') {
+      const v = String(cur[0]) === 'true';
+      control = `<select id="${fid}" data-kind="bool" style="${inputStyle}"><option value="" ${cur.length === 0 ? 'selected' : ''}>— none —</option><option value="true" ${v ? 'selected' : ''}>Yes</option><option value="false" ${cur.length && !v ? 'selected' : ''}>No</option></select>`;
+    } else if (def.dataType === 'integer' || def.dataType === 'decimal') {
+      control = `<input id="${fid}" data-kind="num" type="number" step="${def.dataType === 'integer' ? '1' : 'any'}" value="${esc(cur[0] || '')}" style="${inputStyle}">`;
+    } else if (def.dataType === 'dictionary') {
+      control = `<input id="${fid}" data-kind="ro" value="${esc(cur[0] || '—')}" disabled style="${inputStyle};opacity:0.55"><div style="font-size:10px;color:var(--muted);margin-top:3px">Dictionary value — manage in Bluestone PIM</div>`;
+    } else if (def.dataType === 'formatted_text') {
+      control = `<textarea id="${fid}" data-kind="text" rows="3" style="${inputStyle};resize:vertical">${esc(cur[0] || '')}</textarea>`;
+    } else {
+      control = `<input id="${fid}" data-kind="text" value="${esc(cur[0] || '')}" style="${inputStyle}">`;
+    }
+    const groupHdr = def.group !== lastGroup ? `<div style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:var(--blue);text-transform:uppercase;margin-top:8px">${esc(def.group)}</div>` : '';
+    lastGroup = def.group;
+    return `${groupHdr}<div><label style="${labelStyle}">${esc(def.name)}${unit}</label>${control}</div>`;
+  }).join('');
+
+  openModal(`
+    <h3 style="font-size:16px;font-weight:800;margin-bottom:4px">Edit ${esc(product.name)}</h3>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${esc(product.sku)} · <span style="color:var(--green)">${items.length} live attribute${items.length === 1 ? '' : 's'} from Bluestone PIM</span></div>
+    <div style="max-height:55vh;overflow-y:auto;display:grid;gap:12px;padding-right:4px">${fieldsHtml}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-confirm" onclick="saveLiveEdit('${product.id}')">Save to Bluestone PIM</button>
+    </div>`);
+
+  // Stash originals + types for diffing on save.
+  openLiveEditor._ctx = { productId: product.id, pimId: product.pimId, items: items.map(({ a, def }) => ({ defId: def.id, name: def.name, dataType: def.dataType, orig: (a.values || a.dictionary || []).slice() })) };
+}
+
+window.saveLiveEdit = async function(productId) {
+  const ctx = openLiveEditor._ctx;
+  if (!ctx || ctx.productId !== productId) { closeModal(); return; }
+  const p = DB.products.find(x => x.id === productId);
+  const changes = [];
+  for (const it of ctx.items) {
+    if (it.dataType === 'dictionary') continue; // read-only here
+    const el = document.getElementById('live-' + it.defId);
+    if (!el) continue;
+    const kind = el.dataset ? el.dataset.kind : '';
+    let values;
+    if (kind === 'multi') values = [...el.querySelectorAll('input[type=checkbox]:checked')].map(c => c.value);
+    else if (kind === 'select' || kind === 'bool') values = el.value ? [el.value] : [];
+    else { const v = (el.value || '').trim(); values = v === '' ? [] : [v]; }
+    if (JSON.stringify(values) !== JSON.stringify(it.orig)) changes.push({ defId: it.defId, name: it.name, values });
+  }
+  if (!changes.length) { closeModal(); addSystem('<p>No changes made.</p>', []); return; }
+  closeModal();
+
+  addSystem(`<p>Writing <strong>${changes.length}</strong> attribute change${changes.length === 1 ? '' : 's'} to Bluestone PIM for <strong>${esc(p.name)}</strong>…</p>`, []);
+  let ok = 0, fail = 0;
+  for (const c of changes) {
+    try {
+      await mcpCall('set_product_attribute', { productId: ctx.pimId, definitionId: c.defId, values: c.values, context: 'en', attributeName: c.name, productName: p.name });
+      ok++;
+    } catch (e) { fail++; console.warn('[ai-pim] set_product_attribute failed', c.name, e && e.message); }
+  }
+  if (p) { p.detailLoaded = false; p.updated = new Date().toISOString(); }
+  addAudit('update', `Updated ${ok} attribute(s) on ${p.sku} in Bluestone PIM`);
+  addSystem(`<div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:var(--radius);padding:12px;margin:8px 0">
+    <p style="color:${fail ? 'var(--yellow)' : 'var(--green)'};font-weight:700">${fail ? `Saved ${ok}, ${fail} failed — check console` : `✓ ${ok} attribute${ok === 1 ? '' : 's'} written to Bluestone PIM`}</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px">${changes.map(c => esc(c.name)).join(', ')}</p>
+  </div>`, [`Edit ${p.sku}`, `Show all products`]);
 };
 
 function execPriceChange(direction, target, percent) {
