@@ -116,6 +116,20 @@
     .suggest-foot{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:10px;color:var(--accent);font-weight:600}
     .suggest-foot .dismiss{color:var(--muted);cursor:pointer;margin-left:auto;font-weight:700}
     .suggest-foot .dismiss:hover{color:var(--red)}
+    .cell-tag.edited{color:var(--blue);background:rgba(61,116,244,0.12);border:1px solid rgba(61,116,244,0.3)}
+    /* Inline cell editing */
+    .cell-edit-btn{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:11px;line-height:1;padding:0;z-index:1}
+    .val-cell:hover .cell-edit-btn{display:flex}
+    .cell-edit-btn:hover{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+    .val-cell.editing-cell{background:rgba(45,212,191,0.06)}
+    .cell-edit{width:100%;background:#0a1424;border:1px solid var(--accent-line);border-radius:8px;color:var(--text);font-family:inherit;font-size:12.5px;line-height:1.45;padding:8px 10px;resize:vertical;min-height:40px;-webkit-appearance:none}
+    .cell-edit:focus{outline:none;border-color:var(--accent)}
+    .edit-actions{display:flex;gap:6px;margin-top:6px}
+    .mini-btn{font-family:inherit;font-size:11px;font-weight:700;padding:4px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer}
+    .mini-btn:hover{border-color:rgba(255,255,255,0.2)}
+    .mini-btn.save{background:var(--accent);border-color:var(--accent);color:#04221d}
+    .mini-btn.save:hover{background:#43e6d1}
+    .edit-hint{font-size:9.5px;color:var(--muted);margin-top:4px}
 
     .action-row{display:flex;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
     .action-row .summary{font-size:12px;color:var(--muted)}
@@ -438,8 +452,10 @@
       sourceId:'en',
       products:[],            // [{ id, sku, name, fields:[...], suggestions:{} }]
       productId:null,
-      pending:{},             // fieldKey → { localeId → text } (AI suggestions not yet pushed)
+      pending:{},             // fieldKey → { localeId → text } (AI suggestions OR manual edits, not yet pushed)
       committed:{},           // fieldKey → { localeId → true } (pushed this session)
+      edited:{},              // fieldKey → { localeId → true } (manually typed, vs AI-suggested)
+      editing:null,           // "fieldKey__localeId" of the cell currently being edited inline
     };
 
     function currentProduct(){return state.products.find(p=>p.id===state.productId)||null}
@@ -454,7 +470,7 @@
 
     // ─── Bootstrap ───────────────────────────────────────────────────────
     async function bootstrap(){
-      state.pending={};state.committed={};
+      state.pending={};state.committed={};state.edited={};state.editing=null;
       if(!settings.workerUrl||!settings.workerSecret){
         activateDemo('Demo data — configure the backend to load a live product across its markets.');
         return;
@@ -586,12 +602,12 @@
     }
     function onProductChange(){
       state.productId=document.getElementById('product-select').value;
-      state.pending={};state.committed={};
+      state.pending={};state.committed={};state.edited={};state.editing=null;
       renderAll();
     }
     function onSourceChange(){
       state.sourceId=document.getElementById('source-select').value;
-      state.pending={};
+      state.pending={};state.edited={};state.editing=null;
       renderAll();
     }
 
@@ -646,33 +662,88 @@
     }
 
     function renderCell(prod,f,loc){
-      const isSrc=loc.id===state.sourceId;
+      if(state.editing===f.key+'__'+loc.id) return renderCellEditor(prod,f,loc);
       const live=liveValue(f,loc.id);
-      if(isSrc){
-        return `<td class="val-cell src">${live!=null?`<div class="val-text">${escapeHtml(live)}</div>`:'<span class="cell-empty-hint">— empty in source —</span>'}</td>`;
-      }
+      const pend=pendingValue(f.key,loc.id);
       const committed=state.committed[f.key]&&state.committed[f.key][loc.id];
-      if(live!=null&&!committed){
-        return `<td class="val-cell filled"><div class="val-text">${escapeHtml(live)}</div></td>`;
+      const isSrc=loc.id===state.sourceId;
+      const pencil=`<button class="cell-edit-btn" title="Edit value" onclick="event.stopPropagation();startEdit('${f.key}','${loc.id}')">✎</button>`;
+
+      // Pending (AI suggestion OR manual edit) takes precedence — it's what gets pushed.
+      if(pend){
+        const edited=state.edited[f.key]&&state.edited[f.key][loc.id];
+        const tag=edited?'<span class="cell-tag edited">✎ edited</span>':'<span class="cell-tag suggested">✦ AI suggestion</span>';
+        return `<td class="val-cell suggested">${pencil}${tag}
+          <div class="val-text">${escapeHtml(pend)}</div>
+          <div class="suggest-foot">queued for push<span class="dismiss" onclick="event.stopPropagation();dismissOne('${f.key}','${loc.id}')">✕ dismiss</span></div>
+        </td>`;
+      }
+      if(isSrc){
+        return `<td class="val-cell src">${pencil}${live!=null?`<div class="val-text">${escapeHtml(live)}</div>`:'<span class="cell-empty-hint">— empty —</span>'}</td>`;
       }
       if(committed){
-        const v=pendingValue(f.key,loc.id)||live||'';
-        return `<td class="val-cell committed"><span class="cell-tag committed">✓ pushed</span><div class="val-text">${escapeHtml(v)}</div></td>`;
+        return `<td class="val-cell committed">${pencil}<span class="cell-tag committed">✓ pushed</span><div class="val-text">${escapeHtml(live||'')}</div></td>`;
       }
-      const pend=pendingValue(f.key,loc.id);
-      if(pend){
-        return `<td class="val-cell suggested" onclick="dismissOne('${f.key}','${loc.id}')" title="Click to dismiss this suggestion">
-          <span class="cell-tag suggested">✦ AI suggestion</span>
-          <div class="val-text">${escapeHtml(pend)}</div>
-          <div class="suggest-foot">queued for push<span class="dismiss">✕ dismiss</span></div>
-        </td>`;
+      if(live!=null){
+        return `<td class="val-cell filled">${pencil}<div class="val-text">${escapeHtml(live)}</div></td>`;
       }
       // a genuine gap
       const hasSuggestion=!!suggestionFor(prod,f.key,loc.id);
-      return `<td class="val-cell missing">
+      return `<td class="val-cell missing">${pencil}
         <span class="cell-tag missing">missing</span>
-        <div class="cell-empty-hint">${hasSuggestion?'AI can fill this':'no translation'}</div>
+        <div class="cell-empty-hint">${hasSuggestion?'AI can fill this — or ✎ to type your own':'✎ to add a translation'}</div>
       </td>`;
+    }
+
+    function renderCellEditor(prod,f,loc){
+      const cur=pendingValue(f.key,loc.id) ?? liveValue(f,loc.id) ?? '';
+      const id='edit-'+f.key+'__'+loc.id;
+      return `<td class="val-cell editing-cell">
+        <textarea class="cell-edit" id="${id}" rows="3" oninput="autoGrow(this)" onkeydown="editKeydown(event,'${f.key}','${loc.id}')">${escapeHtml(cur)}</textarea>
+        <div class="edit-actions">
+          <button class="mini-btn save" onclick="commitEdit('${f.key}','${loc.id}')">Save</button>
+          <button class="mini-btn" onclick="cancelEdit()">Cancel</button>
+        </div>
+        <div class="edit-hint">⌘/Ctrl+Enter to save · Esc to cancel</div>
+      </td>`;
+    }
+
+    // ─── Inline editing ──────────────────────────────────────────────────
+    function startEdit(fieldKey,localeId){
+      state.editing=fieldKey+'__'+localeId;
+      renderAll();
+      const ta=document.getElementById('edit-'+fieldKey+'__'+localeId);
+      if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);autoGrow(ta);}
+    }
+    function cancelEdit(){state.editing=null;renderAll();}
+    function commitEdit(fieldKey,localeId){
+      const ta=document.getElementById('edit-'+fieldKey+'__'+localeId);
+      setManualValue(fieldKey,localeId,ta?ta.value:'');
+      state.editing=null;
+      renderAll();
+    }
+    function editKeydown(e,fieldKey,localeId){
+      if(e.key==='Escape'){e.preventDefault();cancelEdit();}
+      else if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();commitEdit(fieldKey,localeId);}
+    }
+    function autoGrow(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,240)+'px';}
+
+    // Store a manual value as a pending (queued-for-push) edit. Clears the
+    // pending entry if it's empty or equals what's already live (no change).
+    function setManualValue(fieldKey,localeId,raw){
+      const prod=currentProduct();if(!prod)return;
+      const f=prod.fields.find(x=>x.key===fieldKey);
+      const val=(raw||'').trim();
+      const live=f?liveValue(f,localeId):null;
+      if(val===''||val===(live||'')){
+        if(state.pending[fieldKey]){delete state.pending[fieldKey][localeId];if(!Object.keys(state.pending[fieldKey]).length)delete state.pending[fieldKey];}
+        if(state.edited[fieldKey]){delete state.edited[fieldKey][localeId];if(!Object.keys(state.edited[fieldKey]).length)delete state.edited[fieldKey];}
+        return;
+      }
+      if(!state.pending[fieldKey])state.pending[fieldKey]={};
+      state.pending[fieldKey][localeId]=val;
+      if(!state.edited[fieldKey])state.edited[fieldKey]={};
+      state.edited[fieldKey][localeId]=true;
     }
 
     function renderKpis(prod){
@@ -722,12 +793,12 @@
       if(n>0){
         const writable=countWritablePending();
         const cap=state.mode==='live'&&state.contextWrite&&state.contextWrite.supported;
-        summary.innerHTML=`<strong>${n}</strong> AI translation${n===1?'':'s'} queued`+
+        summary.innerHTML=`<strong>${n}</strong> translation${n===1?'':'s'} queued`+
           (state.mode==='live'
             ? (cap?` · <strong>${writable}</strong> will write live (${n-writable} preview-only)`:' · preview-only on this MCP build')
             : ' · demo — push is simulated');
       }else{
-        summary.textContent='No pending translations. Click “Translate all gaps” to draft them with AI.';
+        summary.textContent='No pending changes. Draft with “Translate all gaps”, or click ✎ on any cell to edit it.';
       }
     }
 
@@ -771,9 +842,10 @@
 
     function dismissOne(fieldKey,localeId){
       if(state.pending[fieldKey]){delete state.pending[fieldKey][localeId];if(!Object.keys(state.pending[fieldKey]).length)delete state.pending[fieldKey]}
+      if(state.edited[fieldKey]){delete state.edited[fieldKey][localeId];if(!Object.keys(state.edited[fieldKey]).length)delete state.edited[fieldKey]}
       renderAll();
     }
-    function discardPending(){state.pending={};renderAll();toast('Suggestions discarded')}
+    function discardPending(){state.pending={};state.edited={};renderAll();toast('Pending changes discarded')}
 
     // ─── Push to PIM ─────────────────────────────────────────────────────
     async function pushToPim(){
@@ -838,6 +910,7 @@
       const v=pendingValue(fieldKey,localeId);
       if(f&&v!=null){if(!f.values)f.values={};f.values[localeId]=v;}
       if(state.pending[fieldKey]){delete state.pending[fieldKey][localeId];if(!Object.keys(state.pending[fieldKey]).length)delete state.pending[fieldKey]}
+      if(state.edited[fieldKey]){delete state.edited[fieldKey][localeId];if(!Object.keys(state.edited[fieldKey]).length)delete state.edited[fieldKey]}
     }
 
     // ─── Boot ────────────────────────────────────────────────────────────
