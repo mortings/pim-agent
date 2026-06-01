@@ -2848,10 +2848,19 @@ function execListAttributes() {
 }
 
 function execEdit(query) {
-  const q = query.replace(/^(product|item|the)\s+/i, '').replace(/\s*(price|name|description|status|brand|weight|material|ean)\s+/i, '');
-  const product = DB.products.find(p => p.sku.toLowerCase() === q.toLowerCase() || p.name.toLowerCase().includes(q.toLowerCase()));
+  const raw = (query || '').trim();
+  // Resolve the product. Try the raw query first so SKUs that contain
+  // field-like words (e.g. "ean 00011111") still match; only if that finds
+  // nothing do we strip leading qualifiers like "price"/"name"/"ean".
+  let results = findProducts(raw);
+  if (!results.length) {
+    const stripped = raw.replace(/^(product|item|the)\s+/i, '').replace(/\s*(price|name|description|status|brand|weight|material|ean)\s+/i, '').trim();
+    if (stripped && stripped.toLowerCase() !== raw.toLowerCase()) results = findProducts(stripped);
+  }
+  // Prefer an exact SKU/name hit; otherwise a single result is unambiguous.
+  const product = results.find(p => p.sku.toLowerCase() === raw.toLowerCase() || p.name.toLowerCase() === raw.toLowerCase())
+    || (results.length === 1 ? results[0] : null);
   if (!product) {
-    const results = findProducts(q);
     if (results.length > 1) {
       addSystem(`<p>Multiple products match. Which one?</p>${productTableHtml(results)}`, results.slice(0,3).map(p => `Edit ${p.sku}`));
     } else {
