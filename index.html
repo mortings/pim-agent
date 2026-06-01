@@ -516,7 +516,7 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         <div id="cat-tree"></div>
       </div>
       <div class="sidebar-divider"></div>
-      <div class="sidebar-section">
+      <div class="sidebar-section" id="labels-section">
         <div class="sidebar-title">Labels</div>
         <div id="label-list"></div>
       </div>
@@ -554,12 +554,6 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         <div class="welcome-hint" onclick="welcomeHint(this)">📊 Quality report</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">✏️ Find drafts</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Missing descriptions</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">✨ AI Enrich Heritage Brogue</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🔗 OPTISONIC 3400 relations</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🏷️ Bestsellers</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🏃 Show running shoes</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">⚡ Show cable ladders</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">📡 Show flowmeters</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">📋 Show attributes</div>
       </div>
     </div>
@@ -1240,6 +1234,8 @@ function renderSidebar() {
     lblHtml += `<div class="label-item" onclick="handleLabelClick('${l.id}')"><span class="label-dot" style="background:${l.color}"></span>${esc(l.name)}<span class="cnt">${count}</span></div>`;
   });
   document.getElementById('label-list').innerHTML = lblHtml;
+  const lblSec = document.getElementById('labels-section');
+  if (lblSec) lblSec.style.display = DB.labels.length ? '' : 'none';
 
   // Activity
   let actHtml = '';
@@ -3410,8 +3406,10 @@ async function hydrateLiveCatalog() {
     DB.relationships = (DB.relationships || []).filter(r => keep.has(r.from) && keep.has(r.to));
     DB.categories = nodeList.map(n => ({ id: n.id, name: n.name, parent: n.parent }));
     DB.products = liveProducts;
+    DB.labels = [];           // seed labels are demo-only; the MCP exposes no live label source
     liveSyncDone = true;
     render();
+    refreshWelcomeHints();
     showToast(`✓ Synced ${liveProducts.length} products from Bluestone PIM`, 'var(--green)');
   } catch (e) {
     console.warn('[ai-pim] live catalog hydration failed:', e && e.message);
@@ -3484,6 +3482,20 @@ function publishBadge(p) {
   return p.published
     ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;background:rgba(52,211,153,0.15);color:var(--green)">● Published</span>'
     : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;background:rgba(251,231,77,0.12);color:var(--yellow)">○ Draft</span>';
+}
+
+// Rebuild the welcome-screen suggestion chips from the LIVE catalog so they
+// don't keep pointing at seed-only products/categories (Heritage Brogue,
+// flowmeters, …). Called after a successful live sync.
+function refreshWelcomeHints() {
+  const wrap = document.querySelector('.welcome-hints');
+  if (!wrap) return;
+  const roots = DB.categories.filter(c => !c.parent && productsInCat(c.id).length > 0)
+    .sort((a, b) => productsInCat(b.id).length - productsInCat(a.id).length).slice(0, 4);
+  const hints = ['📦 Show all products', '🎯 What to work on?', '📊 Quality report', '✏️ Find drafts'];
+  roots.forEach(c => hints.push('📁 Show products in ' + c.name));
+  hints.push('📋 Show attributes');
+  wrap.innerHTML = hints.map(h => `<div class="welcome-hint" onclick="welcomeHint(this)">${esc(h)}</div>`).join('');
 }
 
 function extractLiveProducts(parsed) {
