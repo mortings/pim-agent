@@ -1371,7 +1371,7 @@ function openDetail(productId) {
       </div>
     </div>
     <div class="detail-title">${esc(p.name)}</div>
-    <div class="detail-sku">${esc(p.sku)}</div>
+    <div class="detail-sku">${esc(p.sku)} ${publishBadge(p)}</div>
     ${(p.liveOnly && !p.detailLoaded) ? `<div style="font-size:11px;color:var(--blue);margin-top:4px">⟳ Loading full detail from Bluestone PIM…</div>` : ''}
     <div class="detail-section">
       <div class="detail-section-title">Status & Quality</div>
@@ -3269,6 +3269,7 @@ async function enrichImagesFromPublished() {
     // Collect imageUrl by product id and by SKU/number, across all published
     // catalogs, a few in parallel and a few pages each.
     const byId = new Map(), byNum = new Map();
+    const pubIds = new Set(), pubNums = new Set();
     let idx = 0;
     async function worker() {
       while (idx < catalogs.length) {
@@ -3280,8 +3281,10 @@ async function enrichImagesFromPublished() {
           catch (e) { break; }
           const list = parsed?.products || parsed?.items || (Array.isArray(parsed) ? parsed : []);
           for (const p of list) {
-            const url = p.imageUrl || p.image; if (!url) continue;
             const id = p.id || p.productId || p._id, num = p.number || p.sku;
+            if (id) pubIds.add(id);
+            if (num) pubNums.add(num);
+            const url = p.imageUrl || p.image; if (!url) continue;
             if (id && !byId.has(id)) byId.set(id, url);
             if (num && !byNum.has(num)) byNum.set(num, url);
           }
@@ -3290,20 +3293,30 @@ async function enrichImagesFromPublished() {
       }
     }
     await Promise.all(Array.from({ length: 5 }, worker));
-    if (!byId.size && !byNum.size) return;
+    if (!pubIds.size && !pubNums.size) return;
 
+    // Mark publish status (drives the Published/Draft badge) and attach photos.
     let applied = 0;
     for (const p of DB.products) {
+      p.published = pubIds.has(p.pimId) || (!!p.sku && pubNums.has(p.sku));
       if (p.images && p.images.length) continue;            // keep existing/seed photos
       const url = (p.pimId && byId.get(p.pimId)) || (p.sku && byNum.get(p.sku));
       if (url) { p.images = [{ id: 'img_' + p.id, url, name: p.sku || p.name || 'image', primary: true, size: '' }]; applied++; }
     }
-    if (applied) {
-      render();
-      if (typeof currentMode !== 'undefined') { if (currentMode === 'data') renderDataGrid(); else if (currentMode === 'dam') renderDamGrid(); }
-      showToast(`✓ Loaded ${applied} product photo${applied === 1 ? '' : 's'} from published data`, 'var(--green)');
-    }
+    render();
+    if (typeof currentMode !== 'undefined') { if (currentMode === 'data') renderDataGrid(); else if (currentMode === 'dam') renderDamGrid(); }
+    if (applied) showToast(`✓ Loaded ${applied} product photo${applied === 1 ? '' : 's'} from published data`, 'var(--green)');
   } catch (e) { console.warn('[ai-pim] image enrichment failed:', e && e.message); }
+}
+
+// Small Published/Draft pill. Only shown once publish status is known (i.e.
+// after enrichImagesFromPublished has run against a live tenant) — so the
+// photo-vs-placeholder distinction reads as intentional, not broken.
+function publishBadge(p) {
+  if (p.published === undefined) return '';
+  return p.published
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;background:rgba(52,211,153,0.15);color:var(--green)">● Published</span>'
+    : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;background:rgba(251,231,77,0.12);color:var(--yellow)">○ Draft</span>';
 }
 
 function extractLiveProducts(parsed) {
@@ -4925,7 +4938,7 @@ function renderDamGrid() {
         <div class="dam-card-name" title="${esc(p.name)}">${esc(p.name)}</div>
         <div class="dam-card-meta">
           <span class="sku">${esc(p.sku)}</span>
-          ${img ? `<span>${img.size}</span>` : '<span style="color:var(--red)">No image</span>'}
+          ${publishBadge(p) || (img ? `<span>${img.size}</span>` : '')}
           ${primaryBadge}
         </div>
       </div>
