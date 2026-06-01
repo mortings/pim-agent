@@ -2959,7 +2959,7 @@ let ATTR_DEFS = null;
 async function ensureAttrDefs() {
   if (ATTR_DEFS) return ATTR_DEFS;
   const m = new Map();
-  let page = 1, more = true;
+  let page = 1, more = true, order = 0;
   while (more && page <= 6) {
     let parsed;
     try { parsed = parseMcpJson(await mcpCall('list_attribute_definitions', { limit: 500, maxEnumValues: 100, page })); }
@@ -2967,7 +2967,9 @@ async function ensureAttrDefs() {
     const defs = parsed?.definitions || parsed?.items || (Array.isArray(parsed) ? parsed : []);
     for (const d of defs) {
       const id = d.id || d.definitionId; if (!id) continue;
-      m.set(id, { id, name: d.name || id, group: d.group || 'Attributes', dataType: d.dataType || 'text', unit: d.unit || '', enumValues: (d.enum && d.enum.values) || [] });
+      // `order` = position in the data-model sequence → used to render the
+      // editor in the same group/field order as the Bluestone UI.
+      m.set(id, { id, name: d.name || id, group: d.group || 'Attributes', groupId: d.groupId || '', dataType: d.dataType || 'text', unit: d.unit || '', enumValues: (d.enum && d.enum.values) || [], order: order++ });
     }
     more = !!parsed?.hasMore; page++;
   }
@@ -2996,7 +2998,6 @@ async function openLiveEditor(product) {
 
   const attrs = (doc && Array.isArray(doc.attributes)) ? doc.attributes : [];
   const items = attrs.map(a => ({ a, def: defs.get(a.definitionId) })).filter(x => x.def);
-  items.sort((x, y) => (x.def.group || '').localeCompare(y.def.group || '') || x.def.name.localeCompare(y.def.name));
   if (!items.length) {
     openModal(`<h3 style="font-size:16px;font-weight:800;margin-bottom:8px">Edit ${esc(product.name)}</h3>
       <p style="color:var(--muted);font-size:13px">No attributes on this product could be resolved against the data model.</p>
@@ -3004,8 +3005,8 @@ async function openLiveEditor(product) {
     return;
   }
 
-  let lastGroup = '';
-  const fieldsHtml = items.map(({ a, def }) => {
+  // One editable control for a single attribute.
+  const fieldHtml = ({ a, def }) => {
     const cur = a.values || a.dictionary || [];
     const fid = 'live-' + def.id;
     const unit = def.unit ? ` <span style="color:var(--muted);text-transform:none;font-weight:500">(${esc(def.unit)})</span>` : '';
@@ -3031,10 +3032,25 @@ async function openLiveEditor(product) {
     } else {
       control = `<input id="${fid}" data-kind="text" value="${esc(cur[0] || '')}" style="${inputStyle}">`;
     }
-    const groupHdr = def.group !== lastGroup ? `<div style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:var(--blue);text-transform:uppercase;margin-top:8px">${esc(def.group)}</div>` : '';
-    lastGroup = def.group;
-    return `${groupHdr}<div><label style="${labelStyle}">${esc(def.name)}${unit}</label>${control}</div>`;
-  }).join('');
+    return `<div><label style="${labelStyle}">${esc(def.name)}${unit}</label>${control}</div>`;
+  };
+
+  // Order to mirror the Bluestone UI: bucket by attribute group, with groups
+  // and the fields inside them following the data-model sequence (def.order).
+  const groups = new Map();
+  for (const it of items) {
+    const g = it.def.group || 'Attributes';
+    if (!groups.has(g)) groups.set(g, { order: it.def.order ?? 1e9, list: [] });
+    const b = groups.get(g); b.list.push(it); b.order = Math.min(b.order, it.def.order ?? 1e9);
+  }
+  const ordered = [...groups.entries()].sort((a, b) => a[1].order - b[1].order);
+  ordered.forEach(([, b]) => b.list.sort((x, y) => (x.def.order ?? 0) - (y.def.order ?? 0)));
+
+  const hdrStyle = 'font-size:10px;font-weight:800;letter-spacing:0.6px;color:var(--blue);text-transform:uppercase;margin-top:10px;display:flex;align-items:center;gap:6px';
+  const cntStyle = 'background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:100px;padding:0 6px;font-size:9px;font-weight:700';
+  const fieldsHtml = ordered.map(([g, b]) =>
+    `<div style="${hdrStyle}">${esc(g)}<span style="${cntStyle}">${b.list.length}</span></div>` + b.list.map(fieldHtml).join('')
+  ).join('');
 
   openModal(`
     <h3 style="font-size:16px;font-weight:800;margin-bottom:4px">Edit ${esc(product.name)}</h3>
