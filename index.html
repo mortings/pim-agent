@@ -3149,69 +3149,103 @@ function parseMcpJson(result) {
 }
 
 // ============ LIVE CATALOG HYDRATION ============
-// The seed array gives an instant, never-flakes first paint. This brings the
-// in-memory catalog in line with the live Bluestone tenant by ADDING any
-// products that exist in PIM but aren't in the seed (e.g. SKUs added after it
-// was authored). Additive + keyed by Bluestone product id — it never drops
-// seed products, so the curated variant families and relationship demos stay
-// intact. Any failure leaves the seed catalog exactly as-is.
+// The seed array gives an instant, never-flakes first paint. On open we then
+// rebuild the catalog to MIRROR the live Bluestone tenant: real catalogs and
+// their real category tree, with each product placed in its actual category
+// (queried by exact membership). Curated seed products are preserved by
+// Bluestone product id, so their rich copy/images survive; a category reuses
+// the matching seed id when names line up, so the chat's category/keyword
+// wiring keeps working. Any failure leaves the seed catalog untouched.
 let liveSyncDone = false;
 async function hydrateLiveCatalog() {
   if (liveSyncDone || !backendConfigured()) return;
   try {
     showToast('Syncing catalog from Bluestone PIM…', 'var(--blue)');
 
-    // Live top-level catalogs — fall back to the seed's root categories.
-    let roots = [];
-    try {
-      const cat = parseMcpJson(await mcpCall('list_catalogs', { context: 'en' }));
-      const list = Array.isArray(cat) ? cat : (cat?.catalogs || cat?.items || cat?.data?.catalogs || []);
-      roots = list.map(c => ({ id: c.id || c.catalogId || c._id || c.nodeId, name: c.name || c.label || c.title || '' })).filter(c => c.id);
-    } catch (e) { /* fall through to seed roots */ }
-    if (!roots.length) roots = DB.categories.filter(c => !c.parent).map(c => ({ id: c.id, name: c.name }));
-    if (!roots.length) return;
+    // 1. Live catalogs.
+    const catParsed = parseMcpJson(await mcpCall('list_catalogs', { context: 'en' }));
+    const catRaw = Array.isArray(catParsed) ? catParsed : (catParsed?.catalogs || catParsed?.items || catParsed?.data?.catalogs || []);
+    const catalogs = catRaw.map(c => ({ liveId: c.id || c.catalogId || c._id || c.nodeId, name: c.name || c.label || c.title || 'Catalog' })).filter(c => c.liveId);
+    if (!catalogs.length) return; // nothing live → keep seed
 
-    // Make sure every live root exists as a category so new products have a home.
-    roots.forEach(r => { if (!DB.categories.find(c => c.id === r.id)) DB.categories.push({ id: r.id, name: r.name || 'Catalog', parent: null }); });
+    // Reuse a seed category's id when the live name matches (keeps chat wiring + emojis).
+    const seedIdByName = new Map();
+    DB.categories.forEach(c => { const k = c.name.toLowerCase(); if (!seedIdByName.has(k)) seedIdByName.set(k, c.id); });
+    const mapId = (name, liveId) => seedIdByName.get(String(name).toLowerCase()) || liveId;
 
-    // Pull each catalog's working-state product set (whole subtree) in parallel.
-    const lists = await Promise.all(roots.map(async root => {
+    // 2. Real category tree per catalog → node list with parent links.
+    // Each node keeps a display id (for storage/chat) and the live id (for querying).
+    const nodes = new Map(); // displayId -> { id, liveId, name, parent }
+    const addNode = (name, liveId, parentDisplayId) => {
+      const id = mapId(name, liveId);
+      if (!nodes.has(id)) nodes.set(id, { id, liveId, name, parent: parentDisplayId ?? null });
+      return id;
+    };
+    catalogs.forEach(c => addNode(c.name, c.liveId, null));
+    const trees = await Promise.all(catalogs.map(async c => {
+      try { return { c, tree: parseMcpJson(await mcpCall('list_category_tree', { catalogId: c.liveId, context: 'en' })) }; }
+      catch (e) { return { c, tree: null }; }
+    }));
+    for (const { c, tree } of trees) {
+      if (!tree) continue;
+      const rootId = mapId(c.name, c.liveId);
+      const arr = Array.isArray(tree) ? tree : (tree.categories || tree.tree || tree.children || tree.items || tree.nodes || []);
+      const walk = (list, parentDisplayId) => (list || []).forEach(n => {
+        const liveId = n.id || n.nodeId || n._id; if (!liveId) return;
+        const name = n.name || n.label || n.title || 'Category';
+        const kids = n.children || n.subcategories || n.nodes || n.categories;
+        if (mapId(name, liveId) === rootId) { walk(kids, rootId); return; } // tree repeats the catalog node itself
+        const id = addNode(name, liveId, parentDisplayId);
+        walk(kids, id);
+      });
+      walk(arr, rootId);
+    }
+
+    // 3. Products per node by EXACT membership. Query categories before catalog
+    // roots so each product is claimed by its specific category first.
+    const nodeList = [...nodes.values()].sort((a, b) => (a.parent ? 0 : 1) - (b.parent ? 0 : 1));
+    const seedByPim = new Map();
+    DB.products.forEach(p => { if (p.pimId) seedByPim.set(p.pimId, p); });
+    const results = await Promise.all(nodeList.map(async node => {
       try {
-        const parsed = parseMcpJson(await mcpCall('search_products', {
-          categoryId: root.id, categoryScope: 'catalog_with_subcategories', context: 'en', limit: 200
-        }));
-        return { root, items: extractLiveProducts(parsed) };
-      } catch (e) { return { root, items: null }; } // null = this catalog failed; skip it, keep the seed for it
+        const parsed = parseMcpJson(await mcpCall('search_products', { categoryId: node.liveId, categoryScope: 'exact_category', context: 'en', limit: 200 }));
+        return { node, items: extractLiveProducts(parsed) };
+      } catch (e) { return { node, items: [] }; }
     }));
 
-    const byPimId = new Map();
-    DB.products.forEach(p => { if (p.pimId) byPimId.set(p.pimId, p); });
-    const seen = new Set();
-    let added = 0;
-    for (const { root, items } of lists) {
-      if (!items) continue;
+    const seenPim = new Set();
+    const liveProducts = [];
+    for (const { node, items } of results) {
       for (const it of items) {
-        if (!it.id || seen.has(it.id)) continue;
-        seen.add(it.id);
-        if (byPimId.has(it.id)) continue; // already represented by a seed product
-        let cat = it.category;
-        if (!cat || !DB.categories.find(c => c.id === cat)) cat = root.id;
-        const prod = {
-          id: genId('prod'), sku: it.number || '—', name: it.name,
-          category: cat, price: 0, status: it.status || 'active',
-          brand: '', description: '', labels: [], weight: '', material: '', color: '', ean: '',
-          channels: [], pimId: it.id, pimType: it.type || 'SINGLE', parentSku: '',
-          images: [], created: new Date().toISOString(), updated: new Date().toISOString(), liveOnly: true
-        };
-        DB.products.push(prod);
-        DB.history[prod.id] = [{ time: prod.created, user: 'Bluestone PIM', action: 'synced', detail: 'Read live from Bluestone PIM LABS via MCP' }];
-        byPimId.set(it.id, prod);
-        added++;
+        if (!it.id || seenPim.has(it.id)) continue;
+        seenPim.add(it.id);
+        const seed = seedByPim.get(it.id);
+        if (seed) { // keep the curated record (id/images/copy/relationships), move to its live category
+          seed.category = node.id; seed.liveOnly = false; seed.detailLoaded = true;
+          liveProducts.push(seed);
+        } else {
+          const prod = {
+            id: genId('prod'), sku: it.number || '—', name: it.name, category: node.id,
+            price: 0, status: it.status || 'active', brand: '', description: '', labels: [],
+            weight: '', material: '', color: '', ean: '', channels: [], pimId: it.id,
+            pimType: it.type || 'SINGLE', parentSku: '', images: [],
+            created: new Date().toISOString(), updated: new Date().toISOString(), liveOnly: true
+          };
+          DB.history[prod.id] = [{ time: prod.created, user: 'Bluestone PIM', action: 'synced', detail: 'Read live from Bluestone PIM LABS via MCP' }];
+          liveProducts.push(prod);
+        }
       }
     }
+    if (!liveProducts.length) return; // nothing came back → keep the seed
+
+    // 4. Swap in the mirrored catalog; keep relationships only among survivors.
+    const keep = new Set(liveProducts.map(p => p.id));
+    DB.relationships = (DB.relationships || []).filter(r => keep.has(r.from) && keep.has(r.to));
+    DB.categories = nodeList.map(n => ({ id: n.id, name: n.name, parent: n.parent }));
+    DB.products = liveProducts;
     liveSyncDone = true;
     render();
-    showToast(added > 0 ? `✓ Synced ${added} live product${added === 1 ? '' : 's'} from Bluestone PIM` : '✓ Catalog in sync with Bluestone PIM', 'var(--green)');
+    showToast(`✓ Synced ${liveProducts.length} products from Bluestone PIM`, 'var(--green)');
   } catch (e) {
     console.warn('[ai-pim] live catalog hydration failed:', e && e.message);
     // Seed catalog stays as-is — no user-facing breakage.
