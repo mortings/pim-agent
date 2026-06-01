@@ -70,6 +70,10 @@
 
     .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
     .toolbar .grp{display:flex;align-items:center;gap:8px}
+    .nav-btn{width:32px;height:34px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+    .nav-btn:hover:not(:disabled){border-color:var(--accent-line);color:var(--accent);background:var(--accent-soft)}
+    .nav-btn:disabled{opacity:0.35;cursor:not-allowed}
+    .prod-count{font-size:12px;font-weight:700;color:var(--muted);min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
     .toolbar label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
     select{appearance:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;font-weight:600;padding:8px 32px 8px 12px;cursor:pointer;
       background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff77' stroke-width='2'><polyline points='6,9 12,15 18,9'/></svg>");background-repeat:no-repeat;background-position:right 11px center}
@@ -213,7 +217,10 @@
     <div class="toolbar">
       <div class="grp">
         <label for="product-select">Product</label>
+        <button class="nav-btn" id="prev-btn" onclick="stepProduct(-1)" title="Previous product" aria-label="Previous product">←</button>
         <select id="product-select" onchange="onProductChange()"></select>
+        <button class="nav-btn" id="next-btn" onclick="stepProduct(1)" title="Next product" aria-label="Next product">→</button>
+        <span class="prod-count" id="prod-count"></span>
       </div>
       <div class="grp">
         <label for="source-select">Source</label>
@@ -235,6 +242,7 @@
       <div class="spacer"></div>
       <button class="btn ghost" id="discard-btn" onclick="discardPending()" style="display:none">Discard suggestions</button>
       <button class="btn primary" id="push-btn" onclick="pushToPim()" disabled>Push to Bluestone PIM</button>
+      <button class="btn" id="next-product-btn" onclick="stepProduct(1)" style="display:none">Next product →</button>
     </div>
 
     <div class="footer-note">
@@ -595,15 +603,32 @@
     function renderProductSelect(){
       const sel=document.getElementById('product-select');
       sel.innerHTML=state.products.map(p=>`<option value="${escapeHtml(p.id)}" ${p.id===state.productId?'selected':''}>${escapeHtml(p.name)} · ${escapeHtml(p.sku)}</option>`).join('');
+      renderProductNav();
+    }
+    // Position counter + enable/disable the ← / → product arrows.
+    function renderProductNav(){
+      const idx=state.products.findIndex(p=>p.id===state.productId);
+      const n=state.products.length;
+      const cnt=document.getElementById('prod-count'); if(cnt) cnt.textContent=n?(idx+1)+' / '+n:'';
+      const prev=document.getElementById('prev-btn'); if(prev) prev.disabled=idx<=0;
+      const next=document.getElementById('next-btn'); if(next) next.disabled=idx>=n-1;
     }
     function renderSourceSelect(){
       const sel=document.getElementById('source-select');
       sel.innerHTML=state.locales.map(l=>`<option value="${escapeHtml(l.id)}" ${l.id===state.sourceId?'selected':''}>${l.flag} ${escapeHtml(l.name)}</option>`).join('');
     }
-    function onProductChange(){
-      state.productId=document.getElementById('product-select').value;
+    // Switch products and start fresh (the natural "on to the next one" step).
+    function selectProduct(id){
+      state.productId=id;
       state.pending={};state.committed={};state.edited={};state.editing=null;
+      renderProductSelect();
       renderAll();
+    }
+    function onProductChange(){ selectProduct(document.getElementById('product-select').value); }
+    function stepProduct(delta){
+      const idx=state.products.findIndex(p=>p.id===state.productId);
+      const ni=Math.min(Math.max(idx+delta,0),state.products.length-1);
+      if(ni>=0&&ni!==idx) selectProduct(state.products[ni].id);
     }
     function onSourceChange(){
       state.sourceId=document.getElementById('source-select').value;
@@ -780,6 +805,17 @@
       const summary=document.getElementById('action-summary');
       discardBtn.style.display=n>0?'inline-block':'none';
       pushBtn.disabled=n===0;
+      // "Next product →" — visible whenever there's a next product; highlighted
+      // (primary) once there's nothing pending, so it's the obvious next step.
+      const idx=state.products.findIndex(p=>p.id===state.productId);
+      const hasNext=idx>=0&&idx<state.products.length-1;
+      const npb=document.getElementById('next-product-btn');
+      if(npb){
+        npb.style.display=hasNext?'inline-block':'none';
+        npb.classList.toggle('primary',hasNext&&n===0);
+        const nextName=hasNext?state.products[idx+1].name:'';
+        npb.textContent=(n===0&&hasNext?('Next: '+nextName):'Next product')+' →';
+      }
       // count remaining fillable gaps
       let fillable=0;
       if(prod){
