@@ -3252,6 +3252,60 @@ async function hydrateLiveCatalog() {
   }
 }
 
+// Real product photos via the MCP's own published data. Working-state
+// get_product only returns asset IDs (no URL), but list_published_products_in_category
+// returns a ready-to-use imageUrl per published product. We pull those across
+// all published catalogs and attach them to the catalog by product id / SKU.
+// Published products get real photos; unpublished drafts keep the category
+// placeholder — which truthfully signals "no published media yet".
+async function enrichImagesFromPublished() {
+  if (!backendConfigured()) return;
+  try {
+    const cat = parseMcpJson(await mcpCall('list_published_catalogs', {}));
+    const catalogs = (Array.isArray(cat) ? cat : (cat?.catalogs || cat?.items || []))
+      .map(c => ({ id: c.id || c.catalogId || c._id, name: c.name || '' })).filter(c => c.id);
+    if (!catalogs.length) return;
+
+    // Collect imageUrl by product id and by SKU/number, across all published
+    // catalogs, a few in parallel and a few pages each.
+    const byId = new Map(), byNum = new Map();
+    let idx = 0;
+    async function worker() {
+      while (idx < catalogs.length) {
+        const c = catalogs[idx++];
+        let page = 1, totalPages = 1;
+        do {
+          let parsed;
+          try { parsed = parseMcpJson(await mcpCall('list_published_products_in_category', { categoryId: c.id, categoryName: c.name, limit: 50, page })); }
+          catch (e) { break; }
+          const list = parsed?.products || parsed?.items || (Array.isArray(parsed) ? parsed : []);
+          for (const p of list) {
+            const url = p.imageUrl || p.image; if (!url) continue;
+            const id = p.id || p.productId || p._id, num = p.number || p.sku;
+            if (id && !byId.has(id)) byId.set(id, url);
+            if (num && !byNum.has(num)) byNum.set(num, url);
+          }
+          totalPages = parsed?.totalPages || 1; page++;
+        } while (page <= totalPages && page <= 4);
+      }
+    }
+    await Promise.all(Array.from({ length: 5 }, worker));
+    if (!byId.size && !byNum.size) return;
+
+    let applied = 0;
+    for (const p of DB.products) {
+      if (p.images && p.images.length) continue;            // keep existing/seed photos
+      const url = (p.pimId && byId.get(p.pimId)) || (p.sku && byNum.get(p.sku));
+      if (url) { p.images = [{ id: 'img_' + p.id, url, name: p.sku || p.name || 'image', primary: true, size: '' }]; applied++; }
+    }
+    if (applied) {
+      render();
+      if (typeof currentMode !== 'undefined') { if (currentMode === 'data') renderDataGrid(); else if (currentMode === 'dam') renderDamGrid(); }
+      showToast(`✓ Loaded ${applied} product photo${applied === 1 ? '' : 's'} from published data`, 'var(--green)');
+    }
+  } catch (e) { console.warn('[ai-pim] image enrichment failed:', e && e.message); }
+}
+
 function extractLiveProducts(parsed) {
   if (!parsed) return [];
   let list = null;
@@ -5145,9 +5199,9 @@ initSidebar();
 
 render();
 
-// Bring the catalog in line with the live tenant (additive; seed stays as the
-// offline fallback). Runs async so first paint isn't blocked.
-hydrateLiveCatalog();
+// Bring the catalog in line with the live tenant, then attach real product
+// photos from the published data. Async so first paint isn't blocked.
+hydrateLiveCatalog().then(enrichImagesFromPublished);
 
 // Focus the welcome input
 setTimeout(() => {
