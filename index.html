@@ -1532,7 +1532,19 @@ function parseCommand(input) {
   // Greetings — expanded
   if (/^(hey|hi|hello|hei|yo|sup|good\s*(morning|afternoon|evening)|what'?s?\s*up|howdy|hiya|g'?day|greetings)/i.test(n)) return { type:'greeting', raw };
   if (/^(thanks?|thank\s*you|thx|cheers|ta|much\s*appreciated|tyvm)/i.test(n)) return { type:'thanks', raw };
-  if (/^(help|what can you do|\?|capabilities|features|commands?|help\s*me\s*(get\s*started)?)/i.test(n)) return { type:'help', raw };
+  // Help / capabilities — accept the many natural ways people ask "what can you do?"
+  // (kept additive: the first clause preserves the original triggers, the rest widen coverage.
+  //  Note "what should I work on next" / "what can I do next" deliberately stay with suggest_next.)
+  if (/^(help|what can you do|\?|capabilities|features|commands?|help\s*me\s*(get\s*started)?)/i.test(n)
+      || /^what\s+can\s+you\s+help\s+(me\s+)?with/i.test(n)
+      || /^what\s+(do\s+you\s+do|are\s+your?\s+(capabilities|features)|are\s+you\s+(capable\s+of|able\s+to\s+do))/i.test(n)
+      || /^(how\s+can\s+you\s+help|how\s+do\s+you\s+(work|help)|how\s+does\s+this\s+(thing\s+)?work)/i.test(n)
+      || /^what\s+can\s+i\s+(ask|say|type)/i.test(n)
+      || /^(show|tell)\s+me\s+what\s+you\s+can\s+do/i.test(n)
+      || /^what\s+else\s+can\s+you\s+do/i.test(n)
+      || /^(options|examples?|menu|guide(\s*me)?)\s*$/i.test(n)) {
+    return { type:'help', raw };
+  }
   if (/^(bye|goodbye|see\s*you|cya|later|gotta\s*go|signing\s*off)/i.test(n)) return { type:'goodbye', raw };
 
   // Natural questions about the catalog
