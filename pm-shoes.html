@@ -229,8 +229,8 @@
       <div class="toolbar-control">
         <span>Sort</span>
         <select id="sort-select">
-          <option value="score-asc">Lowest score first</option>
           <option value="score-desc">Highest score first</option>
+          <option value="score-asc">Lowest score first</option>
           <option value="name-asc">Name A→Z</option>
           <option value="name-desc">Name Z→A</option>
         </select>
@@ -412,7 +412,7 @@
       products:[],         // [{ id, name, number, score }]
       summary:null,        // { totalWithScores, atZero, partial, fullyComplete, averageScore }
       filter:'all',
-      sort:'score-asc',
+      sort:'score-desc',
       locale:'en',
       contexts:[],         // [{ id, name, locale, isDefault }]
       catalogs:[],         // [{ id, name }]
