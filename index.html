@@ -549,12 +549,12 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);c
         </button>
       </div>
       <div class="welcome-hints">
-        <div class="welcome-hint" onclick="welcomeHint(this)">📦 Show all products</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">🎯 What to work on?</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">📊 Quality report</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">✏️ Find drafts</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🎯 What should I work on next?</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🚀 What's ready to publish?</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">✨ Which products need enrichment?</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">📊 Completeness report</div>
+        <div class="welcome-hint" onclick="welcomeHint(this)">🧬 Show variant groups</div>
         <div class="welcome-hint" onclick="welcomeHint(this)">🔍 Find products missing a description</div>
-        <div class="welcome-hint" onclick="welcomeHint(this)">📋 Show attributes</div>
       </div>
     </div>
 
@@ -1543,6 +1543,32 @@ function parseCommand(input) {
   if (/^(show\s*me\s*everything|everything|all|give\s*me\s*everything)/i.test(n)) return { type:'show_all', raw };
   if (/^(how'?s?\s*(my|the|our)?\s*(data\s*)?quality)/i.test(n)) return { type:'quality', raw };
 
+  // ============ VARIANT GROUPS / FAMILIES (core PIM concept) ============
+  // "variants of STR-99", "show variants of the runner", "what variants does X have"
+  let vof = n.match(/^(?:show|list|view|get|display|expand)?\s*(?:me\s*)?(?:the\s*)?variants?\s+(?:of|for|in|under|on)\s+(.+)/i);
+  if (!vof) vof = n.match(/^what\s+variants?\s+(?:does|do|are\s+(?:there\s+)?(?:in|for|under))\s+(.+?)\s*(?:have)?\??$/i);
+  if (vof) return { type:'variants_of', target: vof[1].replace(/^the\s+/i,'').replace(/\?+$/,'').trim(), raw };
+  // "show variant groups", "variant groups", "product families", "products with variants"
+  if (/^(?:show|list|view|get|display)?\s*(?:me\s*)?(?:all\s*)?(?:the\s*)?(?:variant\s*groups?|variant\s*families|product\s*families|families|grouped\s*products?)\s*\??$/i.test(n)
+      || /^(?:which|what|any)\s*(?:products?\s*)?(?:have|with|are)\s*variants?\s*\??$/i.test(n)
+      || /\bproducts?\s+with\s+variants?\b/i.test(n)) {
+    return { type:'variant_groups', raw };
+  }
+
+  // ============ PUBLISH-READINESS (real PIM publishing workflow) ============
+  if (/^(?:what'?s?\s*)?(?:ready|good)\s*(?:to|for)\s*(?:publish|go\s*live|launch|syndicat)/i.test(n)
+      || /\b(?:publish[\s-]?ready|ready[\s-]?to[\s-]?publish|publishable|ready\s*to\s*go\s*live)\b/i.test(n)
+      || /^what\s*(?:can|should)\s*i\s*publish/i.test(n)) {
+    return { type:'publish_ready', raw };
+  }
+
+  // ============ ENRICHMENT CANDIDATES ============
+  if (/\b(?:needs?|requires?)\s*(?:some\s*)?(?:ai\s*)?enrich(?:ing|ment)?\b/i.test(n)
+      || /\b(?:enrichment\s*candidates?|candidates?\s*for\s*enrichment|products?\s*to\s*enrich)\b/i.test(n)
+      || /^what\s*(?:should\s*i|to)\s*enrich/i.test(n)) {
+    return { type:'enrich_candidates', raw };
+  }
+
   // Relationships (must come before smart query to avoid false matches)
   let relm = n.match(/^(related|relationships?|cross.?sell|upsell|accessories|outfit)\s*(products?\s*)?(for|of|to)?\s*(.*)/i);
   if (relm && relm[4]) return { type:'relationships', target: relm[4].trim(), raw };
@@ -2145,6 +2171,10 @@ async function executeCommand(input) {
     case 'detail': execDetail(cmd.query); break;
     case 'quality': execQuality(); break;
     case 'overview': execOverview(); break;
+    case 'variant_groups': execVariantGroups(); break;
+    case 'variants_of': execVariantsOf(cmd.target); break;
+    case 'publish_ready': execPublishReady(); break;
+    case 'enrich_candidates': execEnrichCandidates(); break;
     case 'add_label': execAddLabel(cmd.label, cmd.target); break;
     case 'remove_label': execRemoveLabel(cmd.label, cmd.target); break;
     case 'create_label': execCreateLabel(cmd.name, cmd.color); break;
@@ -2267,29 +2297,34 @@ function execGoodbye() {
 
 function execSuggestNext() {
   const drafts = DB.products.filter(p => p.status === 'draft');
-  const lowQuality = DB.products.filter(p => completeness(p) < 50);
+  const readyDrafts = drafts.filter(p => completeness(p) >= 80);
+  const needsEnrich = DB.products.filter(p => completeness(p) < 80);
   const noLabels = DB.products.filter(p => !p.labels.length);
   const suggestions = [];
-  let html = `<p>${pick(["Here's what I'd focus on:","Let me look at your catalog...","Good question! Here's my assessment:"])}</p><ul style="margin:10px 0 10px 16px;font-size:13px">`;
+  let html = `<p>${pick(["Here's what I'd focus on:","Let me look at your catalog…","Good question — here's my read on the catalog:"])}</p><ul style="margin:10px 0 10px 16px;font-size:13px">`;
 
-  if (drafts.length) {
-    html += `<li style="margin:4px 0"><strong style="color:var(--yellow)">${drafts.length} draft products</strong> need review before publishing</li>`;
-    suggestions.push('Show draft products');
+  if (readyDrafts.length) {
+    html += `<li style="margin:4px 0"><strong style="color:var(--green)">${readyDrafts.length} draft${readyDrafts.length !== 1 ? 's are' : ' is'} 80%+ complete</strong> — ready to publish now</li>`;
+    suggestions.push("What's ready to publish?");
   }
-  if (lowQuality.length) {
-    html += `<li style="margin:4px 0"><strong style="color:var(--red)">${lowQuality.length} products</strong> have low data quality (under 50%)</li>`;
-    suggestions.push('Data quality report');
+  if (drafts.length - readyDrafts.length > 0) {
+    const rest = drafts.length - readyDrafts.length;
+    html += `<li style="margin:4px 0"><strong style="color:var(--yellow)">${rest} other draft${rest !== 1 ? 's' : ''}</strong> still need review before publishing</li>`;
+    if (!suggestions.includes('Show draft products')) suggestions.push('Show draft products');
+  }
+  if (needsEnrich.length) {
+    html += `<li style="margin:4px 0"><strong style="color:var(--red)">${needsEnrich.length} product${needsEnrich.length !== 1 ? 's' : ''}</strong> sit under 80% completeness — prime enrichment candidates</li>`;
+    suggestions.push('Which products need enrichment?');
   }
   if (noLabels.length > 3) {
-    html += `<li style="margin:4px 0"><strong style="color:var(--muted)">${noLabels.length} products</strong> have no labels — consider organizing them for campaigns</li>`;
-    suggestions.push('Show all products');
+    html += `<li style="margin:4px 0"><strong style="color:var(--muted)">${noLabels.length} products</strong> have no labels — worth organizing for campaigns</li>`;
   }
-  if (!drafts.length && !lowQuality.length) {
-    html += `<li style="margin:4px 0;color:var(--green)">Your catalog is in great shape! Maybe check for duplicates or explore relationships.</li>`;
-    suggestions.push('Find duplicates');
+  if (!drafts.length && !needsEnrich.length) {
+    html += `<li style="margin:4px 0;color:var(--green)">Your catalog is in great shape! Maybe check for duplicates or review your variant groups.</li>`;
+    suggestions.push('Find duplicates', 'Show variant groups');
   }
   html += '</ul>';
-  addSystem(html, suggestions.length ? suggestions : smartSuggestions());
+  addSystem(html, suggestions.length ? suggestions.slice(0, 4) : smartSuggestions());
 }
 
 function execFuzzySearch(query) {
@@ -2385,7 +2420,7 @@ function execGreeting() {
       "Where should we start?",
       "What's on your agenda today?"
     ])}</p>`,
-    ['Show all products', 'What should I work on next?', 'Data quality report', 'Help']
+    ['What should I work on next?', "What's ready to publish?", 'Completeness report', 'Show variant groups']
   );
 }
 
@@ -2402,62 +2437,54 @@ function execThanks() {
 
 function execHelp() {
   addSystem(
-    `<p><strong>Here's what I can help you with:</strong></p>
+    `<p><strong>I'm your PIM working in plain language.</strong> Tell me what you'd do in a product catalog and I'll do it against Bluestone — here's the range:</p>
     <div style="margin:10px 0;font-size:13px">
-      <p style="margin:8px 0"><strong style="color:var(--blue)">Browse & Search</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--blue)">Daily workflow — where do I start?</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Show all products" — full catalog view</li>
-        <li>"Show products in Shoes" — filter by category</li>
-        <li>"Show active products" — filter by status</li>
-        <li>"Show products labeled Summer Sale" — filter by label</li>
-        <li>"Search Nike" — find products by name, brand, or SKU</li>
+        <li>"What should I work on next?" — your prioritized to-do</li>
+        <li>"What's ready to publish?" — drafts that clear the completeness bar</li>
+        <li>"Which products need enrichment?" — the thinnest data, ranked</li>
       </ul>
-      <p style="margin:8px 0"><strong style="color:var(--green)">Edit & Update</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--green)">Completeness & data quality</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Edit ELEC-001" — modify a specific product</li>
-        <li>"Increase price of all Shoes by 10%" — bulk price change</li>
-        <li>"Create a new product" — add product to catalog</li>
+        <li>"Completeness report" — score distribution and the biggest gaps</li>
+        <li>"Find products missing a description" — also price, EAN, image, brand…</li>
+        <li>"Show low-quality running shoes" — combine completeness + category</li>
       </ul>
-      <p style="margin:8px 0"><strong style="color:var(--purple)">Labels & Campaigns</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--purple)">Catalog structure — variants & categories</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Add label 'Summer Sale' to all Shoes" — bulk labeling</li>
-        <li>"Create label 'Black Friday'" — new label</li>
-        <li>"Remove label 'Clearance' from SHOE-005" — remove label</li>
+        <li>"Show variant groups" — every model and its variant count</li>
+        <li>"Variants of STR-99" — expand one family by color / size</li>
+        <li>"Show products in Running" — browse a category and its children</li>
+        <li>"Move BRG-22 to Work Boots" — re-classify a product</li>
       </ul>
-      <p style="margin:8px 0"><strong style="color:var(--orange)">Workflow & Publishing</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--orange)">Publishing & lifecycle</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Publish ELEC-001" — set product to active</li>
-        <li>"Unpublish ELEC-001" — archive a product</li>
-        <li>"Clone SHOE-001" — duplicate a product</li>
-        <li>"Move ELEC-001 to Audio" — change category</li>
+        <li>"Publish STR-99" / "Unpublish STR-99" — change channel status</li>
+        <li>"Show draft products" — what's still in progress</li>
+        <li>"Clone STR-99" — spin up a new product from an existing one</li>
       </ul>
-      <p style="margin:8px 0"><strong style="color:var(--yellow)">AI & Intelligence</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--yellow)">AI enrichment & dedup</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Enrich ELEC-008" — AI suggestions for missing fields</li>
-        <li>"Find duplicates" — detect similar products</li>
-        <li>"Compare ELEC-001 and ELEC-002" — side-by-side comparison</li>
+        <li>"Enrich BRG-22" — AI drafts the missing fields for review</li>
+        <li>"Enrich all" — suggestions across the whole catalog</li>
+        <li>"Find duplicates" · "Compare STR-99 and BRG-22"</li>
       </ul>
-      <p style="margin:8px 0"><strong style="color:var(--blue)">Relationships & History</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--blue)">Attributes, labels & relationships</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Related products for ELEC-001" — view relationships</li>
-        <li>"History for SHOE-001" — view change log</li>
-        <li>"Add related ELEC-003 to ELEC-004" — create relationship</li>
+        <li>"Show attributes" · "Add attribute 'Care instructions'"</li>
+        <li>"Add label 'Summer Sale' to all sandals" · "Create label 'Black Friday'"</li>
+        <li>"Related products for STR-99" · "History for BRG-22"</li>
       </ul>
-      <p style="margin:8px 0"><strong style="color:var(--green)">Import & Export</strong></p>
+      <p style="margin:8px 0"><strong style="color:var(--green)">Bulk edits, import & export</strong></p>
       <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Import data" — upload CSV or Excel file</li>
-        <li>"Download template" — get a ready-made CSV template</li>
-        <li>"Export" — download catalog as CSV</li>
-        <li>Or just <strong>drag & drop</strong> a file onto the chat!</li>
-      </ul>
-      <p style="margin:8px 0"><strong style="color:var(--green)">Reports</strong></p>
-      <ul style="margin-left:16px;color:var(--muted)">
-        <li>"Data quality report" — completeness analysis</li>
-        <li>"Overview" — catalog summary</li>
+        <li>"Increase price of all Running by 10%" — bulk price change</li>
+        <li>"Import data" / drag & drop a CSV or Excel file onto the chat</li>
+        <li>"Export" — download the catalog as CSV</li>
       </ul>
     </div>
-    <p style="font-size:13px;color:var(--muted)">You can also click products in tables to see full details, or use the sidebar to browse by category and label.</p>`,
-    ['Show all products', 'Import data', 'Data quality report', 'Export']
+    <p style="font-size:13px;color:var(--muted)">No rigid syntax — ask the way you'd ask a colleague. Click any product row for full detail, or use the sidebar to browse by category and label.</p>`,
+    ["What should I work on next?", "What's ready to publish?", 'Show variant groups', 'Completeness report']
   );
 }
 
@@ -2670,6 +2697,104 @@ function execOverview() {
       return labelHtml(l.id, false) + `<span style="font-size:11px;color:var(--muted);margin-right:8px">(${cnt})</span>`;
     }).join('')}</div>`,
     ['Show all products', 'Data quality report', 'Show draft products']
+  );
+}
+
+function execVariantGroups() {
+  const groups = DB.products.filter(p => p.pimType === 'GROUP');
+  if (!groups.length) {
+    addSystem(`<p>I don't see any variant groups right now — the products in view are standalone (single) items. In Bluestone, a variant group bundles SKUs that share a model but vary by an axis like color or size.</p>`, ['Show all products', 'Completeness report']);
+    return;
+  }
+  const rows = groups.map(g => {
+    const variants = DB.products.filter(p => p.parentSku === g.sku);
+    const axis = [...new Set(variants.map(v => v.color).filter(Boolean))];
+    return { g, count: variants.length, axis };
+  });
+  const totalVariants = rows.reduce((s, r) => s + r.count, 0);
+  convo.lastProducts = groups;
+  convo.lastProduct = groups[0];
+  let html = `<p><strong>Variant groups</strong> — ${groups.length} group${groups.length !== 1 ? 's' : ''} covering ${totalVariants} variant${totalVariants !== 1 ? 's' : ''}.</p>`;
+  html += `<table class="msg-table"><thead><tr><th></th><th>Group</th><th>Variants</th><th>Varies by</th><th>Quality</th></tr></thead><tbody>`;
+  rows.forEach(({ g, count, axis }) => {
+    const q = completeness(g);
+    html += `<tr onclick="openDetail('${g.id}')">
+      <td style="width:44px;padding:6px 8px"><div style="width:36px;height:36px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px">${catImageIcons[g.category] || '🧬'}</div></td>
+      <td style="font-weight:600">${esc(g.name)}<div class="sku" style="font-weight:400;font-size:10px;margin-top:2px">${esc(g.sku)}</div></td>
+      <td><strong>${count}</strong></td>
+      <td style="font-size:12px;color:var(--muted)">${axis.length ? esc(axis.slice(0, 4).join(', ')) + (axis.length > 4 ? '…' : '') : '—'}</td>
+      <td><div class="quality-bar" style="width:60px"><div class="quality-fill ${qClass(q)}" style="width:${q}%"></div></div></td>
+    </tr>`;
+  });
+  html += `</tbody></table><p style="font-size:12px;color:var(--muted);margin-top:6px">💡 Say "variants of ${esc(groups[0].sku)}" to expand a group, or click a row for the full family.</p>`;
+  addSystem(html, [`Variants of ${groups[0].sku}`, 'Which products need enrichment?', 'Show all products']);
+}
+
+function execVariantsOf(target) {
+  const matches = findProducts((target || '').trim());
+  if (!matches.length) {
+    addSystem(`<p>I couldn't find a product matching "<strong>${esc(target || '')}</strong>" to look up variants for.</p>`, ['Show variant groups', 'Show all products']);
+    return;
+  }
+  // Resolve to the parent group: prefer a GROUP match, else hop from a variant to its parent, else the first match.
+  let prod = matches.find(p => p.pimType === 'GROUP')
+    || matches.find(p => p.parentSku)
+    || matches[0];
+  const group = (prod.pimType === 'VARIANT' && prod.parentSku)
+    ? (DB.products.find(p => p.sku === prod.parentSku) || prod)
+    : prod;
+  const variants = DB.products.filter(p => p.parentSku === group.sku);
+  if (!variants.length) {
+    addSystem(`<p><strong>${esc(group.name)}</strong> (${esc(group.sku)}) is a standalone product — it isn't part of a variant group.</p>`, [`Show ${group.sku}`, 'Show variant groups', 'Show all products']);
+    return;
+  }
+  convo.lastProduct = group;
+  convo.lastProducts = variants;
+  const axis = [...new Set(variants.map(v => v.color).filter(Boolean))];
+  addSystem(
+    `<p><strong>${esc(group.name)}</strong> has <strong>${variants.length}</strong> variant${variants.length !== 1 ? 's' : ''}${axis.length ? `, varying by <strong>color</strong> — ${esc(axis.join(', '))}` : ''}:</p>${productTableHtml(variants)}`,
+    [`Enrich ${group.sku}`, 'Show variant groups', `History for ${group.sku}`]
+  );
+}
+
+function execPublishReady() {
+  const drafts = DB.products.filter(p => p.status === 'draft');
+  if (!drafts.length) {
+    addSystem(`<p>🚀 Nothing waiting in drafts — every product is already published or archived. Your catalog is fully live.</p>`, ['Show all products', 'Completeness report', 'Show variant groups']);
+    return;
+  }
+  const ready = drafts.filter(p => completeness(p) >= 80).sort((a, b) => completeness(b) - completeness(a));
+  const almost = drafts.filter(p => completeness(p) >= 60 && completeness(p) < 80).sort((a, b) => completeness(b) - completeness(a));
+  convo.lastProducts = ready.length ? ready : (almost.length ? almost : drafts);
+  if (ready.length) convo.lastProduct = ready[0];
+  let html = `<p><strong>Publish readiness</strong> — ${drafts.length} draft${drafts.length !== 1 ? 's' : ''} in the pipeline.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0">
+      <div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--green)">${ready.length}</div><div style="font-size:10px;color:var(--muted)">Ready · 80%+ complete</div></div>
+      <div style="background:rgba(251,231,77,0.1);border:1px solid rgba(251,231,77,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--yellow)">${almost.length}</div><div style="font-size:10px;color:var(--muted)">Almost · 60–79%</div></div>
+    </div>`;
+  if (ready.length) {
+    html += `<p style="font-size:13px;margin-top:8px"><strong>Ready to publish now:</strong></p>${productTableHtml(ready)}`;
+    addSystem(html, [`Publish ${ready[0].sku}`, 'Which products need enrichment?', 'Show draft products']);
+  } else {
+    html += `<p style="font-size:13px;margin-top:8px;color:var(--muted)">None clear the 80% bar yet — the closest drafts are below. Enrich them to get them publish-ready.</p>${productTableHtml(almost.length ? almost : drafts)}`;
+    addSystem(html, ['Which products need enrichment?', 'Completeness report', 'Show draft products']);
+  }
+}
+
+function execEnrichCandidates() {
+  // Below the 80% publish bar = worth enriching before it can go live.
+  const candidates = DB.products.filter(p => completeness(p) < 80).sort((a, b) => completeness(a) - completeness(b));
+  if (!candidates.length) {
+    addSystem(`<p>✨ Nothing obvious to enrich — every product already clears 80% completeness. Nicely done.</p>`, ['Completeness report', "What's ready to publish?", 'Show all products']);
+    return;
+  }
+  convo.lastProducts = candidates;
+  convo.lastProduct = candidates[0];
+  const top = candidates.slice(0, 8);
+  addSystem(
+    `<p><strong>${candidates.length}</strong> product${candidates.length !== 1 ? 's' : ''} would benefit from AI enrichment — these have the thinnest data right now:</p>${productTableHtml(top, 'Enrichment candidates')}
+    <p style="font-size:12px;color:var(--yellow);margin-top:6px">💡 Say <strong>"enrich all"</strong> to draft suggestions for every gap at once, or <strong>"enrich ${esc(top[0].sku)}"</strong> to do just one.</p>`,
+    ['Enrich all', `Enrich ${top[0].sku}`, 'Completeness report']
   );
 }
 
