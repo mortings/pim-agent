@@ -146,7 +146,39 @@
       </div>
     </section>
 
-    <div class="section-cap">Six personas, one PIM</div>
+    <div class="section-cap" style="color:var(--red)">★ New this year — the hybrid benchmark: demo ↔ live tenant</div>
+    <section style="margin-bottom:54px">
+      <a class="card" href="pim.html" target="_blank" rel="noopener" style="border-color:rgba(235,72,94,0.4)">
+        <div class="card-accent red"></div>
+        <div class="card-body" style="display:grid;grid-template-columns:1.25fr 1fr;gap:30px;padding:30px">
+          <div>
+            <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px"><svg width="44" height="44" viewBox="0 0 100 100" fill="none" aria-hidden="true"><polygon points="51,9 77,21 58,51" fill="#BE2434"/><polygon points="4,55 41,45 25,77" fill="#BE2434"/><polygon points="41,87 69,93 47,100" fill="#BE2434"/><polygon points="17,35 48,8 47,47" fill="#16110F"/><polygon points="44,47 76,60 38,86" fill="#16110F"/><polygon points="13,77 35,83 19,99" fill="#16110F"/></svg><div class="card-persona" style="color:var(--red);margin:0">The benchmark · standalone ↔ live tenant</div></div>
+            <h2 style="font-size:26px">Redstone PIM — a complete Enterprise PIM, vibe-coded from scratch</h2>
+            <p class="card-desc">Not a UI on top of a PIM — this <strong>is</strong> the PIM: its own data model, completeness engine, workflow, localization and pluggable AI in one self-contained file with no backend. Then flip a single toggle and the same screens hook onto a <strong>real Bluestone tenant</strong> through the PIM MCP — live browsing, real completeness scores and attribute writes — with everything the MCP can't back clearly flagged, not faked. One vibe-coded app, two modes.</p>
+            <div class="pill-row">
+              <span class="tool-pill">demo ↔ live</span>
+              <span class="tool-pill">Bluestone PIM MCP</span>
+              <span class="tool-pill">set_product_attribute</span>
+              <span class="tool-pill">real completeness</span>
+              <span class="tool-pill">pluggable AI</span>
+            </div>
+            <div class="card-cta" style="border:none;padding-top:0">
+              <span class="open" style="color:var(--red)">Launch Redstone PIM</span>
+              <span class="arrow" style="color:var(--red)">→</span>
+            </div>
+          </div>
+          <ul class="card-points" style="align-self:center">
+            <li><strong>Standalone demo</strong> — 70-product mixed-retail catalog, fully offline</li>
+            <li>Catalog · variants · typed attributes · taxonomy · DAM · workflow · AI · ⌘K</li>
+            <li>Flip to <strong>LIVE</strong> (<code>?mcp=1</code>): real reads, completeness &amp; attribute writes via the Bluestone PIM MCP</li>
+            <li>Same screens, one <code>api</code> facade — ~160 lines turned demo into a live tenant client</li>
+            <li>Honest in live: workflow, relations, publish &amp; DAM-upload are flagged, not faked</li>
+          </ul>
+        </div>
+      </a>
+    </section>
+
+    <div class="section-cap">Six fit-for-purpose UIs on the live PIM MCP</div>
 
     <section class="grid">
       <a class="card" href="index.html" target="_blank" rel="noopener">
@@ -300,6 +332,7 @@
 <pre class="how-arch"><span class="b">Browser</span>  ─►  <span class="g">Cloudflare Worker</span>  ─►  <span class="p">Bluestone PIM MCP</span>  ─►  Bluestone PIM
 demo.html      pim-agent-proxy        jsonrpc 2.0           tenant
 shared-secret  3 Bluestone headers    tools/call</pre>
+      <p style="margin-top:16px"><strong>Redstone PIM</strong> takes it further: the same single-file app runs fully standalone on local data, and a <code>?mcp=1</code> toggle swaps its data layer onto the live tenant through the very same Worker → MCP path — real reads, real completeness scores, and attribute writes (<code>set_product_attribute</code>, <code>create_product</code>, <code>update_product_name</code>) — degrading gracefully wherever the MCP has no matching tool. Same UI, flip a switch, and it's editing your real catalog.</p>
     </section>
 
     <p class="footnote">
