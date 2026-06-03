@@ -114,7 +114,8 @@ a{color:inherit;text-decoration:none}
 @media(max-width:900px){.cols-2,.cols-3{grid-template-columns:1fr}}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .card-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.card-head h3{font-size:13px;font-weight:700;color:var(--white)}
+.card-head h3{font-size:13px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:7px}
+.card-head h3 svg{width:16px;height:16px;flex-shrink:0}
 .card-head .ch-sub{font-size:11px;color:var(--muted)}
 .card-head .spacer{flex:1}
 .card-body{padding:16px}
@@ -304,6 +305,19 @@ del{background:rgba(235,72,94,0.16);color:var(--red);text-decoration:line-throug
 .notice svg{width:16px;height:16px;color:var(--purple);flex-shrink:0;margin-top:1px}
 .notice.warn{background:rgba(236,103,43,0.08);border-color:rgba(236,103,43,0.25)}
 .notice.warn svg{color:var(--orange)}
+#modeBanner:empty{display:none}
+#modeBanner{padding:8px 18px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:54px;z-index:19}
+#modeBanner.live{background:rgba(52,211,153,0.1);color:var(--green)}
+#modeBanner.warn{background:rgba(236,103,43,0.12);color:var(--orange)}
+#modeBanner .mb-dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor;flex-shrink:0}
+#modeBanner .mb-link{color:inherit;text-decoration:underline;cursor:pointer;font-weight:700}
+#modeBanner .mb-spacer{flex:1}
+#connecting{position:fixed;inset:0;z-index:300;background:rgba(5,13,31,0.93);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text);backdrop-filter:blur(3px)}
+#connecting .cn-title{font-size:15px;font-weight:700;color:var(--white)}
+#connecting .cn-sub{font-size:12px;color:var(--muted)}
+.local-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--orange);background:rgba(236,103,43,0.12);border:1px solid rgba(236,103,43,0.3);padding:2px 8px;border-radius:100px;vertical-align:middle;text-transform:none}
+.notice.live{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.25)}
+.notice.live svg{color:var(--green)}
 </style>
 </head>
 <body>
@@ -327,6 +341,7 @@ del{background:rgba(235,72,94,0.16);color:var(--red);text-decoration:line-throug
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </div>
 </div>
+<div id="modeBanner"></div>
 <div id="app">
   <nav id="sidebar"></nav>
   <main id="view"></main>
@@ -411,7 +426,7 @@ const LOCALES=[
  {code:'fr-FR',name:'French'},
  {code:'nb-NO',name:'Norwegian'},
 ];
-const DEFAULT_LOCALE='en-US';
+let DEFAULT_LOCALE='en-US';
 const LIFECYCLE=[
  {key:'draft',label:'Draft',next:['review']},
  {key:'review',label:'In Review',next:['approved','draft']},
@@ -1156,6 +1171,7 @@ function wireEditor(){
  // completeness
  const cf=D.querySelector('#cFill');if(cf)cf.onclick=async()=>{const p=api.products.get(editorState.id);cf.disabled=true;cf.innerHTML='<span class="spinner"></span> Filling…';const o=await ai.run('suggestAttributes',{product:p});Object.entries(o).forEach(([aid,val])=>api.products.setAttr(p.id,aid,val));ui.toast(Object.keys(o).length?'AI filled '+Object.keys(o).length+' attributes':'Nothing to fill','ai');refreshEditor()};
  if(!(state.can('edit')||state.can('translate'))){D.querySelectorAll('.drawer-body input,.drawer-body textarea,.drawer-body select,.drawer-body .switch,.drawer-body .filter-pill,.drawer-body button,#edAI').forEach(el=>{el.disabled=true;el.style.opacity='0.55';el.style.pointerEvents='none'});const f=D.querySelector('.drawer-foot');if(f)f.insertAdjacentHTML('afterbegin','<span class="pill neutral" style="margin-right:auto">Read-only · '+esc(ROLES[state.user().role].label)+'</span>');}
+ if(state.live){D.querySelectorAll('[data-ai-task],[data-ai-cat],[data-ai-alt],#edAI,#cFill').forEach(b=>b.remove());}
 }
 
 /* ============================================================================
@@ -1420,7 +1436,13 @@ Views.importexport=function(root){
    ========================================================================== */
 Views.settings=function(root){
  const s=DB().settings;
- root.innerHTML=`<div class="page-head"><div><h1>Settings</h1><p>Configure the AI provider, active locales and demo data.</p></div></div>
+ root.innerHTML=`<div class="page-head"><div><h1>Settings</h1><p>Configure the Bluestone connection, AI provider, locales and demo data.</p></div></div>
+  <div class="card" style="margin-bottom:16px"><div class="card-head"><h3>${icon('channels')} Bluestone PIM connection</h3><div class="spacer"></div>${state.live?'<span class="pill published"><span class="dot"></span>Live</span>':'<span class="pill neutral">Demo data</span>'}</div><div class="card-body">
+   <div class="notice ${state.live?'live':''}">${icon(state.live?'channels':'ai')}<div>${state.live?'Connected to your Bluestone tenant through the MCP worker. Browsing, completeness and attribute writes hit real working-state data.':'Running on standalone demo data (localStorage). Connect to browse and enrich your <strong>real tenant</strong> via the Bluestone PIM MCP. Reads, completeness, attribute edits and create go live; governance, relationships, DAM upload and publishing stay demo-only (not exposed by this MCP).'}</div></div>
+   <div class="field"><label>Worker URL</label><input class="input" id="setWorker" value="${esc(MCP.url())}"></div>
+   <div class="field"><label>Worker secret <span class="muted" style="text-transform:none;font-weight:500">— stored only in this browser, never in the page or shared</span></label><input class="input" id="setSecret" type="password" placeholder="${MCP.secret()?'•••••••• already set':'paste your X-Demo-Secret'}"></div>
+   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" id="setTest">Test connection</button>${state.live?'<button class="btn" id="setDemo">Switch to demo data</button>':'<button class="btn primary" id="setGoLive">'+icon('publish')+' Go live</button>'}<span id="setConnStatus" class="muted" style="font-size:12px"></span></div>
+  </div></div>
   <div class="grid cols-2"><div>
    <div class="card"><div class="card-head"><h3>${icon('ai')} AI provider</h3></div><div class="card-body">
     <div class="toggle-row"><span><span class="tr-label">Use a live LLM</span><div class="tr-sub">Off = built-in simulated provider (offline, deterministic)</div></span><div class="switch ${s.aiProvider==='live'?'on':''}" id="setAiLive"></div></div>
@@ -1438,7 +1460,139 @@ Views.settings=function(root){
  ['setEndpoint','setKey','setModel'].forEach(id=>{const el=root.querySelector('#'+id);if(el)el.onchange=()=>{s.aiEndpoint=root.querySelector('#setEndpoint').value;s.aiKey=root.querySelector('#setKey').value;s.aiModel=root.querySelector('#setModel').value;store.save()}});
  root.querySelectorAll('[data-loc]').forEach(sw=>sw.onclick=()=>{const code=sw.dataset.loc;if(code===DEFAULT_LOCALE)return ui.toast('The source locale stays active','error');const i=s.activeLocales.indexOf(code);i>=0?s.activeLocales.splice(i,1):s.activeLocales.push(code);store.emit()});
  root.querySelector('#setReset').onclick=()=>ui.confirm('Reseed the demo catalog? All local changes will be lost.',()=>{store.reset();ui.toast('Demo data reseeded','success');go('dashboard')},{danger:true,yes:'Reseed'});
+ const sw=root.querySelector('#setWorker');if(sw)sw.onchange=()=>localStorage.setItem('pim-workerUrl',sw.value.trim());
+ const ssec=root.querySelector('#setSecret');if(ssec)ssec.onchange=()=>{if(ssec.value.trim()){localStorage.setItem('pim-workerSecret',ssec.value.trim());ssec.value='';ssec.placeholder='•••••••• already set';ui.toast('Secret saved in this browser','success')}};
+ const stest=root.querySelector('#setTest');if(stest)stest.onclick=async()=>{const out=root.querySelector('#setConnStatus');out.textContent='Testing…';try{const h=await MCP.health();if(!MCP.secret()){out.innerHTML='<span style="color:var(--yellow)">Worker reachable'+(h.bluestoneConfigured?' & configured':'')+' — add a secret to call MCP.</span>';return}const ctx=await MCP.call('list_contexts',{});out.innerHTML='<span style="color:var(--green)">✓ Connected — '+(Array.isArray(ctx)?ctx.length:0)+' market contexts, MCP responding.</span>'}catch(e){out.innerHTML='<span style="color:var(--red)">✗ '+esc(e.message)+'</span>'}};
+ const sgl=root.querySelector('#setGoLive');if(sgl)sgl.onclick=()=>{if(!MCP.secret())return ui.toast('Add the Worker secret first','error');goLive()};
+ const sdm=root.querySelector('#setDemo');if(sdm)sdm.onclick=goDemo;
 };
+
+/* ============================================================================
+   LIVE MODE — Bluestone PIM MCP via the Cloudflare worker proxy
+   ========================================================================== */
+const WORKER_DEFAULT='https://pim-agent-proxy.mortings.workers.dev';
+const MCP={
+ url(){return (localStorage.getItem('pim-workerUrl')||WORKER_DEFAULT).replace(/\/+$/,'')},
+ secret(){return localStorage.getItem('pim-workerSecret')||''},
+ async call(tool,args){const res=await fetch(this.url()+'/api/mcp-call',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':this.secret()},body:JSON.stringify({tool,args:args||{}})});if(res.status===401)throw new Error('Unauthorized — check the Worker secret');if(!res.ok)throw new Error('Worker '+res.status+': '+(await res.text()).slice(0,140));const j=await res.json();if(j&&j.success===false)throw new Error(j.error||'MCP error');return parseMcpResult(j.result!==undefined?j.result:j)},
+ async health(){const r=await fetch(this.url()+'/api/health');return r.json()},
+ async papi(path){const res=await fetch(this.url()+'/api/papi',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':this.secret()},body:JSON.stringify({path})});if(!res.ok)return null;return res.json()},
+};
+function extractJSON(text){if(!text)return null;const i=text.search(/[\{\[]/);if(i<0)return null;try{return JSON.parse(text.slice(i))}catch(e){}for(let end=text.length;end>i+1;end--){const seg=text.slice(i,end).trim();if(/[\}\]]$/.test(seg)){try{return JSON.parse(seg)}catch(e2){}}}return null}
+function parseMcpResult(result){if(result==null)return null;if(typeof result==='object'){if(result.structuredContent)return result.structuredContent;if(Array.isArray(result.content)){const j=result.content.find(c=>c&&c.json);if(j)return j.json;const txt=result.content.map(c=>(c&&c.text)||'').join('\n');const o=extractJSON(txt);return o!=null?o:{raw:txt}}return result}if(typeof result==='string'){const o=extractJSON(result);return o!=null?o:{raw:result}}return result}
+
+function showConnecting(title,sub){let c=$('#connecting');if(!c){c=document.createElement('div');c.id='connecting';document.body.appendChild(c)}c.style.display='flex';c.innerHTML='<span class="spinner" style="width:26px;height:26px"></span><div class="cn-title">'+esc(title||'Connecting…')+'</div><div class="cn-sub" id="cnSub">'+esc(sub||'')+'</div>'}
+function setConnecting(sub){const s=$('#cnSub');if(s)s.textContent=sub||''}
+function hideConnecting(){const c=$('#connecting');if(c)c.style.display='none'}
+
+const MCP_TYPE={single_select:'select',multi_select:'multiselect',dictionary:'text',text:'text',long_text:'textarea',textarea:'textarea',html:'richtext',rich_text:'richtext',decimal:'decimal',number:'decimal',integer:'number',boolean:'boolean',date:'date',datetime:'date',matrix:'text',uri:'url',url:'url'};
+function mapDef(def){const type=MCP_TYPE[def.dataType]||'text';const idByName={},nameById={},options=[];if(def.enum&&Array.isArray(def.enum.values)){def.enum.values.forEach(v=>{if(v&&v.value!=null){options.push(v.value);idByName[v.value]=v.valueId;nameById[v.valueId]=v.value}})}return{id:def.id,key:def.number||def.id,name:def.name||def.number||'Attribute',type,groupId:def.groupId||'grp_general',localizable:!!def.contextAware,required:false,options,unit:'',validation:{},appliesTo:'all',help:def.description||'',_mcp:{dataType:def.dataType,idByName,nameById}}}
+function mapState(s){return {Draft:'draft','In progress':'review','In Progress':'review',Review:'review',Approved:'approved',Done:'approved',Active:'published',Published:'published',Archived:'archived'}[s]||'draft'}
+function mapProductListItem(it,catId){return{id:it.id,sku:it.number||it.id,name:it.name||'Untitled',categoryId:catId,productTypeId:'pt_live',status:mapState(it.state),attributes:{},variantAxes:[],variants:[],assetIds:[],primaryAssetId:null,relationships:{crosssell:[],upsell:[],accessories:[],bundle:[]},channelStatus:{},createdAt:Date.now(),updatedAt:Date.now(),createdBy:'u_live',updatedBy:'u_live',_live:true,_loaded:false,_score:(it.completenessScore!=null?it.completenessScore:null),_btype:it.type||'SINGLE'}}
+function applyProductDetail(p,gp){const defsById=DB()._defsById||{};const locale=gp.context||DEFAULT_LOCALE;(gp.attributes||[]).forEach(a=>{const def=defsById[a.definitionId];const vals=a.values||[];let val;if(def&&def.type==='select')val=(def._mcp.nameById[vals[0]]||vals[0]);else if(def&&def.type==='multiselect')val=vals.map(v=>def._mcp.nameById[v]||v);else if(def&&(def.type==='number'||def.type==='decimal'))val=parseFloat(vals[0]);else if(def&&def.type==='boolean')val=(vals[0]===true||vals[0]==='true');else val=vals.join(' ');if(def&&def.localizable){const cur=(typeof p.attributes[a.definitionId]==='object'&&p.attributes[a.definitionId])?p.attributes[a.definitionId]:{};cur[locale]=val;p.attributes[a.definitionId]=cur}else p.attributes[a.definitionId]=val});if(gp.categories&&gp.categories[0])p.categoryId=gp.categories[0];p.assetIds=gp.assets||[];p.status=mapState(gp.state);p._related=gp.relatedProducts||[];p._btype=gp.type||p._btype;p._loadedLocales=p._loadedLocales||{};p._loadedLocales[locale]=true}
+
+async function hydrateLive(){
+ showConnecting('Connecting to Bluestone PIM…','Reading contexts');
+ const cres=await MCP.call('list_contexts',{});const contexts=Array.isArray(cres)?cres:(cres.contexts||cres.raw&&[]||[]);
+ const defCtxObj=contexts.find(c=>c.default)||contexts[0]||{id:'en',name:'English'};DEFAULT_LOCALE=defCtxObj.id;
+ setConnecting('Reading the attribute model');
+ let rawDefs=[],page=1;while(page<=8){const r=await MCP.call('list_attribute_definitions',{page,limit:200,maxEnumValues:80,includeReadOnly:false});(r.definitions||[]).forEach(d=>rawDefs.push(d));if(!r||!r.hasMore)break;page++}
+ const attributes=rawDefs.filter(d=>!d.isCompound).map(mapDef);
+ const defsById={};attributes.forEach(a=>defsById[a.id]=a);
+ const gmap={};rawDefs.forEach(d=>{const gid=d.groupId||'grp_general';if(!gmap[gid])gmap[gid]={id:gid,name:d.group||'Attributes',order:Object.keys(gmap).length+1}});
+ const attributeGroups=Object.values(gmap);if(!attributeGroups.length)attributeGroups.push({id:'grp_general',name:'Attributes',order:1});
+ attributes.forEach(a=>{if(!gmap[a.groupId])a.groupId=attributeGroups[0].id});
+ setConnecting('Reading catalogs & categories');
+ const catRes=await MCP.call('list_catalogs',{});const catalogs=catRes.catalogs||[];
+ const categories=[],products=[];
+ for(const cat of catalogs){
+  categories.push({id:cat.id,name:cat.name,parentId:null,productTypeId:'pt_live',order:0});
+  try{const tree=await MCP.call('list_category_tree',{catalogId:cat.id,catalogName:cat.name,limit:400});const stack=[cat.id];(tree.categories||[]).forEach(c=>{if(c.id===cat.id)return;const d=Math.max(1,c.depth||1);const parent=stack[d-1]||cat.id;categories.push({id:c.id,name:c.name,parentId:parent,productTypeId:'pt_live',order:0});stack[d]=c.id;stack.length=d+1})}catch(e){}
+  setConnecting('Reading products in “'+cat.name+'”');
+  try{let pg=1;while(pg<=4){const sr=await MCP.call('search_products',{categoryId:cat.id,categoryName:cat.name,includeCompletenessScores:true,completenessContext:DEFAULT_LOCALE,limit:200,page:pg});(sr.products||[]).forEach(it=>products.push(mapProductListItem(it,cat.id)));if(!sr||!sr.hasMore)break;pg++}}catch(e){}
+ }
+ store.db={version:1,live:true,
+  settings:{aiProvider:'simulated',aiEndpoint:'',aiKey:'',aiModel:'claude-opus-4-8',activeLocales:contexts.map(c=>c.id),currentUserId:'u_live'},
+  locales:contexts.map(c=>({code:c.id,name:c.name||c.id,def:!!c.default})),
+  attributeGroups,attributes,productTypes:[{id:'pt_live',name:'Product',required:[]}],
+  channels:[],categories,users:[{id:'u_live',name:'Bluestone (service)',role:'admin',color:'#D23145'}],
+  products,assets:[],workflowTasks:[],auditLog:[],_defsById:defsById,_contexts:contexts,
+ };
+ hideConnecting();
+}
+async function loadData(){
+ const params=new URLSearchParams(location.search);
+ const wantLive=params.get('mcp')==='1'||localStorage.getItem('redstone-live')==='1';
+ if(wantLive&&MCP.secret()){try{await hydrateLive();state.live=true;return}catch(e){console.error('live hydrate failed',e);hideConnecting();state.liveError=(e&&e.message)||String(e)}}
+ else if(wantLive){state.liveNeedsSecret=true}
+ store.load();
+}
+function renderModeBanner(){
+ const b=$('#modeBanner');if(!b)return;const badge=$('.pim-badge');
+ if(state.live){b.className='live';b.innerHTML='<span class="mb-dot"></span><span>LIVE · Bluestone PIM tenant (working state) · '+(DB().products?DB().products.length:0)+' products across '+(DB().categories?DB().categories.filter(c=>!c.parentId).length:0)+' catalogs</span><span class="mb-spacer"></span><span class="mb-link" id="mbDemo">Switch to demo data</span>';if(badge)badge.innerHTML='<span class="pim-dot"></span>LIVE · BLUESTONE PIM';const d=$('#mbDemo');if(d)d.onclick=goDemo}
+ else if(state.liveNeedsSecret){b.className='warn';b.innerHTML='<span class="mb-dot"></span><span>Live mode requested — add your Worker secret in Settings, then Connect.</span><span class="mb-spacer"></span><span class="mb-link" id="mbSet">Open Settings</span>';const s=$('#mbSet');if(s)s.onclick=()=>go('settings')}
+ else if(state.liveError){b.className='warn';b.innerHTML='<span class="mb-dot"></span><span>Live connect failed: '+esc(state.liveError)+' — showing demo data.</span><span class="mb-spacer"></span><span class="mb-link" id="mbRetry">Settings</span>';const r=$('#mbRetry');if(r)r.onclick=()=>go('settings')}
+ else{b.className='';b.innerHTML=''}
+}
+function goLive(){localStorage.setItem('redstone-live','1');const u=new URL(location.href);u.searchParams.set('mcp','1');location.href=u.toString()}
+function goDemo(){localStorage.removeItem('redstone-live');const u=new URL(location.href);u.searchParams.delete('mcp');location.href=u.pathname+(u.hash||'#/dashboard')}
+
+/* engine overrides — use real MCP scores/validation in live mode */
+const _engCompleteness=engine.completeness.bind(engine);
+engine.completeness=function(p){if(state.live&&p){if(p._score!=null){const pct=Math.round(p._score);return{pct,filled:0,total:0,missing:[],q:qBand(pct)}}return{pct:0,filled:0,total:0,missing:[],q:'low'}}return _engCompleteness(p)};
+const _engValidate=engine.validate.bind(engine);
+engine.validate=function(p){if(state.live)return[];return _engValidate(p)};
+
+/* ---- live reads: lazy-load full product on editor open ---- */
+async function mcpLoadProduct(id){const p=api.products.get(id);if(!p)return;const gp=await MCP.call('get_product',{productId:id,productName:p.name});applyProductDetail(p,gp);if(gp.name)p.name=gp.name;try{const cd=await MCP.call('get_product_completeness_detail',{productId:id,context:DEFAULT_LOCALE});p._score=cd.score;p._reqs=cd.requirements||[]}catch(e){}p._loaded=true}
+const _openProductDrawer=openProductDrawer;
+openProductDrawer=function(id){const p=api.products.get(id);if(!p)return;
+ if(state.live&&!p._loaded){editorState={id,tab:'overview',loc:DEFAULT_LOCALE,axisPick:new Set()};
+  ui.openDrawer('<div class="drawer-head"><img class="prod-thumb" style="width:54px;height:54px" src="'+productThumb(p)+'"><div class="drawer-head-main"><h2>'+esc(p.name)+'</h2><div class="sku">'+esc(p.sku)+' · loading from Bluestone…</div></div><button class="drawer-close" data-close>×</button></div><div class="drawer-body"><div class="loading"><span class="spinner"></span> Fetching working-state attributes &amp; completeness…</div></div>',{wide:true,onOpen:(d)=>{const c=d.querySelector('[data-close]');if(c)c.onclick=closeEditor;$('#drawerBackdrop').onclick=closeEditor}});
+  mcpLoadProduct(id).then(()=>{if(editorState.id===id&&ui.drawerOpen)refreshEditor()}).catch(e=>{if(editorState.id===id&&ui.drawerOpen){$('#drawer').querySelector('.drawer-body').innerHTML='<div class="empty"><h2>Couldn’t load from Bluestone</h2><p class="mono">'+esc(e.message)+'</p></div>'}});
+  return;}
+ _openProductDrawer(id);};
+
+/* ---- live writes: mirror to MCP (optimistic local + background) ---- */
+async function liveWriteAttr(id,attrId,value,locale){const def=api.attributes.get(attrId);if(!def||!def._mcp)return;
+ if(def.localizable&&locale&&locale!==DEFAULT_LOCALE){ui.toast('Per-market writes aren’t exposed by set_product_attribute — saved locally only','error',4500);return}
+ if(value===''||value==null||(Array.isArray(value)&&!value.length)){ui.toast('Clearing a value isn’t supported by this MCP tool','error',4000);return}
+ let values;const t=def.type;
+ if(t==='select')values=[def._mcp.idByName[value]||value];
+ else if(t==='multiselect')values=(Array.isArray(value)?value:[value]).map(v=>def._mcp.idByName[v]||v);
+ else if(t==='boolean')values=[value?'true':'false'];
+ else values=[String(value)];
+ try{await MCP.call('set_product_attribute',{productId:id,definitionId:attrId,values,productName:(api.products.get(id)||{}).name,attributeName:def.name});ui.toast('Saved to Bluestone ✓','success');
+  try{const cd=await MCP.call('get_product_completeness_detail',{productId:id,context:DEFAULT_LOCALE});const p=api.products.get(id);if(p){p._score=cd.score;p._reqs=cd.requirements||[]}if(ui.drawerOpen&&editorState.id===id){updateEditorChrome();}}catch(e){}
+ }catch(e){ui.toast('Bluestone write failed: '+e.message,'error',5500)}}
+const _setAttr=api.products.setAttr.bind(api.products);
+api.products.setAttr=function(id,attrId,value,locale){const r=_setAttr(id,attrId,value,locale);if(state.live)liveWriteAttr(id,attrId,value,locale);return r};
+const _updateP=api.products.update.bind(api.products);
+api.products.update=function(id,patch,summary){const r=_updateP(id,patch,summary);if(state.live&&patch){if(patch.name)MCP.call('update_product_name',{productId:id,newName:patch.name}).then(()=>ui.toast('Renamed in Bluestone ✓','success')).catch(e=>ui.toast('Rename failed: '+e.message,'error'));if(patch.categoryId)MCP.call('assign_product_to_category',{productId:id,categoryId:patch.categoryId}).then(()=>ui.toast('Category set in Bluestone ✓','success')).catch(e=>ui.toast('Assign failed: '+e.message,'error'))}return r};
+const _createP=api.products.create.bind(api.products);
+api.products.create=function(data){const local=_createP(data);if(state.live){const num=(local.sku&&!/^(NEW|IMP)-/.test(local.sku))?local.sku:undefined;MCP.call('create_product',{name:local.name,number:num,type:'SINGLE',categoryId:local.categoryId||undefined}).then(res=>{if(res&&res.id){const old=local.id;local.id=res.id;local._live=true;local._loaded=true;if(editorState&&editorState.id===old)editorState.id=res.id;store.emit();ui.toast('Created in Bluestone ✓','success')}}).catch(e=>ui.toast('Create failed: '+e.message,'error'))}return local};
+const _setStatusP=api.products.setStatus.bind(api.products);
+api.products.setStatus=function(id,status){if(state.live){ui.toast('Lifecycle / publish actions aren’t exposed by this MCP connector','error',4500);return api.products.get(id)}return _setStatusP(id,status)};
+const _removeP=api.products.remove.bind(api.products);
+api.products.remove=function(id){if(state.live){ui.toast('Deleting products isn’t exposed by this MCP connector','error',4000);return}return _removeP(id)};
+
+/* ---- live completeness tab: real Bluestone requirements ---- */
+const _tabCompleteness=tabCompleteness;
+tabCompleteness=function(p){if(state.live){const reqs=p._reqs||[];const pct=Math.round(p._score||0);const passed=reqs.filter(r=>r.status==='PASSED');return '<div class="notice live">'+icon('channels')+'<div>Live completeness from Bluestone for context <strong>'+esc(DEFAULT_LOCALE)+'</strong>.</div></div><div class="tile" style="display:flex;align-items:center;gap:18px;margin-bottom:16px"><div style="font-size:42px;font-weight:800;min-width:88px;color:var(--'+(pct>=80?'green':pct>=50?'yellow':'red')+')">'+pct+'%</div><div style="flex:1"><div class="quality-bar" style="width:100%;height:8px"><div class="quality-fill" data-q="'+qBand(pct)+'" style="width:'+pct+'%"></div></div><div class="muted" style="font-size:11px;margin-top:6px">'+passed.length+' of '+reqs.length+' requirements passed</div></div></div><div class="section-cap">Completeness requirements<span class="line"></span></div>'+(reqs.length?reqs.map(function(r){var ok=r.status==='PASSED';return '<div class="req-item '+(ok?'pass':'fail')+'"><span class="req-icon">'+(ok?'✓':'!')+'</span><span class="rq-name">'+esc(r.name)+'</span><span class="rq-val muted" style="font-size:10px">'+esc((r.requirementType||'').toLowerCase())+'</span></div>'}).join(''):'<div class="muted">Open the product to load requirement detail.</div>');}return _tabCompleteness(p);};
+
+/* ---- live-mode degradation: honest "demo-only" notices + real read-only relations ---- */
+function prependLocalNotice(root,msg){const ph=root.querySelector('.page-head');const d=document.createElement('div');d.className='notice warn';d.style.margin='2px 0 16px';d.innerHTML=icon('importexport')+'<div><strong>Demo-only in live mode.</strong> '+msg+'</div>';if(ph)ph.insertAdjacentElement('afterend',d);else root.insertBefore(d,root.firstChild)}
+const _vWorkflow=Views.workflow;Views.workflow=function(root){_vWorkflow(root);if(state.live)prependLocalNotice(root,'Approval tasks &amp; lifecycle workflow aren’t part of this MCP connector — shown on demo data.')};
+const _vAudit=Views.audit;Views.audit=function(root){_vAudit(root);if(state.live)prependLocalNotice(root,'Audit history isn’t exposed by this MCP connector — shown on demo data.')};
+const _vChannels2=Views.channels;Views.channels=function(root){_vChannels2(root);if(state.live)prependLocalNotice(root,'Channel definitions &amp; syndication feeds are this demo’s own model; Bluestone uses contexts + catalog publication, not exposed as writable here.')};
+const _vLoc2=Views.localization;Views.localization=function(root){_vLoc2(root);if(state.live)prependLocalNotice(root,'Per-product localization reads are live in the editor; this cross-catalog board runs on demo data.')};
+const _vIE2=Views.importexport;Views.importexport=function(root){_vIE2(root);if(state.live)prependLocalNotice(root,'Export reads are live-capable; bulk import would orchestrate create_product + set_product_attribute per row (not wired).')};
+const _tabRel2=tabRelationships;tabRelationships=function(p){if(state.live){const rel=p._related||[];return '<div class="notice warn">'+icon('products')+'<div><strong>Read-only in live mode.</strong> Bluestone returns linked products via get_product, but this MCP connector exposes no relationship write tool.</div></div>'+(rel.length?('<div class="section-cap">Related products <span class="count">'+rel.length+'</span><span class="line"></span></div><div class="chips">'+rel.map(function(r){var rp=api.products.get(r.relatedId);return '<span class="chip">'+esc(rp?rp.name:('id '+String(r.relatedId).slice(-6)))+'</span>'}).join('')+'</div>'):'<div class="empty"><p>No related products on this item.</p></div>');}return _tabRel2(p);};
+const _tabCh2=tabChannels;tabChannels=function(p){if(state.live)return '<div class="notice warn">'+icon('channels')+'<div><strong>Demo-only in live mode.</strong> The channel/syndication model is this demo’s own; Bluestone uses contexts + catalog publication, which this MCP connector doesn’t expose as writable.</div></div>';return _tabCh2(p);};
+const _tabVar2=tabVariants;tabVariants=function(p){if(state.live)return '<div class="notice warn">'+icon('products')+'<div><strong>Demo-only in live mode.</strong> The MCP has variant tools (generate_variant_matrix, set_variant_level_attribute) but they’re not wired into this build. Bluestone product type: <strong>'+esc(p._btype||'SINGLE')+'</strong>.</div></div>';return _tabVar2(p);};
+const _tabMed2=tabMedia;tabMedia=function(p){if(state.live){const n=(p.assetIds||[]).length;return '<div class="notice warn">'+icon('assets')+'<div><strong>Read-only in live mode.</strong> '+(n?('This product has '+n+' Bluestone asset(s); resolving them to URLs uses the worker /api/papi route (not wired into the grid yet).'):'No assets linked on this product.')+' Asset upload isn’t an MCP capability.</div></div>';}return _tabMed2(p);};
+const _tabLoc2=tabLocalization;tabLocalization=function(p){if(state.live)return '<div class="notice warn">'+icon('localization')+'<div><strong>Reads across markets are live; writes are base-context only.</strong> get_product reads per context ('+(DB().locales||[]).map(function(l){return l.code}).join(', ')+'), but set_product_attribute has no context parameter — so non-default-market edits save locally only.</div></div>';return _tabLoc2(p);};
+const _statusActions2=statusActions;statusActions=function(p){if(state.live)return '<span class="save-state">State: <strong style="color:var(--text)">'+esc(STATUS_LABEL[p.status]||p.status)+'</strong> · <span class="local-badge">lifecycle read-only via MCP</span></span>';return _statusActions2(p);};
 
 /* ===== @VIEWS@ — additional view modules are inserted above this line ===== */
 
@@ -1490,8 +1644,8 @@ function hiliteCmdk(){$$('#cmdkResults .cmdk-item').forEach((el,i)=>el.classList
 function cmdkKey(e){if(e.key==='ArrowDown'){e.preventDefault();cmdkSel=clamp(cmdkSel+1,0,cmdkItems.length-1);hiliteCmdk();}else if(e.key==='ArrowUp'){e.preventDefault();cmdkSel=clamp(cmdkSel-1,0,cmdkItems.length-1);hiliteCmdk();}else if(e.key==='Enter'){runCmdk(cmdkSel)}}
 function runCmdk(i){const it=cmdkItems[i];if(!it)return;closeCmdk();if(it.type==='go')go(it.id);else if(it.type==='prod')openProduct(it.id);else if(it.type==='action'){if(it.id==='create')createProductFlow();else if(it.id==='reset')ui.confirm('Reseed the demo catalog? This replaces all local changes.',()=>{store.reset();rerender();ui.toast('Demo data reseeded','success')},{yes:'Reseed',danger:true});else go(it.id)}}
 
-function boot(){
- store.load();
+async function boot(){
+ await loadData();
  try{const fsvg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='51,9 77,21 58,51' fill='#D23145'/><polygon points='4,55 41,45 25,77' fill='#D23145'/><polygon points='41,87 69,93 47,100' fill='#D23145'/><polygon points='17,35 48,8 47,47' fill='#1F2937'/><polygon points='44,47 76,60 38,86' fill='#1F2937'/><polygon points='13,77 35,83 19,99' fill='#1F2937'/></svg>";const fav=document.createElement('link');fav.rel='icon';fav.href='data:image/svg+xml,'+encodeURIComponent(fsvg);document.head.appendChild(fav)}catch(e){}
  document.addEventListener('error',function(e){const t=e.target;if(!t||t.tagName!=='IMG')return;const s=t.src||'';if(/loremflickr/.test(s)&&!t.dataset.fb){t.dataset.fb='1';const m=s.match(/lock=(\d+)/);t.src='https://picsum.photos/seed/r'+(m?m[1]:Math.abs(hashCode(t.alt||'x')))+'/400/400'}else if(/picsum/.test(s)&&t.dataset.fb!=='2'){t.dataset.fb='2';t.src=placeholderSVG(t.alt||'IMG','#3D74F4')}},true);
  store.onChange(()=>{ renderUserChip(); renderNav(); if(Views[state.route])renderRoute(); });
@@ -1499,6 +1653,7 @@ function boot(){
  if(!location.hash)location.hash='#/dashboard';
  window.addEventListener('hashchange',()=>{renderRoute();window.scrollTo(0,0)});
  wireGlobal();
+ renderModeBanner();
  renderRoute();
 }
 boot();
