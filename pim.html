@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redstone PIM — Bluestone PIM LABS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050D1F; --surface:#0C1829; --surface2:#111F35; --surface3:#16284A;
+  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+  --blue:#3D74F4; --electric:#0F05CC; --green:#34D399; --orange:#EC672B;
+  --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --cyan:#38BDF8;
+  --white:#fff; --text:rgba(255,255,255,0.85); --muted:rgba(255,255,255,0.45);
+  --radius:10px;
+}
+html,body{height:100%}
+body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+::selection{background:rgba(61,116,244,0.35)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:6px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.18)}
+
+/* ---- Layout ---- */
+#header{display:flex;align-items:center;gap:14px;padding:0 18px;height:54px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:15px;color:var(--white);letter-spacing:-0.01em}
+.logo .mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo .mark svg{width:34px;height:34px}
+.logo small{font-weight:600;font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase}
+.pim-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);font-size:11px;font-weight:600;color:var(--green);letter-spacing:0.2px;white-space:nowrap}
+.pim-badge .pim-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pimPulse 2.4s ease-in-out infinite}
+@keyframes pimPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+.header-spacer{flex:1}
+.gsearch{position:relative;width:340px;max-width:38vw}
+.gsearch input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 12px 8px 34px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:border-color .15s}
+.gsearch input:focus{border-color:rgba(61,116,244,0.5)}
+.gsearch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted)}
+.gsearch .kbd{position:absolute;right:8px;top:50%;transform:translateY(-50%)}
+.kbd{font-size:10px;font-weight:600;color:var(--muted);background:var(--surface3);border:1px solid var(--border);border-radius:5px;padding:2px 6px;letter-spacing:0.5px}
+.user-chip{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:100px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:border-color .15s}
+.user-chip:hover{border-color:var(--border2)}
+.avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.user-chip .u-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.1}
+.user-chip .u-role{font-size:10px;color:var(--muted)}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .15s;flex-shrink:0}
+.icon-btn:hover{color:var(--text);border-color:var(--border2)}
+.icon-btn svg{width:16px;height:16px}
+
+#app{display:grid;grid-template-columns:228px 1fr;min-height:calc(100vh - 54px)}
+#sidebar{background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto}
+.nav-group{margin-bottom:14px}
+.nav-group-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:0 10px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;transition:all .12s;position:relative}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:rgba(61,116,244,0.14);color:var(--blue)}
+.nav-item.active::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--blue)}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-item .nav-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);background:var(--surface2);border-radius:100px;padding:1px 7px;min-width:20px;text-align:center}
+.nav-item.active .nav-count{background:rgba(61,116,244,0.2);color:var(--blue)}
+.nav-item .nav-count.alert{background:rgba(235,72,94,0.16);color:var(--red)}
+
+#view{padding:24px 28px;max-width:1320px;margin:0 auto;width:100%}
+.page-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.page-head h1{font-size:22px;font-weight:800;color:var(--white);letter-spacing:-0.02em;line-height:1.2}
+.page-head p{font-size:13px;color:var(--muted);margin-top:3px;max-width:640px}
+.page-head .ph-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ---- Buttons ---- */
+.btn{background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{background:rgba(61,116,244,0.12);border-color:rgba(61,116,244,0.35);color:var(--white)}
+.btn svg{width:14px;height:14px}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:#5687f5}
+.btn.success{background:var(--green);border-color:var(--green);color:#06251c}
+.btn.success:hover{filter:brightness(1.08)}
+.btn.danger{background:transparent;border-color:rgba(235,72,94,0.35);color:var(--red)}
+.btn.danger:hover{background:rgba(235,72,94,0.12);color:var(--red)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+.btn.small{padding:5px 10px;font-size:11px}
+.btn.ai{border-color:rgba(167,139,255,0.4);color:var(--purple);background:rgba(167,139,255,0.08)}
+.btn.ai:hover{background:rgba(167,139,255,0.16);color:var(--purple)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+
+/* ---- Pills ---- */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:0.2px;white-space:nowrap;text-transform:capitalize}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.draft{background:rgba(251,231,77,0.1);color:var(--yellow);border:1px solid rgba(251,231,77,0.3)}
+.pill.review{background:rgba(56,189,248,0.1);color:var(--cyan);border:1px solid rgba(56,189,248,0.3)}
+.pill.approved{background:rgba(167,139,255,0.12);color:var(--purple);border:1px solid rgba(167,139,255,0.3)}
+.pill.published{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.3)}
+.pill.archived{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)}
+.pill.neutral{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.pill.blue{background:rgba(61,116,244,0.12);color:var(--blue);border:1px solid rgba(61,116,244,0.3)}
+
+/* ---- Tiles / KPI ---- */
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.tile.hover:hover{border-color:rgba(61,116,244,0.3);background:#0E1B2F;cursor:pointer}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+.tile-cap{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.tile-num{font-size:30px;font-weight:800;color:var(--white);line-height:1.05;font-variant-numeric:tabular-nums}
+.tile-num.green{color:var(--green)} .tile-num.yellow{color:var(--yellow)} .tile-num.red{color:var(--red)} .tile-num.blue{color:var(--blue)} .tile-num.purple{color:var(--purple)}
+.tile-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.tile-sub strong{color:var(--text)}
+
+/* ---- Grid helpers ---- */
+.grid{display:grid;gap:14px}
+.cols-2{grid-template-columns:1fr 1fr}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:900px){.cols-2,.cols-3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-head h3{font-size:13px;font-weight:700;color:var(--white)}
+.card-head .ch-sub{font-size:11px;color:var(--muted)}
+.card-head .spacer{flex:1}
+.card-body{padding:16px}
+
+/* ---- Toolbar ---- */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.filter-pills{display:flex;gap:6px;flex-wrap:wrap}
+.filter-pill{padding:7px 13px;border:1px solid var(--border);background:rgba(255,255,255,0.03);border-radius:100px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:0.3px;white-space:nowrap}
+.filter-pill:hover{color:var(--text);border-color:var(--border2)}
+.filter-pill.active{border-color:var(--blue);background:rgba(61,116,244,0.15);color:var(--blue)}
+.filter-pill .c{opacity:0.7;margin-left:4px}
+.toolbar-spacer{flex:1}
+select,input[type=text],input[type=number],input[type=search],textarea{font-family:inherit}
+.input{padding:8px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .15s;width:100%}
+.input:focus{border-color:rgba(61,116,244,0.5)}
+select.input{appearance:none;padding-right:30px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff77' stroke-width='2'><polyline points='6,9 12,15 18,9'/></svg>");background-repeat:no-repeat;background-position:right 9px center}
+.input.sm{padding:6px 9px;font-size:12px}
+textarea.input{resize:vertical;min-height:70px;line-height:1.5}
+
+/* ---- Table ---- */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:auto}
+table.fpu{width:100%;border-collapse:separate;border-spacing:0;min-width:760px}
+table.fpu thead th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:12px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);user-select:none;position:sticky;top:0;z-index:1}
+table.fpu thead th.sortable{cursor:pointer}
+table.fpu thead th.sortable:hover{color:var(--text)}
+table.fpu thead th.sorted{color:var(--blue)}
+table.fpu tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle}
+table.fpu tbody tr{cursor:pointer;transition:background .1s}
+table.fpu tbody tr:hover{background:rgba(61,116,244,0.06)}
+table.fpu tbody tr.selected{background:rgba(61,116,244,0.12)}
+table.fpu tbody tr:last-child td{border-bottom:none}
+.prod-cell{display:flex;align-items:center;gap:11px}
+.prod-thumb{width:38px;height:38px;border-radius:8px;object-fit:cover;background:var(--surface2);flex-shrink:0;border:1px solid var(--border)}
+.product-name{font-weight:600;color:var(--white);display:block}
+.product-sku{font-size:11px;color:var(--muted);margin-top:1px;font-family:'Menlo','SF Mono',monospace}
+.checkcol{width:38px;text-align:center}
+.checkbox{width:16px;height:16px;border-radius:4px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+.checkbox.on{background:var(--blue);border-color:var(--blue)}
+.checkbox svg{width:11px;height:11px;color:#fff;opacity:0;transition:opacity .1s}
+.checkbox.on svg{opacity:1}
+
+/* ---- Quality bar ---- */
+.quality-cell{display:flex;align-items:center;gap:10px;min-width:150px}
+.quality-bar{width:96px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;flex-shrink:0}
+.quality-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.quality-fill[data-q="low"]{background:var(--red)}
+.quality-fill[data-q="mid"]{background:var(--yellow)}
+.quality-fill[data-q="high"]{background:var(--green)}
+.quality-pct{font-weight:700;color:var(--white);min-width:36px;text-align:right;font-variant-numeric:tabular-nums;font-size:12px}
+.quality-pct.low{color:var(--red)} .quality-pct.mid{color:var(--yellow)} .quality-pct.high{color:var(--green)}
+
+/* ---- Drawer ---- */
+.drawer-backdrop{position:fixed;inset:0;background:rgba(2,6,16,0.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;backdrop-filter:blur(2px)}
+.drawer-backdrop.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:660px;max-width:100vw;background:var(--surface);border-left:1px solid var(--border);box-shadow:-24px 0 70px rgba(0,0,0,0.5);transform:translateX(100%);transition:transform .26s cubic-bezier(.4,0,.2,1);z-index:70;display:flex;flex-direction:column}
+.drawer.open{transform:translateX(0)}
+.drawer.wide{width:880px}
+.drawer-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:14px}
+.drawer-head-main{flex:1;min-width:0}
+.drawer-head h2{font-size:18px;font-weight:800;color:var(--white);line-height:1.25;letter-spacing:-0.01em}
+.drawer-head .sku{font-size:11px;color:var(--muted);margin-top:4px;font-family:'Menlo','SF Mono',monospace;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.drawer-close{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;padding:0 4px;border-radius:6px}
+.drawer-close:hover{color:var(--text)}
+.drawer-tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--border);overflow-x:auto;background:var(--surface)}
+.drawer-tab{padding:11px 13px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .12s;display:flex;align-items:center;gap:6px}
+.drawer-tab:hover{color:var(--text)}
+.drawer-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.drawer-tab .tcount{font-size:10px;background:var(--surface2);border-radius:100px;padding:0 6px;color:var(--muted)}
+.drawer-tab .warn{width:6px;height:6px;border-radius:50%;background:var(--orange)}
+.drawer-body{flex:1;overflow-y:auto;padding:20px 22px}
+.drawer-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface)}
+.drawer-foot .spacer{flex:1}
+.drawer-foot .save-state{font-size:11px;color:var(--muted)}
+
+/* ---- Modal ---- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,6,16,0.6);opacity:0;pointer-events:none;transition:opacity .18s;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-backdrop.open{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,0.55);width:560px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;transform:translateY(8px) scale(.99);transition:transform .18s}
+.modal-backdrop.open .modal{transform:none}
+.modal.lg{width:840px}
+.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.modal-head h2{font-size:16px;font-weight:800;color:var(--white)}
+.modal-head .spacer{flex:1}
+.modal-body{padding:20px 22px;overflow-y:auto}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* ---- Form fields ---- */
+.field{margin-bottom:16px}
+.field>label,.label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.field .hint{font-size:11px;color:var(--muted);margin-top:5px}
+.field-row{display:flex;gap:12px}
+.field-row>.field{flex:1}
+.section-cap{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin:22px 0 12px;display:flex;align-items:center;gap:9px}
+.section-cap:first-child{margin-top:0}
+.section-cap .count{background:var(--surface2);color:var(--text);padding:1px 8px;border-radius:100px;font-size:10px}
+.section-cap .line{flex:1;height:1px;background:var(--border)}
+.localized-tag{font-size:9px;font-weight:700;color:var(--cyan);background:rgba(56,189,248,0.12);padding:1px 6px;border-radius:4px;letter-spacing:0.3px;text-transform:none}
+.req-star{color:var(--red);margin-left:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:12px;color:var(--text)}
+.chip .x{cursor:pointer;color:var(--muted);font-weight:700}
+.chip .x:hover{color:var(--red)}
+.chip.add{cursor:pointer;border-style:dashed;color:var(--muted)}
+.chip.add:hover{color:var(--blue);border-color:rgba(61,116,244,0.4)}
+.switch{position:relative;width:38px;height:21px;border-radius:100px;background:var(--surface3);border:1px solid var(--border);cursor:pointer;transition:background .15s;flex-shrink:0}
+.switch.on{background:var(--blue);border-color:var(--blue)}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch.on::after{transform:translateX(17px)}
+.toggle-row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:9px 0}
+.toggle-row .tr-label{font-size:13px;color:var(--text);font-weight:500}
+.toggle-row .tr-sub{font-size:11px;color:var(--muted)}
+
+/* ---- misc ---- */
+.empty{padding:54px 24px;text-align:center;color:var(--muted)}
+.empty h2{font-weight:700;color:var(--text);margin-bottom:6px;font-size:15px}
+.empty .ico{width:46px;height:46px;margin:0 auto 14px;color:var(--muted);opacity:0.5}
+.loading{padding:40px 24px;text-align:center;color:var(--muted);font-size:12px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+ins{background:rgba(52,211,153,0.16);color:var(--green);text-decoration:none;padding:1px 3px;border-radius:3px}
+del{background:rgba(235,72,94,0.16);color:var(--red);text-decoration:line-through;padding:1px 3px;border-radius:3px}
+.mono{font-family:'Menlo','SF Mono',monospace;font-size:12px}
+.muted{color:var(--muted)}
+.pending-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 6px var(--blue);animation:pimPulse 1.4s ease-in-out infinite}
+.req-item{display:flex;align-items:center;gap:10px;font-size:12px;padding:8px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.req-item .req-icon{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+.req-item.pass .req-icon{background:rgba(52,211,153,0.2);color:var(--green)}
+.req-item.fail .req-icon{background:rgba(235,72,94,0.2);color:var(--red)}
+.req-item .rq-name{flex:1;color:var(--text)}
+.req-item .rq-val{color:var(--muted);font-size:11px;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:0 0 16px 0}
+.tl-item::before{content:"";position:absolute;left:-18px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--surface3);border:2px solid var(--blue)}
+.tl-item .tl-action{font-size:13px;color:var(--text);font-weight:600}
+.tl-item .tl-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.tl-item .tl-diff{font-size:12px;margin-top:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+
+/* tree */
+.tree-node{user-select:none}
+.tree-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s}
+.tree-row:hover{background:var(--surface2)}
+.tree-row.active{background:rgba(61,116,244,0.14)}
+.tree-row .tw{width:16px;height:16px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:transform .15s}
+.tree-row .tw.open{transform:rotate(90deg)}
+.tree-row .t-name{font-size:13px;font-weight:600;color:var(--text)}
+.tree-row .t-count{margin-left:auto;font-size:11px;color:var(--muted);background:var(--surface2);border-radius:100px;padding:1px 8px}
+.tree-children{margin-left:16px;border-left:1px solid var(--border);padding-left:6px}
+
+/* toast */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.toast{background:var(--surface3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text);box-shadow:0 12px 40px rgba(0,0,0,0.5);display:flex;align-items:center;gap:10px;min-width:240px;max-width:380px;animation:toastIn .25s ease;border-left:3px solid var(--blue)}
+.toast.success{border-left-color:var(--green)} .toast.error{border-left-color:var(--red)} .toast.ai{border-left-color:var(--purple)}
+.toast .t-ico{flex-shrink:0;width:18px;height:18px}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+/* command palette */
+#cmdk{position:fixed;inset:0;z-index:120;display:none;align-items:flex-start;justify-content:center;padding-top:13vh;background:rgba(2,6,16,0.55);backdrop-filter:blur(3px)}
+#cmdk.open{display:flex}
+.cmdk-box{width:620px;max-width:92vw;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,0.6);overflow:hidden}
+.cmdk-input{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+.cmdk-input svg{width:18px;height:18px;color:var(--muted)}
+.cmdk-input input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:15px;font-family:inherit}
+.cmdk-results{max-height:46vh;overflow-y:auto;padding:8px}
+.cmdk-sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;padding:8px 12px 4px}
+.cmdk-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text)}
+.cmdk-item.sel{background:rgba(61,116,244,0.16)}
+.cmdk-item svg{width:15px;height:15px;color:var(--muted);flex-shrink:0}
+.cmdk-item .ci-sub{font-size:11px;color:var(--muted);margin-left:auto}
+.cmdk-item .avatar{width:22px;height:22px;font-size:9px}
+
+.menu{position:absolute;background:var(--surface3);border:1px solid var(--border2);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,0.5);padding:6px;z-index:150;min-width:200px}
+.menu-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text);font-weight:500}
+.menu-item:hover{background:rgba(61,116,244,0.14)}
+.menu-item svg{width:15px;height:15px;color:var(--muted)}
+.menu-item.danger{color:var(--red)}
+.menu-sep{height:1px;background:var(--border);margin:5px 0}
+.menu-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;padding:6px 11px 3px}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12px}
+.bar-row .bl{width:128px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .bt{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:4px;background:var(--blue)}
+.bar-row .bn{width:42px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.ai-glow{box-shadow:0 0 0 1px rgba(167,139,255,0.4),0 0 24px rgba(167,139,255,0.15)}
+.notice{background:rgba(167,139,255,0.08);border:1px solid rgba(167,139,255,0.25);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text);display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.notice svg{width:16px;height:16px;color:var(--purple);flex-shrink:0;margin-top:1px}
+.notice.warn{background:rgba(236,103,43,0.08);border-color:rgba(236,103,43,0.25)}
+.notice.warn svg{color:var(--orange)}
+</style>
+</head>
+<body>
+<div id="header">
+  <div class="logo">
+    <span class="mark"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><polygon points="51,9 77,21 58,51" fill="#D23145"/><polygon points="4,55 41,45 25,77" fill="#D23145"/><polygon points="41,87 69,93 47,101" fill="#D23145"/><polygon points="17,35 48,8 47,47" fill="#F5F7FA"/><polygon points="44,47 76,60 38,86" fill="#F5F7FA"/><polygon points="13,77 35,83 19,99" fill="#F5F7FA"/></svg></span>
+    <span>Redstone PIM <small>Enterprise</small></span>
+  </div>
+  <span class="pim-badge"><span class="pim-dot"></span>BLUESTONE PIM LABS</span>
+  <div class="header-spacer"></div>
+  <div class="gsearch">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+    <input id="globalSearch" type="search" placeholder="Search products, categories, SKUs…" autocomplete="off">
+    <span class="kbd">⌘K</span>
+  </div>
+  <div class="user-chip" id="userChip">
+    <span class="avatar" id="userAvatar"></span>
+    <span><span class="u-name" id="userName"></span><br><span class="u-role" id="userRole"></span></span>
+  </div>
+  <div class="icon-btn" id="settingsBtn" title="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </div>
+</div>
+<div id="app">
+  <nav id="sidebar"></nav>
+  <main id="view"></main>
+</div>
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="modal-backdrop" id="modalBackdrop"></div>
+<div id="cmdk"><div class="cmdk-box"><div class="cmdk-input"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="cmdkInput" type="text" placeholder="Type a command or search…"></div><div class="cmdk-results" id="cmdkResults"></div></div></div>
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* ============================================================================
+   REDSTONE PIM — a standalone, vibe-coded Enterprise PIM
+   Single file · vanilla JS · no backend. Own data model, mock-API store with
+   localStorage persistence + audit, completeness engine, pluggable AI.
+   ========================================================================== */
+
+/* ---------- tiny utils ---------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let _uid = 1; const uid = p => (p||'id')+'_'+(Date.now().toString(36))+(_uid++).toString(36);
+const debounce = (fn,ms=350)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
+const by = k => (a,b)=> a[k]<b[k]?-1:a[k]>b[k]?1:0;
+const sum = a => a.reduce((x,y)=>x+y,0);
+const uniq = a => Array.from(new Set(a));
+const groupBy = (arr,fn)=>arr.reduce((m,x)=>{const k=fn(x);(m[k]=m[k]||[]).push(x);return m},{});
+function fmtMoney(v,cur='USD'){if(v==null||v==='')return '—';try{return new Intl.NumberFormat('en-US',{style:'currency',currency:cur,maximumFractionDigits:2}).format(v)}catch(e){return cur+' '+v}}
+function fmtDate(ts){if(!ts)return '—';const d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+function timeAgo(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return 'just now';const m=Math.floor(s/60);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';const d=Math.floor(h/24);if(d<30)return d+'d ago';return fmtDate(ts)}
+function initials(n){return String(n||'?').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+function qBand(p){return p>=80?'high':p>=50?'mid':'low'}
+function download(name,text,mime='text/plain'){const b=new Blob([text],{type:mime});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)}
+function hashColor(s){let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);const cols=['#3D74F4','#A78BFF','#34D399','#EC672B','#38BDF8','#EB485E','#FBE74D','#0F05CC'];return cols[Math.abs(h)%cols.length]}
+/* seeded prng for reproducible demo data */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let RND=mulberry32(0xC0FFEE);
+const rnd=()=>RND();
+const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+const pick=arr=>arr[Math.floor(rnd()*arr.length)];
+const chance=p=>rnd()<p;
+function placeholderSVG(label,color,glyph){
+  const c=color||'#3D74F4';
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c}'/><stop offset='1' stop-color='${c}99'/></linearGradient></defs><rect width='400' height='400' fill='#0C1829'/><rect width='400' height='400' fill='url(#g)' opacity='0.22'/><text x='50%' y='52%' font-family='Montserrat,Arial' font-size='150' font-weight='800' fill='${c}' text-anchor='middle' dominant-baseline='middle'>${esc(glyph||initials(label))}</text></svg>`;
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
+}
+
+/* ---------- icons ---------- */
+const ICON={
+ dashboard:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+ products:'<path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/>',
+ categories:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+ assets:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+ model:'<path d="M12 2v20M2 7l10 5 10-5M2 17l10 5 10-5"/>',
+ localization:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/>',
+ channels:'<path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5"/>',
+ workflow:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+ audit:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/>',
+ quality:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>',
+ importexport:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+ settings:ICON_GEAR(),
+ ai:'<path d="M12 2l2.4 5.6L20 10l-5.6 2.4L12 18l-2.4-5.6L4 10l5.6-2.4z"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ check:'<path d="M20 6L9 17l-5-5"/>',
+ chevron:'<path d="M9 18l6-6-6-6"/>',
+ trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+ edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+ publish:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+ filter:'<path d="M22 3H2l8 9.46V19l4 2v-8.54z"/>',
+};
+function ICON_GEAR(){return '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'}
+const icon=(n,cls='')=>`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]||''}</svg>`;
+
+/* ---------- domain constants ---------- */
+const LOCALES=[
+ {code:'en-US',name:'English (US)',def:true},
+ {code:'en-GB',name:'English (UK)'},
+ {code:'de-DE',name:'German'},
+ {code:'fr-FR',name:'French'},
+ {code:'nb-NO',name:'Norwegian'},
+];
+const DEFAULT_LOCALE='en-US';
+const LIFECYCLE=[
+ {key:'draft',label:'Draft',next:['review']},
+ {key:'review',label:'In Review',next:['approved','draft']},
+ {key:'approved',label:'Approved',next:['published','draft']},
+ {key:'published',label:'Published',next:['archived','approved']},
+ {key:'archived',label:'Archived',next:['draft']},
+];
+const STATUS_LABEL=Object.fromEntries(LIFECYCLE.map(s=>[s.key,s.label]));
+const ROLES={
+ admin:{label:'Administrator',perms:{edit:1,approve:1,publish:1,model:1,translate:1,users:1,delete:1}},
+ pm:{label:'Product Manager',perms:{edit:1,approve:1,publish:1,model:1,translate:1,users:0,delete:1}},
+ editor:{label:'Content Editor',perms:{edit:1,approve:0,publish:0,model:0,translate:1,users:0,delete:0}},
+ translator:{label:'Translator',perms:{edit:0,approve:0,publish:0,model:0,translate:1,users:0,delete:0}},
+ viewer:{label:'Viewer',perms:{edit:0,approve:0,publish:0,model:0,translate:0,users:0,delete:0}},
+};
+const ATTR_TYPES={
+ text:'Short text', textarea:'Long text', richtext:'Rich text', number:'Number',
+ decimal:'Decimal', price:'Price', boolean:'Yes / No', select:'Single select',
+ multiselect:'Multi select', date:'Date', measurement:'Measurement', url:'URL', media:'Media',
+};
+
+/* ============================================================================
+   SEED — a mixed-retail catalogue built from compact specs
+   ========================================================================== */
+function buildSeed(){
+ RND=mulberry32(0xC0FFEE); _uid=1;
+ const now=Date.now(), DAY=86400000;
+ const ag=(id,name,order)=>({id,name,order});
+ const attributeGroups=[
+  ag('grp_general','General',1),ag('grp_marketing','Marketing & SEO',2),
+  ag('grp_specs','Specifications',3),ag('grp_logistics','Logistics',4),
+  ag('grp_compliance','Compliance',5),
+ ];
+ // attribute definitions
+ const A=(o)=>Object.assign({localizable:false,required:false,options:[],unit:null,validation:{},appliesTo:'all',help:''},o);
+ const attributes=[
+  A({id:'at_brand',key:'brand',name:'Brand',type:'select',groupId:'grp_general',required:true,options:['Aurora','Nimbus','Vertex','Kindred','Meridian','Northwind','Lumen','Sage & Stone','Volta','Habit','Petra']}),
+  A({id:'at_desc',key:'description',name:'Description',type:'richtext',groupId:'grp_marketing',required:true,localizable:true,help:'Primary marketing copy shown on storefronts.'}),
+  A({id:'at_short',key:'shortDescription',name:'Short description',type:'textarea',groupId:'grp_marketing',localizable:true}),
+  A({id:'at_price',key:'price',name:'Price',type:'price',groupId:'grp_general',required:true}),
+  A({id:'at_color',key:'color',name:'Color',type:'select',groupId:'grp_specs',options:['Black','White','Navy','Charcoal','Sand','Forest','Burgundy','Silver','Sky','Blush','Olive','Stone']}),
+  A({id:'at_material',key:'material',name:'Material',type:'text',groupId:'grp_specs',appliesTo:['pt_apparel','pt_home']}),
+  A({id:'at_size',key:'size',name:'Size',type:'select',groupId:'grp_specs',options:['XS','S','M','L','XL','XXL'],appliesTo:['pt_apparel']}),
+  A({id:'at_weight',key:'weight',name:'Weight',type:'measurement',unit:'g',groupId:'grp_logistics'}),
+  A({id:'at_gtin',key:'gtin',name:'GTIN / EAN',type:'text',groupId:'grp_logistics',required:true,validation:{pattern:'^[0-9]{8,14}$'},help:'8–14 digit barcode number.'}),
+  A({id:'at_country',key:'countryOfOrigin',name:'Country of origin',type:'select',groupId:'grp_compliance',options:['USA','Germany','Italy','Portugal','Vietnam','China','Norway','India','Japan']}),
+  A({id:'at_warranty',key:'warrantyMonths',name:'Warranty (months)',type:'number',groupId:'grp_compliance',appliesTo:['pt_electronics','pt_home'],validation:{min:0,max:120}}),
+  A({id:'at_power',key:'power',name:'Power',type:'text',groupId:'grp_specs',appliesTo:['pt_electronics']}),
+  A({id:'at_connectivity',key:'connectivity',name:'Connectivity',type:'multiselect',groupId:'grp_specs',options:['Wi-Fi','Bluetooth','USB-C','USB-A','HDMI','3.5mm','NFC','Ethernet'],appliesTo:['pt_electronics']}),
+  A({id:'at_ingredients',key:'ingredients',name:'Ingredients',type:'textarea',groupId:'grp_compliance',localizable:true,appliesTo:['pt_grocery','pt_beauty']}),
+  A({id:'at_allergens',key:'allergens',name:'Allergens',type:'multiselect',groupId:'grp_compliance',options:['Gluten','Nuts','Dairy','Soy','Egg','None'],appliesTo:['pt_grocery']}),
+  A({id:'at_volume',key:'volume',name:'Net content',type:'text',groupId:'grp_specs',appliesTo:['pt_grocery','pt_beauty']}),
+  A({id:'at_skintype',key:'skinType',name:'Skin type',type:'multiselect',groupId:'grp_specs',options:['Normal','Dry','Oily','Combination','Sensitive'],appliesTo:['pt_beauty']}),
+  A({id:'at_care',key:'careInstructions',name:'Care instructions',type:'text',groupId:'grp_specs',localizable:true,appliesTo:['pt_apparel','pt_home']}),
+  A({id:'at_seotitle',key:'seoTitle',name:'SEO title',type:'text',groupId:'grp_marketing',localizable:true,validation:{maxLength:60}}),
+  A({id:'at_seodesc',key:'seoDescription',name:'SEO meta description',type:'textarea',groupId:'grp_marketing',localizable:true,validation:{maxLength:160}}),
+  A({id:'at_keywords',key:'keywords',name:'Search keywords',type:'multiselect',groupId:'grp_marketing',options:['eco','premium','bestseller','new','sale','organic','gift','limited']}),
+  A({id:'at_sustainable',key:'sustainable',name:'Sustainable',type:'boolean',groupId:'grp_compliance'}),
+ ];
+ const productTypes=[
+  {id:'pt_electronics',name:'Electronics',required:['at_brand','at_desc','at_price','at_gtin','at_warranty','at_power']},
+  {id:'pt_apparel',name:'Apparel',required:['at_brand','at_desc','at_price','at_gtin','at_material','at_color','at_care']},
+  {id:'pt_home',name:'Home & Kitchen',required:['at_brand','at_desc','at_price','at_gtin','at_material']},
+  {id:'pt_grocery',name:'Grocery',required:['at_brand','at_desc','at_price','at_gtin','at_ingredients','at_volume','at_country']},
+  {id:'pt_beauty',name:'Beauty',required:['at_brand','at_desc','at_price','at_gtin','at_ingredients','at_volume']},
+ ];
+ const channels=[
+  {id:'ch_web',name:'Web Store',key:'web',color:'#3D74F4',required:['at_desc','at_price','at_seotitle'],locales:['en-US','en-GB','de-DE','fr-FR','nb-NO']},
+  {id:'ch_amazon',name:'Amazon',key:'amazon',color:'#EC672B',required:['at_desc','at_price','at_gtin','at_brand','at_seotitle'],locales:['en-US','en-GB','de-DE']},
+  {id:'ch_google',name:'Google Shopping',key:'google',color:'#34D399',required:['at_price','at_gtin','at_brand'],locales:['en-US','en-GB']},
+  {id:'ch_pos',name:'Retail POS',key:'pos',color:'#A78BFF',required:['at_price','at_gtin'],locales:['en-US']},
+  {id:'ch_print',name:'Print Catalog',key:'print',color:'#FBE74D',required:['at_desc','at_price'],locales:['en-US','de-DE']},
+ ];
+ const cat=(id,name,parentId,ptId)=>({id,name,parentId,productTypeId:ptId,order:0});
+ const categories=[
+  cat('c_elec','Electronics',null,'pt_electronics'),
+   cat('c_elec_audio','Audio',null,'pt_electronics'),cat('c_elec_acc','Accessories',null,'pt_electronics'),cat('c_elec_smart','Smart Home',null,'pt_electronics'),
+  cat('c_app','Apparel',null,'pt_apparel'),
+   cat('c_app_tops','Tops & Knitwear',null,'pt_apparel'),cat('c_app_bottoms','Bottoms',null,'pt_apparel'),cat('c_app_outer','Outerwear',null,'pt_apparel'),
+  cat('c_home','Home & Kitchen',null,'pt_home'),
+   cat('c_home_cook','Cookware',null,'pt_home'),cat('c_home_dining','Dining',null,'pt_home'),cat('c_home_textile','Home Textiles',null,'pt_home'),
+  cat('c_groc','Grocery',null,'pt_grocery'),
+   cat('c_groc_pantry','Pantry',null,'pt_grocery'),cat('c_groc_bev','Beverages',null,'pt_grocery'),
+  cat('c_beauty','Beauty',null,'pt_beauty'),
+   cat('c_beauty_skin','Skincare',null,'pt_beauty'),cat('c_beauty_make','Makeup',null,'pt_beauty'),
+ ];
+ // set parents
+ const setP=(c,p)=>{const x=categories.find(z=>z.id===c);if(x)x.parentId=p};
+ ['c_elec_audio','c_elec_acc','c_elec_smart'].forEach(c=>setP(c,'c_elec'));
+ ['c_app_tops','c_app_bottoms','c_app_outer'].forEach(c=>setP(c,'c_app'));
+ ['c_home_cook','c_home_dining','c_home_textile'].forEach(c=>setP(c,'c_home'));
+ ['c_groc_pantry','c_groc_bev'].forEach(c=>setP(c,'c_groc'));
+ ['c_beauty_skin','c_beauty_make'].forEach(c=>setP(c,'c_beauty'));
+
+ const users=[
+  {id:'u_ava',name:'Ava Chen',role:'admin',color:'#3D74F4'},
+  {id:'u_marco',name:'Marco Ruiz',role:'pm',color:'#A78BFF'},
+  {id:'u_lena',name:'Lena Brandt',role:'editor',color:'#34D399'},
+  {id:'u_yuki',name:'Yuki Tanaka',role:'translator',color:'#EC672B'},
+  {id:'u_sam',name:'Sam Okoye',role:'viewer',color:'#38BDF8'},
+ ];
+
+ // catalogue specs: [name, productType, category, brand, [lo,hi] price, glyph]
+ const SPECS=[
+  // Electronics
+  ['Aurora 27" 4K Monitor','pt_electronics','c_elec','Vertex',[329,499]],['Pulse Wireless Earbuds','pt_electronics','c_elec_audio','Nimbus',[79,149]],
+  ['Nimbus Bluetooth Speaker','pt_electronics','c_elec_audio','Nimbus',[59,129]],['Vertex Mechanical Keyboard','pt_electronics','c_elec_acc','Vertex',[89,169]],
+  ['Quantum USB-C Hub 8-in-1','pt_electronics','c_elec_acc','Volta',[39,69]],['Halo Smart Doorbell','pt_electronics','c_elec_smart','Lumen',[99,179]],
+  ['Orbit Robot Vacuum','pt_electronics','c_elec_smart','Lumen',[249,429]],['Echo Noise-Cancel Headphones','pt_electronics','c_elec_audio','Nimbus',[179,299]],
+  ['Flux Power Bank 20000mAh','pt_electronics','c_elec_acc','Volta',[35,59]],['Nova Smartwatch','pt_electronics','c_elec','Vertex',[149,259]],
+  ['Spark 4K Action Camera','pt_electronics','c_elec','Vertex',[129,219]],['Cobalt Gaming Mouse','pt_electronics','c_elec_acc','Vertex',[39,79]],
+  ['Zephyr Smart Air Purifier','pt_electronics','c_elec_smart','Lumen',[149,239]],['Lumen LED Desk Lamp','pt_electronics','c_elec_acc','Lumen',[35,65]],
+  // Apparel
+  ['Merino Crew Sweater','pt_apparel','c_app_tops','Kindred',[79,119]],['Everyday Organic Cotton Tee','pt_apparel','c_app_tops','Habit',[19,29]],
+  ['Tailored Chino Trousers','pt_apparel','c_app_bottoms','Meridian',[59,89]],['Rainproof Shell Jacket','pt_apparel','c_app_outer','Northwind',[129,199]],
+  ['Linen Summer Dress','pt_apparel','c_app_tops','Kindred',[69,99]],['Classic Straight Denim Jeans','pt_apparel','c_app_bottoms','Meridian',[59,89]],
+  ['Performance Running Shorts','pt_apparel','c_app_bottoms','Habit',[29,45]],['Cashmere Scarf','pt_apparel','c_app_outer','Kindred',[49,89]],
+  ['Oxford Button-Down Shirt','pt_apparel','c_app_tops','Meridian',[45,69]],['Quilted Puffer Vest','pt_apparel','c_app_outer','Northwind',[79,129]],
+  ['Ribbed Knit Beanie','pt_apparel','c_app_outer','Habit',[19,29]],['High-Rise Yoga Leggings','pt_apparel','c_app_bottoms','Habit',[39,59]],
+  ['Canvas Low-Top Sneakers','pt_apparel','c_app_outer','Meridian',[55,85]],['Wool Tailored Overcoat','pt_apparel','c_app_outer','Kindred',[189,289]],
+  // Home & Kitchen
+  ['Stoneware Dinner Set 16pc','pt_home','c_home_dining','Sage & Stone',[59,99]],['Cast Iron Skillet 12"','pt_home','c_home_cook','Petra',[39,69]],
+  ['Bamboo Cutting Board','pt_home','c_home_cook','Sage & Stone',[19,35]],['Stainless Cookware Set 10pc','pt_home','c_home_cook','Petra',[129,229]],
+  ['Ceramic Pour-Over Coffee Maker','pt_home','c_home_cook','Sage & Stone',[29,49]],['Memory Foam Pillow','pt_home','c_home_textile','Meridian',[35,59]],
+  ['Linen Duvet Cover Set','pt_home','c_home_textile','Sage & Stone',[79,139]],['Glass Food Storage Set 10pc','pt_home','c_home_cook','Petra',[29,49]],
+  ['Electric Kettle 1.7L','pt_home','c_home_cook','Volta',[35,59]],['Non-Stick Baking Tray Set','pt_home','c_home_cook','Petra',[25,39]],
+  ['Scented Soy Candle','pt_home','c_home_textile','Sage & Stone',[18,32]],['Egyptian Cotton Towel Set','pt_home','c_home_textile','Meridian',[39,69]],
+  ['Air Fryer 5.5L','pt_home','c_home_cook','Volta',[89,149]],['Bamboo Bath Mat','pt_home','c_home_textile','Sage & Stone',[24,39]],
+  // Grocery
+  ['Organic Arabica Coffee Beans 1kg','pt_grocery','c_groc_bev','Sage & Stone',[16,28]],['Extra Virgin Olive Oil 750ml','pt_grocery','c_groc_pantry','Meridian',[12,22]],
+  ['Himalayan Pink Salt 500g','pt_grocery','c_groc_pantry','Sage & Stone',[6,12]],['Raw Wildflower Honey 340g','pt_grocery','c_groc_pantry','Petra',[9,16]],
+  ['Single-Origin Dark Chocolate 70%','pt_grocery','c_groc_pantry','Kindred',[4,9]],['Aged Balsamic Vinegar 250ml','pt_grocery','c_groc_pantry','Meridian',[11,19]],
+  ['Organic Green Tea 50 bags','pt_grocery','c_groc_bev','Sage & Stone',[7,13]],['Sourdough Seed Crackers','pt_grocery','c_groc_pantry','Habit',[4,8]],
+  ['Roasted Almond Butter 500g','pt_grocery','c_groc_pantry','Petra',[8,15]],['Aged Basmati Rice 2kg','pt_grocery','c_groc_pantry','Meridian',[9,17]],
+  ['Maple Syrup Grade A 250ml','pt_grocery','c_groc_pantry','Petra',[10,18]],['Sea Salt Potato Chips','pt_grocery','c_groc_pantry','Habit',[3,6]],
+  ['Cold Brew Coffee Concentrate','pt_grocery','c_groc_bev','Sage & Stone',[8,14]],['Sparkling Mineral Water 12pk','pt_grocery','c_groc_bev','Petra',[9,16]],
+  // Beauty
+  ['Hydrating Hyaluronic Serum','pt_beauty','c_beauty_skin','Sage & Stone',[22,38]],['Vitamin C Brightening Cream','pt_beauty','c_beauty_skin','Sage & Stone',[26,44]],
+  ['Gentle Foaming Cleanser','pt_beauty','c_beauty_skin','Habit',[14,24]],['SPF 50 Mineral Sunscreen','pt_beauty','c_beauty_skin','Meridian',[18,32]],
+  ['Argan Oil Hair Mask','pt_beauty','c_beauty_skin','Kindred',[16,28]],['Matte Liquid Lipstick','pt_beauty','c_beauty_make','Petra',[12,22]],
+  ['Bamboo Charcoal Face Mask','pt_beauty','c_beauty_skin','Sage & Stone',[10,18]],['Nourishing Lip Balm','pt_beauty','c_beauty_make','Habit',[5,9]],
+  ['Rose Water Facial Toner','pt_beauty','c_beauty_skin','Sage & Stone',[14,24]],['Retinol Night Cream','pt_beauty','c_beauty_skin','Meridian',[28,48]],
+  ['Tea Tree Spot Treatment','pt_beauty','c_beauty_skin','Habit',[9,16]],['Volumizing Mascara','pt_beauty','c_beauty_make','Petra',[11,19]],
+  ['Whipped Shea Body Butter','pt_beauty','c_beauty_skin','Kindred',[15,26]],['Niacinamide Pore Serum','pt_beauty','c_beauty_skin','Sage & Stone',[18,30]],
+ ];
+
+ const COPY={
+  pt_electronics:'Engineered for everyday performance, the {n} pairs refined hardware with a clean, intuitive experience. Thoughtful details and reliable build quality make it a standout in its class.',
+  pt_apparel:'Crafted from premium materials, the {n} blends timeless design with modern comfort. A versatile piece built to last season after season.',
+  pt_home:'Bring quiet quality to your home with the {n}. Durable materials and a considered design make everyday rituals feel a little more special.',
+  pt_grocery:'Sourced with care, the {n} delivers honest flavor and dependable quality. A pantry staple you can feel good about.',
+  pt_beauty:'Formulated to nourish and protect, the {n} is a gentle yet effective addition to your daily routine. Clean ingredients, visible results.',
+ };
+ const TRANS={
+  'de-DE':n=>'Entdecken Sie '+n+' — durchdachtes Design und verlässliche Qualität für jeden Tag.',
+  'fr-FR':n=>'Découvrez '+n+' — un design soigné et une qualité fiable au quotidien.',
+  'nb-NO':n=>'Oppdag '+n+' — gjennomtenkt design og pålitelig kvalitet for hverdagen.',
+  'en-GB':n=>n+' — considered design and dependable quality, every day.',
+ };
+
+ const products=[]; const assets=[];
+ SPECS.forEach((sp,idx)=>{
+  const [name,ptId,catId,brand,price]=sp;
+  const completenessTier=rnd(); // drives how filled it is
+  const fill=completenessTier; // 0..1
+  const col=pick(['#3D74F4','#A78BFF','#34D399','#EC672B','#38BDF8','#EB485E']);
+  const pid='p_'+String(idx+1).padStart(3,'0');
+  const sku=(ptId.split('_')[1].slice(0,3).toUpperCase())+'-'+String(1000+idx);
+  const asset={id:'as_'+pid,type:'image',name:name+' — main',source:'placeholder',color:col,glyph:initials(name),alt:{},tags:['main'],createdAt:now-ri(1,120)*DAY};
+  assets.push(asset);
+  const attrs={};
+  attrs.at_brand=brand;
+  attrs.at_price=+(price[0]+rnd()*(price[1]-price[0])).toFixed(2);
+  // description (localizable) — default + some locales
+  const baseDesc=COPY[ptId].replace(/\{n\}/g,name);
+  const descMap={[DEFAULT_LOCALE]:baseDesc};
+  if(fill>0.35) descMap['en-GB']=TRANS['en-GB'](name);
+  if(fill>0.55) descMap['de-DE']=TRANS['de-DE'](name);
+  if(fill>0.75) descMap['fr-FR']=TRANS['fr-FR'](name);
+  if(fill>0.85) descMap['nb-NO']=TRANS['nb-NO'](name);
+  attrs.at_desc=descMap;
+  if(fill>0.3) attrs.at_short={[DEFAULT_LOCALE]:name+' — '+pick(['a modern essential.','built to last.','an everyday favorite.','quietly premium.'])};
+  if(fill>0.2) attrs.at_gtin=String(ri(10000000,99999999))+String(ri(100000,999999));
+  if(fill>0.4) attrs.at_weight=ri(80,4200);
+  if(fill>0.5) attrs.at_country=pick(['USA','Germany','Italy','Portugal','Vietnam','Norway','Japan']);
+  if(fill>0.45) attrs.at_seotitle={[DEFAULT_LOCALE]:(name+' | '+brand).slice(0,58)};
+  if(fill>0.6) attrs.at_seodesc={[DEFAULT_LOCALE]:('Shop the '+name+' from '+brand+'. '+pick(['Free shipping.','Top rated.','In stock now.'])).slice(0,158)};
+  if(fill>0.3) attrs.at_keywords=pick([['new'],['bestseller'],['premium','gift'],['organic','eco'],['sale']]);
+  attrs.at_sustainable=chance(0.4);
+  // type specifics
+  let variants=[];
+  if(ptId==='pt_apparel'){
+   attrs.at_material=pick(['100% Merino Wool','Organic Cotton','Linen blend','Recycled Polyester','Cotton / Elastane']);
+   attrs.at_color=pick(['Black','Navy','Sand','Forest','Charcoal','Burgundy','Stone']);
+   if(fill>0.4) attrs.at_care={[DEFAULT_LOCALE]:'Machine wash cold. Lay flat to dry.'};
+   const colors=uniq([attrs.at_color,pick(['Black','Navy','Sand','Olive','White'])]);
+   const sizes=['S','M','L','XL'];
+   colors.forEach(c=>sizes.forEach(s=>{
+    variants.push({id:uid('v'),sku:sku+'-'+c.slice(0,2).toUpperCase()+s,axes:{color:c,size:s},stock:ri(0,140),price:attrs.at_price});
+   }));
+  } else if(ptId==='pt_electronics'){
+   if(fill>0.35) attrs.at_warranty=pick([12,24,24,36]);
+   if(fill>0.3) attrs.at_power=pick(['5V / 2A USB-C','Built-in rechargeable','100–240V AC','Battery (AAA)']);
+   if(fill>0.5) attrs.at_connectivity=pick([['Bluetooth'],['Wi-Fi','Bluetooth'],['USB-C'],['Bluetooth','NFC'],['Wi-Fi','Ethernet']]);
+   attrs.at_color=pick(['Black','Silver','White','Charcoal']);
+   const caps=pick([['Black','White'],['Black','Silver'],['Black']]);
+   caps.forEach(c=>variants.push({id:uid('v'),sku:sku+'-'+c.slice(0,2).toUpperCase(),axes:{color:c},stock:ri(0,90),price:attrs.at_price}));
+  } else if(ptId==='pt_home'){
+   attrs.at_material=pick(['Stoneware','Cast iron','Stainless steel','Bamboo','Egyptian cotton','Borosilicate glass','Linen']);
+   if(fill>0.4) attrs.at_warranty=pick([12,24,0]);
+   if(fill>0.4) attrs.at_care={[DEFAULT_LOCALE]:pick(['Dishwasher safe.','Hand wash recommended.','Machine washable.'])};
+  } else if(ptId==='pt_grocery'){
+   if(fill>0.2) attrs.at_ingredients={[DEFAULT_LOCALE]:pick(['100% organic single-origin.','Cold-pressed, unrefined.','Stone-ground, no additives.','Naturally harvested.'])};
+   if(fill>0.3) attrs.at_volume=pick(['250ml','500g','1kg','340g','2kg','12 × 330ml']);
+   if(fill>0.4) attrs.at_allergens=pick([['None'],['Nuts'],['Gluten'],['Dairy'],['None']]);
+   attrs.at_country=attrs.at_country||pick(['Italy','USA','Norway','India']);
+  } else if(ptId==='pt_beauty'){
+   if(fill>0.2) attrs.at_ingredients={[DEFAULT_LOCALE]:pick(['Aqua, Glycerin, Sodium Hyaluronate.','Aqua, Niacinamide, Panthenol.','Vegan, cruelty-free formula.'])};
+   if(fill>0.3) attrs.at_volume=pick(['30ml','50ml','100ml','15ml','200ml']);
+   if(fill>0.5) attrs.at_skintype=pick([['Normal','Dry'],['Oily','Combination'],['Sensitive'],['Normal']]);
+   attrs.at_color=chance(0.5)?pick(['Blush','Burgundy','Sand']):undefined;
+  }
+  // status distribution
+  const r=rnd();
+  let status = r<0.18?'draft':r<0.36?'review':r<0.52?'approved':r<0.88?'published':'archived';
+  // channel status
+  const channelStatus={};
+  channels.forEach(ch=>{ channelStatus[ch.id]= status==='published'&&chance(0.7)?'published':(status==='approved'||status==='published')&&chance(0.5)?'ready':'unpublished'; });
+  const created=now-ri(20,400)*DAY;
+  // realistic completeness spread: prune some required attributes per tier
+  const ptReq=productTypes.find(t=>t.id===ptId).required;
+  const reqIds=uniq(ptReq.concat(attributes.filter(a=>a.required&&(a.appliesTo==='all'||(Array.isArray(a.appliesTo)&&a.appliesTo.includes(ptId)))).map(a=>a.id)));
+  const tier=rnd();const removeFrac=tier<0.16?0.6:tier<0.44?0.25:0;
+  if(removeFrac>0){const hh=str=>{let h=0;for(const ch of str)h=(h*31+ch.charCodeAt(0))%100000;return h};const filledReq=reqIds.filter(idd=>{const def=attributes.find(a=>a.id===idd);const v=def&&def.localizable?(attrs[idd]&&attrs[idd][DEFAULT_LOCALE]):attrs[idd];return !(v==null||v===''||(Array.isArray(v)&&!v.length))});filledReq.sort((a,b)=>hh(a+pid)-hh(b+pid));const nRem=Math.max(1,Math.round(filledReq.length*removeFrac));for(let i=0;i<nRem&&i<filledReq.length;i++)delete attrs[filledReq[i]];}
+  products.push({
+   id:pid, sku, name, categoryId:catId, productTypeId:ptId, status,
+   attributes:attrs, variantAxes: ptId==='pt_apparel'?['color','size']:ptId==='pt_electronics'?['color']:[],
+   variants, assetIds:[asset.id], primaryAssetId:asset.id,
+   relationships:{crosssell:[],upsell:[],accessories:[],bundle:[]},
+   channelStatus, createdAt:created, updatedAt:now-ri(0,18)*DAY,
+   createdBy:'u_marco', updatedBy:pick(['u_marco','u_lena','u_ava']),
+  });
+ });
+ // relationships — link a few within same category
+ const byCat=groupBy(products,p=>p.categoryId);
+ products.forEach(p=>{
+  const sibs=(byCat[p.categoryId]||[]).filter(x=>x.id!==p.id);
+  if(sibs.length){ p.relationships.crosssell=sibs.slice(0,2).map(x=>x.id);
+   if(sibs.length>2) p.relationships.upsell=[sibs[2].id]; }
+ });
+
+ // workflow tasks (open approvals / translations)
+ const workflowTasks=[];
+ products.filter(p=>p.status==='review').forEach(p=>{
+  workflowTasks.push({id:uid('wf'),productId:p.id,type:'approval',assignedRole:'pm',status:'open',createdAt:now-ri(0,6)*DAY,note:'Awaiting approval to publish',fromStatus:'review',toStatus:'approved'});
+ });
+ products.filter(p=>p.status==='approved'&&chance(0.5)).slice(0,6).forEach(p=>{
+  workflowTasks.push({id:uid('wf'),productId:p.id,type:'translation',assignedRole:'translator',status:'open',createdAt:now-ri(0,9)*DAY,note:'Translate description to de-DE, fr-FR'});
+ });
+
+ // audit seed
+ const auditLog=[];
+ const seedAudit=(p,action,summary,daysAgo,userId)=>auditLog.push({id:uid('au'),ts:now-daysAgo*DAY+ri(0,80000000),userId:userId||pick(users).id,entity:'product',entityId:p.id,entityName:p.name,action,summary});
+ products.slice(0,40).forEach((p,i)=>{ seedAudit(p,'create','Product created',ri(20,300),'u_marco');
+  if(chance(0.7))seedAudit(p,'update','Updated marketing copy',ri(1,18),'u_lena');
+  if(p.status!=='draft')seedAudit(p,'status','Status → '+STATUS_LABEL[p.status],ri(0,12)); });
+ auditLog.sort((a,b)=>b.ts-a.ts);
+
+ return {
+  version:1, settings:{aiProvider:'simulated',aiEndpoint:'',aiKey:'',aiModel:'claude-opus-4-8',activeLocales:LOCALES.map(l=>l.code),currentUserId:'u_ava'},
+  locales:LOCALES.map(l=>({...l})), attributeGroups, attributes, productTypes, channels, categories, users, products, assets, workflowTasks, auditLog,
+ };
+}
+
+/* ============================================================================
+   STORE — mock API + localStorage persistence + audit + change events
+   ========================================================================== */
+const LS_KEY='redstonePim:v1';
+const store={
+ db:null, listeners:new Set(),
+ load(){ try{const raw=localStorage.getItem(LS_KEY); if(raw){this.db=JSON.parse(raw); return}}catch(e){console.warn('load failed',e)} this.db=buildSeed(); this.save(); },
+ _save:null,
+ save(){ this._save=this._save||debounce(()=>{ try{localStorage.setItem(LS_KEY,JSON.stringify(this.db))}catch(e){console.warn('save failed',e)} },200); this._save(); },
+ reset(){ this.db=buildSeed(); localStorage.setItem(LS_KEY,JSON.stringify(this.db)); this.emit(); },
+ emit(){ this.save(); this.listeners.forEach(fn=>{try{fn()}catch(e){console.error(e)}}); },
+ onChange(fn){ this.listeners.add(fn); return ()=>this.listeners.delete(fn) },
+ audit(entry){ this.db.auditLog.unshift(Object.assign({id:uid('au'),ts:Date.now(),userId:state.user().id},entry)); if(this.db.auditLog.length>800)this.db.auditLog.length=800; },
+};
+/* convenience accessors */
+const DB=()=>store.db;
+const api={
+ products:{
+  all(){return DB().products},
+  get(id){return DB().products.find(p=>p.id===id)},
+  update(id,patch,summary){const p=this.get(id);if(!p)return;Object.assign(p,patch);p.updatedAt=Date.now();p.updatedBy=state.user().id;store.audit({entity:'product',entityId:id,entityName:p.name,action:'update',summary:summary||'Updated product'});store.emit();return p},
+  setAttr(id,attrId,value,locale){const p=this.get(id);if(!p)return;const def=api.attributes.get(attrId);if(def&&def.localizable){const cur=(p.attributes[attrId]&&typeof p.attributes[attrId]==='object')?{...p.attributes[attrId]}:{};if(value===''||value==null)delete cur[locale||DEFAULT_LOCALE];else cur[locale||DEFAULT_LOCALE]=value;p.attributes[attrId]=cur;}else{if(value===''||value==null||(Array.isArray(value)&&!value.length))delete p.attributes[attrId];else p.attributes[attrId]=value;}p.updatedAt=Date.now();p.updatedBy=state.user().id;store.emit();return p},
+  setStatus(id,status){const p=this.get(id);if(!p)return;const old=p.status;p.status=status;p.updatedAt=Date.now();store.audit({entity:'product',entityId:id,entityName:p.name,action:'status',summary:'Status '+STATUS_LABEL[old]+' → '+STATUS_LABEL[status]});store.emit();return p},
+  create(data){const idx=DB().products.length+1;const p=Object.assign({id:uid('p'),sku:'NEW-'+(1000+idx),name:'Untitled product',categoryId:null,productTypeId:'pt_electronics',status:'draft',attributes:{},variantAxes:[],variants:[],assetIds:[],primaryAssetId:null,relationships:{crosssell:[],upsell:[],accessories:[],bundle:[]},channelStatus:{},createdAt:Date.now(),updatedAt:Date.now(),createdBy:state.user().id,updatedBy:state.user().id},data);DB().products.unshift(p);store.audit({entity:'product',entityId:p.id,entityName:p.name,action:'create',summary:'Product created'});store.emit();return p},
+  remove(id){const p=this.get(id);DB().products=DB().products.filter(x=>x.id!==id);if(p)store.audit({entity:'product',entityId:id,entityName:p.name,action:'delete',summary:'Product deleted'});store.emit()},
+ },
+ categories:{all(){return DB().categories},get(id){return DB().categories.find(c=>c.id===id)},
+  children(pid){return DB().categories.filter(c=>c.parentId===pid)},
+  path(id){const out=[];let c=this.get(id);while(c){out.unshift(c);c=c.parentId?this.get(c.parentId):null}return out},
+  count(id){const ids=this.subtree(id);return DB().products.filter(p=>ids.includes(p.categoryId)).length},
+  subtree(id){const out=[id];this.children(id).forEach(c=>out.push(...this.subtree(c.id)));return out},
+  create(d){const c=Object.assign({id:uid('c'),name:'New category',parentId:null,productTypeId:null,order:0},d);DB().categories.push(c);store.audit({entity:'category',entityId:c.id,entityName:c.name,action:'create',summary:'Category created'});store.emit();return c},
+  update(id,patch){const c=this.get(id);Object.assign(c,patch);store.emit();return c},
+  remove(id){const sub=this.subtree(id);DB().categories=DB().categories.filter(c=>!sub.includes(c.id));DB().products.forEach(p=>{if(sub.includes(p.categoryId))p.categoryId=null});store.emit()},
+ },
+ attributes:{all(){return DB().attributes},get(id){return DB().attributes.find(a=>a.id===id)},getByKey(k){return DB().attributes.find(a=>a.key===k)},
+  forType(ptId){return DB().attributes.filter(a=>a.appliesTo==='all'||(Array.isArray(a.appliesTo)&&a.appliesTo.includes(ptId)))},
+  create(d){const a=Object.assign({id:uid('at'),key:'attr'+_uid,name:'New attribute',type:'text',groupId:'grp_general',localizable:false,required:false,options:[],unit:null,validation:{},appliesTo:'all',help:''},d);DB().attributes.push(a);store.emit();return a},
+  update(id,patch){Object.assign(this.get(id),patch);store.emit()},
+  remove(id){DB().attributes=DB().attributes.filter(a=>a.id!==id);store.emit()},
+ },
+ groups:{all(){return DB().attributeGroups.slice().sort(by('order'))},get(id){return DB().attributeGroups.find(g=>g.id===id)}},
+ types:{all(){return DB().productTypes},get(id){return DB().productTypes.find(t=>t.id===id)},
+  update(id,patch){Object.assign(this.get(id),patch);store.emit()}},
+ channels:{all(){return DB().channels},get(id){return DB().channels.find(c=>c.id===id)},
+  update(id,patch){Object.assign(this.get(id),patch);store.emit()}},
+ assets:{all(){return DB().assets},get(id){return DB().assets.find(a=>a.id===id)},
+  create(d){const a=Object.assign({id:uid('as'),type:'image',name:'New asset',source:'placeholder',color:'#3D74F4',glyph:'?',alt:{},tags:[],createdAt:Date.now()},d);DB().assets.push(a);store.emit();return a},
+  update(id,patch){Object.assign(this.get(id),patch);store.emit()},
+  remove(id){DB().assets=DB().assets.filter(a=>a.id!==id);DB().products.forEach(p=>{p.assetIds=(p.assetIds||[]).filter(x=>x!==id);if(p.primaryAssetId===id)p.primaryAssetId=p.assetIds[0]||null});store.emit()}},
+ users:{all(){return DB().users},get(id){return DB().users.find(u=>u.id===id)}},
+ tasks:{all(){return DB().workflowTasks},open(){return DB().workflowTasks.filter(t=>t.status==='open')},
+  resolve(id){const t=DB().workflowTasks.find(x=>x.id===id);if(t){t.status='done';t.resolvedAt=Date.now()}store.emit()},
+  create(d){const t=Object.assign({id:uid('wf'),status:'open',createdAt:Date.now()},d);DB().workflowTasks.unshift(t);store.emit();return t}},
+ locales:{active(){return DB().locales.filter(l=>DB().settings.activeLocales.includes(l.code))},all(){return DB().locales}},
+};
+
+/* ============================================================================
+   ENGINE — completeness, validation, channel readiness, asset src
+   ========================================================================== */
+function attrValue(p,attrId,locale){const def=api.attributes.get(attrId);let v=p.attributes[attrId];if(def&&def.localizable){if(v&&typeof v==='object')return v[locale||DEFAULT_LOCALE];return undefined}return v}
+function isFilled(v){return !(v==null||v===''||(Array.isArray(v)&&v.length===0))}
+function requiredAttrsFor(p){const t=api.types.get(p.productTypeId);const set=new Set(t?t.required:[]);api.attributes.all().forEach(a=>{if(a.required&&(a.appliesTo==='all'||(Array.isArray(a.appliesTo)&&a.appliesTo.includes(p.productTypeId))))set.add(a.id)});return Array.from(set)}
+const engine={
+ completeness(p){const req=requiredAttrsFor(p);if(!req.length)return{pct:100,filled:0,total:0,missing:[],q:'high'};let filled=0;const missing=[];req.forEach(aid=>{const def=api.attributes.get(aid);if(!def)return;const v=def.localizable?attrValue(p,aid,DEFAULT_LOCALE):p.attributes[aid];if(isFilled(v))filled++;else missing.push(def)});const pct=Math.round(100*filled/req.length);return{pct,filled,total:req.length,missing,q:qBand(pct)}},
+ validate(p){const errs=[];api.attributes.all().forEach(def=>{const raw=p.attributes[def.id];const vals=def.localizable&&raw&&typeof raw==='object'?Object.entries(raw):[[DEFAULT_LOCALE,raw]];vals.forEach(([loc,v])=>{if(!isFilled(v))return;const V=def.validation||{};if(def.type==='text'||def.type==='textarea'){if(V.maxLength&&String(v).length>V.maxLength)errs.push({attr:def,locale:loc,msg:def.name+' exceeds '+V.maxLength+' chars ('+String(v).length+')'});if(V.pattern&&!new RegExp(V.pattern).test(String(v)))errs.push({attr:def,locale:loc,msg:def.name+' has invalid format'})}if((def.type==='number'||def.type==='decimal'||def.type==='price'||def.type==='measurement')){const n=+v;if(V.min!=null&&n<V.min)errs.push({attr:def,locale:loc,msg:def.name+' below minimum '+V.min});if(V.max!=null&&n>V.max)errs.push({attr:def,locale:loc,msg:def.name+' above maximum '+V.max})}})});return errs},
+ localeCompleteness(p,locale){const reqLoc=requiredAttrsFor(p).map(id=>api.attributes.get(id)).filter(a=>a&&a.localizable);if(!reqLoc.length)return 100;let f=0;reqLoc.forEach(a=>{if(isFilled(attrValue(p,a.id,locale)))f++});return Math.round(100*f/reqLoc.length)},
+ channelReadiness(p,ch){const missing=[];ch.required.forEach(aid=>{const def=api.attributes.get(aid);if(!def)return;const v=def.localizable?attrValue(p,aid,DEFAULT_LOCALE):p.attributes[aid];if(!isFilled(v))missing.push(def)});const statusOK=['approved','published'].includes(p.status);return{ready:missing.length===0&&statusOK,missing,statusOK}},
+};
+function assetSrc(a){if(!a)return placeholderSVG('?','#3D74F4');if(a.source==='url'&&a.url)return a.url;if(a.source==='data'&&a.url)return a.url;return placeholderSVG(a.name,a.color,a.glyph)}
+function productThumb(p){const a=p.primaryAssetId?api.assets.get(p.primaryAssetId):null;return assetSrc(a||{name:p.name,color:'#3D74F4',glyph:initials(p.name)})}
+
+/* ============================================================================
+   AI — pluggable: simulated provider (offline) + live provider (configurable)
+   ========================================================================== */
+const ai={
+ get provider(){return DB().settings.aiProvider},
+ async run(task,payload){ const t0=Date.now();
+  if(this.provider==='live'){ try{ return await this._live(task,payload) }catch(e){ ui.toast('Live AI failed ('+(e.message||e)+') — using simulated','error'); } }
+  await new Promise(r=>setTimeout(r,420+Math.random()*520)); // feel like a network call
+  return this._sim(task,payload);
+ },
+ async _live(task,payload){ const s=DB().settings; if(!s.aiEndpoint) throw new Error('no endpoint set'); const res=await fetch(s.aiEndpoint,{method:'POST',headers:{'Content-Type':'application/json',...(s.aiKey?{'Authorization':'Bearer '+s.aiKey}:{})},body:JSON.stringify({task,payload,model:s.aiModel})}); if(!res.ok)throw new Error('HTTP '+res.status); const j=await res.json(); return j.result!=null?j.result:j; },
+ _sim(task,payload){
+  const p=payload.product;
+  switch(task){
+   case 'description':{const t=api.types.get(p.productTypeId);const brand=p.attributes.at_brand||'our';const mat=p.attributes.at_material;const feat=[mat&&('crafted from '+mat.toLowerCase()),p.attributes.at_sustainable&&'made with sustainability in mind',p.attributes.at_connectivity&&('with '+[].concat(p.attributes.at_connectivity).join(' & ')+' connectivity')].filter(Boolean);
+    return 'Meet the <strong>'+esc(p.name)+'</strong> from '+esc(brand)+'. '+pick(['Designed for people who care about the details,','Built to elevate your everyday,','Thoughtfully made and ready to impress,'])+' it combines refined design with dependable performance'+(feat.length?', '+feat.join(', '):'')+'. A confident choice you\'ll reach for again and again.';}
+   case 'shortDescription':return p.name+' — '+pick(['a modern everyday essential.','quietly premium, built to last.','crafted with care, made to impress.','the upgrade you didn\'t know you needed.']);
+   case 'seoTitle':return (p.name+' | '+(p.attributes.at_brand||'Shop')).slice(0,60);
+   case 'seoDescription':return ('Shop the '+p.name+(p.attributes.at_brand?(' by '+p.attributes.at_brand):'')+'. Premium quality, fast shipping, and easy returns. Order yours today.').slice(0,160);
+   case 'altText':return p.name+(p.attributes.at_color?(' in '+p.attributes.at_color):'')+' — product photo on a clean background';
+   case 'translate':{const txt=payload.text||'';const loc=payload.locale;const pre={'de-DE':'[DE] ','fr-FR':'[FR] ','nb-NO':'[NO] ','en-GB':''}[loc]||'';const map={'de-DE':{'the':'die','and':'und','quality':'Qualität','design':'Design'},'fr-FR':{'the':'le','and':'et','quality':'qualité','design':'design'},'nb-NO':{'the':'','and':'og','quality':'kvalitet','design':'design'}}[loc];let out=txt;if(map)Object.entries(map).forEach(([k,v])=>{out=out.replace(new RegExp('\\b'+k+'\\b','gi'),v)});return pre+out;}
+   case 'suggestCategory':{const name=p.name.toLowerCase();const rules=[[/serum|cream|cleanser|sunscreen|mask|balm|toner|mascara|lipstick|butter/,'c_beauty_skin'],[/coffee|tea|water|brew/,'c_groc_bev'],[/oil|salt|honey|chocolate|rice|syrup|chips|crackers|butter|vinegar/,'c_groc_pantry'],[/skillet|cookware|kettle|fryer|board|baking|pour-over/,'c_home_cook'],[/sweater|tee|shirt|knit|dress/,'c_app_tops'],[/jeans|trousers|shorts|leggings|chino/,'c_app_bottoms'],[/jacket|vest|coat|scarf|beanie|sneaker/,'c_app_outer'],[/earbuds|speaker|headphones/,'c_elec_audio'],[/doorbell|vacuum|purifier/,'c_elec_smart'],[/hub|keyboard|mouse|power bank|lamp/,'c_elec_acc']];for(const[re,c]of rules)if(re.test(name))return{categoryId:c,confidence:0.7+Math.random()*0.25};return{categoryId:p.categoryId,confidence:0.5};}
+   case 'suggestAttributes':{const out={};requiredAttrsFor(p).forEach(aid=>{const def=api.attributes.get(aid);if(!def)return;const v=def.localizable?attrValue(p,aid,DEFAULT_LOCALE):p.attributes[aid];if(isFilled(v))return;if(def.id==='at_gtin')out[aid]=String(ri(10000000,99999999))+String(ri(100000,999999));else if(def.type==='select'&&def.options.length)out[aid]=pick(def.options);else if(def.type==='multiselect'&&def.options.length)out[aid]=[pick(def.options)];else if(def.type==='number')out[aid]=ri(1,36);else if(def.type==='price'||def.type==='decimal')out[aid]=+(ri(9,240)+rnd()).toFixed(2);else if(def.type==='measurement')out[aid]=ri(50,2500);else if(def.id==='at_desc'||def.type==='richtext')out[aid]=this._sim('description',{product:p});else if(def.type==='textarea'||def.type==='text')out[aid]=def.name+' — AI draft for '+p.name;});return out;}
+   case 'quality':{const issues=[];const c=engine.completeness(p);c.missing.forEach(m=>issues.push({severity:'high',attrId:m.id,msg:'Missing required: '+m.name}));engine.validate(p).forEach(e=>issues.push({severity:'medium',attrId:e.attr.id,msg:e.msg}));if(!p.primaryAssetId)issues.push({severity:'medium',msg:'No primary image set'});const desc=attrValue(p,'at_desc',DEFAULT_LOCALE);if(desc&&desc.replace(/<[^>]+>/g,'').length<60)issues.push({severity:'low',attrId:'at_desc',msg:'Description is quite short'});return issues;}
+   default:return '';
+  }
+ },
+};
+
+/* ============================================================================
+   UI helpers — toast / drawer / modal / menu
+   ========================================================================== */
+const ui={
+ toast(msg,type='info',ms=3200){const t=document.createElement('div');t.className='toast '+type;const ic={success:icon('check'),error:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',ai:icon('ai'),info:''}[type]||'';t.innerHTML=(ic?'<span class="t-ico">'+ic+'</span>':'')+'<span>'+esc(msg)+'</span>';$('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300)},ms)},
+ drawerOpen:false,
+ openDrawer(html,opts={}){const d=$('#drawer');d.className='drawer'+(opts.wide?' wide':'');d.innerHTML=html;$('#drawerBackdrop').classList.add('open');requestAnimationFrame(()=>d.classList.add('open'));this.drawerOpen=true;if(opts.onOpen)opts.onOpen(d)},
+ closeDrawer(){$('#drawer').classList.remove('open');$('#drawerBackdrop').classList.remove('open');this.drawerOpen=false},
+ modal(opts){const mb=$('#modalBackdrop');const acts=(opts.actions||[{label:'Close',close:true}]).map((a,i)=>`<button class="btn ${a.cls||''}" data-act="${i}">${esc(a.label)}</button>`).join('');mb.innerHTML=`<div class="modal ${opts.lg?'lg':''}"><div class="modal-head"><h2>${esc(opts.title||'')}</h2><div class="spacer"></div><button class="drawer-close" data-close>×</button></div><div class="modal-body">${opts.body||''}</div><div class="modal-foot">${acts}</div></div>`;mb.classList.add('open');const close=()=>{mb.classList.remove('open')};mb.querySelector('[data-close]').onclick=close;mb.onclick=e=>{if(e.target===mb)close()};(opts.actions||[]).forEach((a,i)=>{const b=mb.querySelector('[data-act="'+i+'"]');if(b)b.onclick=()=>{if(a.onClick)a.onClick(mb);if(a.close!==false)close()}});if(opts.onOpen)opts.onOpen(mb);return{close,el:mb}},
+ confirm(msg,onYes,opts={}){this.modal({title:opts.title||'Please confirm',body:'<p style="color:var(--text)">'+esc(msg)+'</p>',actions:[{label:'Cancel',close:true},{label:opts.yes||'Confirm',cls:opts.danger?'danger':'primary',onClick:onYes}]})},
+};
+
+/* ============================================================================
+   STATE + ROUTER + NAV
+   ========================================================================== */
+const state={
+ route:'dashboard', locale:DEFAULT_LOCALE,
+ user(){return api.users.get(DB().settings.currentUserId)||DB().users[0]},
+ can(perm){return !!ROLES[this.user().role].perms[perm]},
+ setUser(id){DB().settings.currentUserId=id;store.emit()},
+};
+const NAV=[
+ {group:'Catalog',items:[
+  {id:'dashboard',label:'Dashboard',icon:'dashboard'},
+  {id:'products',label:'Products',icon:'products',count:()=>api.products.all().length},
+  {id:'categories',label:'Categories',icon:'categories',count:()=>api.categories.all().length},
+  {id:'assets',label:'Assets',icon:'assets',count:()=>api.assets.all().length},
+ ]},
+ {group:'Data model',items:[
+  {id:'model',label:'Attributes & Types',icon:'model',count:()=>api.attributes.all().length},
+ ]},
+ {group:'Enrich & localize',items:[
+  {id:'localization',label:'Localization',icon:'localization'},
+  {id:'quality',label:'Data Quality',icon:'quality'},
+ ]},
+ {group:'Distribute',items:[
+  {id:'channels',label:'Channels',icon:'channels',count:()=>api.channels.all().length},
+ ]},
+ {group:'Govern',items:[
+  {id:'workflow',label:'Workflow',icon:'workflow',count:()=>api.tasks.open().length,alert:true},
+  {id:'audit',label:'Audit Log',icon:'audit'},
+ ]},
+ {group:'System',items:[
+  {id:'importexport',label:'Import / Export',icon:'importexport'},
+  {id:'settings',label:'Settings',icon:'settings'},
+ ]},
+];
+function renderNav(){
+ const cur=state.route;
+ $('#sidebar').innerHTML=NAV.map(g=>`<div class="nav-group"><div class="nav-group-label">${esc(g.group)}</div>`+
+  g.items.map(it=>{let c=it.count?it.count():null;const alert=it.alert&&c>0;return `<div class="nav-item ${cur===it.id?'active':''}" data-route="${it.id}">${icon(it.icon)}<span>${esc(it.label)}</span>${c!=null?`<span class="nav-count ${alert?'alert':''}">${c}</span>`:''}</div>`}).join('')
+  +`</div>`).join('');
+ $$('#sidebar .nav-item').forEach(el=>el.onclick=()=>go(el.dataset.route));
+}
+function go(route){location.hash='#/'+route}
+function parseHash(){const h=location.hash.replace(/^#\/?/,'').split('/');return{route:h[0]||'dashboard',arg:h[1]}}
+function renderRoute(){const{route,arg}=parseHash();state.route=route;renderNav();const root=$('#view');root.innerHTML='';const fn=Views[route];if(fn){try{fn(root,arg)}catch(e){root.innerHTML='<div class="empty"><h2>Something broke rendering this view</h2><p class="mono">'+esc(e.message)+'</p></div>';console.error(e)}}else{root.innerHTML=`<div class="empty"><div class="ico">${icon('settings')}</div><h2>Module coming online</h2><p>The <strong>${esc(route)}</strong> module is being wired up.</p></div>`}}
+function rerender(){renderNav();renderRoute()}
+
+/* re-render header user chip */
+function renderUserChip(){const u=state.user();$('#userAvatar').style.background=u.color;$('#userAvatar').textContent=initials(u.name);$('#userName').textContent=u.name;$('#userRole').textContent=ROLES[u.role].label}
+
+/* ============================================================================
+   VIEWS
+   ========================================================================== */
+const Views={};
+
+Views.dashboard=function(root){
+ const ps=api.products.all();
+ const comp=ps.map(p=>engine.completeness(p).pct);
+ const avg=Math.round(sum(comp)/(comp.length||1));
+ const byStatus=groupBy(ps,p=>p.status);
+ const published=(byStatus.published||[]).length;
+ const openTasks=api.tasks.open().length;
+ const lowQ=ps.filter(p=>engine.completeness(p).pct<50).length;
+ const chReady=p=>api.channels.all().filter(c=>engine.channelReadiness(p,c).ready).length;
+ const u=state.user();
+ const cats=api.categories.all().filter(c=>!c.parentId);
+ const catBars=cats.map(c=>{const items=api.products.all().filter(p=>api.categories.subtree(c.id).includes(p.categoryId));const a=items.length?Math.round(sum(items.map(p=>engine.completeness(p).pct))/items.length):0;return{name:c.name,count:items.length,avg:a}}).sort((a,b)=>b.count-a.count);
+ const chrows=api.channels.all().map(ch=>{const ready=ps.filter(p=>engine.channelReadiness(p,ch).ready).length;return{ch,ready,pct:Math.round(100*ready/(ps.length||1))}});
+ root.innerHTML=`
+ <div class="page-head"><div><h1>Welcome back, ${esc(u.name.split(' ')[0])}</h1><p>Here's the health of your product catalog across data quality, workflow and channel readiness — all from a standalone, vibe-coded PIM.</p></div>
+  <div class="ph-actions"><button class="btn" id="dPublishables">Review ready-to-publish</button><button class="btn primary" id="dNew">${icon('plus')} New product</button></div></div>
+ <div class="kpi-row">
+  <div class="tile hover" data-go="products"><div class="tile-cap">${icon('products')} Products</div><div class="tile-num">${ps.length}</div><div class="tile-sub"><strong>${published}</strong> published · <strong>${(byStatus.draft||[]).length}</strong> draft</div></div>
+  <div class="tile hover" data-go="quality"><div class="tile-cap">${icon('quality')} Avg completeness</div><div class="tile-num ${avg>=80?'green':avg>=50?'yellow':'red'}">${avg}%</div><div class="tile-sub"><strong>${lowQ}</strong> products below 50%</div></div>
+  <div class="tile hover" data-go="workflow"><div class="tile-cap">${icon('workflow')} Open tasks</div><div class="tile-num ${openTasks?'yellow':'green'}">${openTasks}</div><div class="tile-sub">approvals & translations</div></div>
+  <div class="tile hover" data-go="channels"><div class="tile-cap">${icon('channels')} Channels</div><div class="tile-num blue">${api.channels.all().length}</div><div class="tile-sub">${LOCALES.length} locales active</div></div>
+ </div>
+ <div class="grid cols-2">
+  <div class="card"><div class="card-head"><h3>Completeness by category</h3><span class="ch-sub">avg score · product count</span></div><div class="card-body">${catBars.map(c=>`<div class="bar-row"><span class="bl">${esc(c.name)}</span><span class="bt"><span class="bf" style="width:${c.avg}%;background:${c.avg>=80?'var(--green)':c.avg>=50?'var(--yellow)':'var(--red)'}"></span></span><span class="bn">${c.avg}%</span><span class="bn" style="width:34px">${c.count}</span></div>`).join('')}</div></div>
+  <div class="card"><div class="card-head"><h3>Channel readiness</h3><span class="ch-sub">products ready to syndicate</span></div><div class="card-body">${chrows.map(r=>`<div class="bar-row"><span class="bl"><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${r.ch.color};margin-right:7px"></span>${esc(r.ch.name)}</span><span class="bt"><span class="bf" style="width:${r.pct}%;background:${r.ch.color}"></span></span><span class="bn">${r.ready}/${ps.length}</span></div>`).join('')}</div></div>
+ </div>
+ <div class="grid cols-2" style="margin-top:14px">
+  <div class="card"><div class="card-head"><h3>Needs attention</h3><div class="spacer"></div><span class="ch-sub">lowest completeness</span></div><div class="card-body" id="dAttention"></div></div>
+  <div class="card"><div class="card-head"><h3>Recent activity</h3><div class="spacer"></div><span class="ch-sub">audit trail</span></div><div class="card-body" id="dActivity"></div></div>
+ </div>`;
+ // attention list
+ const worst=ps.map(p=>({p,c:engine.completeness(p).pct})).sort((a,b)=>a.c-b.c).slice(0,6);
+ $('#dAttention').innerHTML=worst.map(({p,c})=>`<div class="req-item" data-prod="${p.id}" style="cursor:pointer"><img class="prod-thumb" style="width:30px;height:30px" src="${productThumb(p)}"><span class="rq-name">${esc(p.name)}</span><span class="quality-bar" style="width:70px"><span class="quality-fill" data-q="${qBand(c)}" style="width:${c}%"></span></span><span class="quality-pct ${qBand(c)}">${c}%</span></div>`).join('');
+ $$('#dAttention [data-prod]').forEach(el=>el.onclick=()=>openProduct(el.dataset.prod));
+ // activity
+ $('#dActivity').innerHTML=DB().auditLog.slice(0,7).map(a=>{const us=api.users.get(a.userId);return `<div class="req-item" style="background:transparent;border:none;padding:6px 0"><span class="avatar" style="width:26px;height:26px;font-size:9px;background:${us?us.color:'#888'}">${us?initials(us.name):'?'}</span><span class="rq-name"><strong style="color:var(--white)">${esc(us?us.name.split(' ')[0]:'System')}</strong> ${esc(a.summary.toLowerCase())} <span class="muted">· ${esc(a.entityName||'')}</span></span><span class="muted" style="font-size:11px">${timeAgo(a.ts)}</span></div>`}).join('');
+ root.querySelectorAll('[data-go]').forEach(el=>el.onclick=()=>go(el.dataset.go));
+ $('#dNew').onclick=()=>createProductFlow();
+ $('#dPublishables').onclick=()=>{go('channels')};
+};
+
+/* placeholder used until catalog module loads */
+function openProduct(id){ go('products'); setTimeout(()=>{ if(Views._openProduct)Views._openProduct(id) },60) }
+function createProductFlow(){ if(Views._createProduct)return Views._createProduct(); ui.toast('Product editor module still loading…') }
+
+/* ============================================================================
+   CATALOG + PRODUCT EDITOR
+   ========================================================================== */
+function statusPill(s){return `<span class="pill ${s}"><span class="dot"></span>${esc(STATUS_LABEL[s]||s)}</span>`}
+function qualityCell(pct){const q=qBand(pct);return `<span class="quality-cell"><span class="quality-bar"><span class="quality-fill" data-q="${q}" style="width:${pct}%"></span></span><span class="quality-pct ${q}">${pct}%</span></span>`}
+function catName(id){if(!id)return '<span class="muted">Uncategorized</span>';return api.categories.path(id).map(x=>esc(x.name)).join(' › ')}
+function catPlain(id){if(!id)return '';return api.categories.path(id).map(c=>c.name).join(' > ')}
+function localeName(code){const l=LOCALES.find(x=>x.code===code);return l?l.name:code}
+function valDisplay(d,v){if(v==null||v==='')return '';if(d.type==='boolean')return v?'Yes':'No';if(d.type==='price')return fmtMoney(v);if(d.type==='measurement')return v+' '+(d.unit||'');if(Array.isArray(v))return v.join(', ');if(d.localizable&&typeof v==='object')return String(v[DEFAULT_LOCALE]||'').replace(/<[^>]+>/g,'').slice(0,80);return String(v).replace(/<[^>]+>/g,'').slice(0,80)}
+function categoryOptions(selected){const out=[];const walk=(pid,depth)=>{api.categories.children(pid).forEach(c=>{out.push(`<option value="${c.id}" ${selected===c.id?'selected':''}>${' '.repeat(depth)}${esc(c.name)}</option>`);walk(c.id,depth+1)})};walk(null,0);return out.join('')}
+function productsToCSV(prods){const cols=['sku','name','type','category','status','brand','price','completeness'];const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};const rows=prods.map(p=>[p.sku,p.name,(api.types.get(p.productTypeId)||{}).name||'',catPlain(p.categoryId),p.status,p.attributes.at_brand||'',p.attributes.at_price||'',engine.completeness(p).pct]);return [cols.join(',')].concat(rows.map(r=>r.map(q).join(','))).join('\n')}
+
+const catalogState={q:'',status:'all',category:'all',comp:'all',sort:'updated',dir:-1,sel:new Set()};
+
+Views.products=function(root){
+ const paint=()=>{
+  const all=api.products.all();
+  let list=all.slice();
+  const q=catalogState.q.trim().toLowerCase();
+  if(q)list=list.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)||String(p.attributes.at_brand||'').toLowerCase().includes(q));
+  if(catalogState.status!=='all')list=list.filter(p=>p.status===catalogState.status);
+  if(catalogState.category!=='all'){const sub=api.categories.subtree(catalogState.category);list=list.filter(p=>sub.includes(p.categoryId))}
+  if(catalogState.comp!=='all')list=list.filter(p=>{const c=engine.completeness(p).pct;return catalogState.comp==='complete'?c>=80:catalogState.comp==='incomplete'?c<50:(c>=50&&c<80)});
+  const keyf={name:p=>p.name.toLowerCase(),status:p=>p.status,price:p=>+p.attributes.at_price||0,completeness:p=>engine.completeness(p).pct,updated:p=>p.updatedAt}[catalogState.sort]||(p=>p.updatedAt);
+  list.sort((a,b)=>{const x=keyf(a),y=keyf(b);return (x<y?-1:x>y?1:0)*catalogState.dir});
+  const statuses=[['all','All']].concat(LIFECYCLE.map(s=>[s.key,s.label]));
+  const cnt=s=>s==='all'?all.length:all.filter(p=>p.status===s).length;
+  const allOn=list.length&&list.every(p=>catalogState.sel.has(p.id));
+  root.innerHTML=`
+   <div class="page-head"><div><h1>Products</h1><p>${list.length} of ${all.length} products · click any row to open the full editor.</p></div>
+    <div class="ph-actions"><button class="btn" id="cExport">${icon('importexport')} Export</button>${state.can('edit')?`<button class="btn primary" id="cNew">${icon('plus')} New product</button>`:''}</div></div>
+   <div class="toolbar">
+    <div class="filter-pills">${statuses.map(([k,l])=>`<span class="filter-pill ${catalogState.status===k?'active':''}" data-status="${k}">${esc(l)}<span class="c">${cnt(k)}</span></span>`).join('')}</div>
+    <div class="toolbar-spacer"></div>
+    <select class="input sm" id="cCat" style="width:auto;max-width:170px"><option value="all">All categories</option>${api.categories.all().filter(c=>!c.parentId).map(c=>`<option value="${c.id}" ${catalogState.category===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+    <select class="input sm" id="cComp" style="width:auto"><option value="all">Any completeness</option><option value="complete" ${catalogState.comp==='complete'?'selected':''}>Complete (≥80%)</option><option value="mid" ${catalogState.comp==='mid'?'selected':''}>Partial</option><option value="incomplete" ${catalogState.comp==='incomplete'?'selected':''}>Incomplete (&lt;50%)</option></select>
+    <input class="input sm" id="cSearch" placeholder="Filter…" style="width:150px" value="${esc(catalogState.q)}">
+   </div>
+   <div id="cBulk"></div>
+   <div class="table-wrap"><table class="fpu"><thead><tr>
+    <th class="checkcol"><span class="checkbox ${allOn?'on':''}" id="cAll">${icon('check')}</span></th>
+    <th class="sortable ${catalogState.sort==='name'?'sorted':''}" data-sort="name">Product</th>
+    <th>Category</th><th>Type</th>
+    <th class="sortable ${catalogState.sort==='status'?'sorted':''}" data-sort="status">Status</th>
+    <th class="sortable ${catalogState.sort==='completeness'?'sorted':''}" data-sort="completeness">Completeness</th>
+    <th class="sortable ${catalogState.sort==='price'?'sorted':''}" data-sort="price">Price</th>
+    <th class="sortable ${catalogState.sort==='updated'?'sorted':''}" data-sort="updated">Updated</th>
+   </tr></thead><tbody>${list.length?list.map(p=>{const c=engine.completeness(p).pct;const t=api.types.get(p.productTypeId);return `<tr data-id="${p.id}" class="${catalogState.sel.has(p.id)?'selected':''}">
+    <td class="checkcol"><span class="checkbox ${catalogState.sel.has(p.id)?'on':''}" data-check="${p.id}">${icon('check')}</span></td>
+    <td><div class="prod-cell"><img class="prod-thumb" src="${productThumb(p)}" loading="lazy"><span><span class="product-name">${esc(p.name)}</span><span class="product-sku">${esc(p.sku)}</span></span></div></td>
+    <td style="font-size:12px">${catName(p.categoryId)}</td>
+    <td><span class="muted">${esc(t?t.name:'—')}</span></td>
+    <td>${statusPill(p.status)}</td>
+    <td>${qualityCell(c)}</td>
+    <td class="mono">${fmtMoney(p.attributes.at_price)}</td>
+    <td class="muted">${timeAgo(p.updatedAt)}</td>
+   </tr>`}).join(''):`<tr><td colspan="8"><div class="empty"><h2>No products match</h2><p>Adjust your filters or create a new product.</p></div></td></tr>`}</tbody></table></div>`;
+  // bulk bar
+  const bulk=root.querySelector('#cBulk');const n=catalogState.sel.size;
+  if(n){bulk.innerHTML=`<div class="tile" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-color:rgba(61,116,244,0.35);background:rgba(61,116,244,0.06)"><strong style="color:var(--white)">${n} selected</strong><div style="flex:1"></div>
+    <select class="input sm" id="bStatus" style="width:auto"><option value="">Set status…</option>${LIFECYCLE.map(s=>`<option value="${s.key}">${esc(s.label)}</option>`).join('')}</select>
+    <select class="input sm" id="bCat" style="width:auto"><option value="">Move to category…</option>${api.categories.all().filter(c=>!c.parentId).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
+    <button class="btn small" id="bExport">Export</button>${state.can('delete')?`<button class="btn danger small" id="bDelete">${icon('trash')} Delete</button>`:''}<button class="btn ghost small" id="bClear">Clear</button></div>`;
+   bulk.querySelector('#bStatus').onchange=e=>{if(!e.target.value)return;catalogState.sel.forEach(id=>api.products.setStatus(id,e.target.value));ui.toast(n+' products → '+STATUS_LABEL[e.target.value],'success');catalogState.sel.clear();paint()};
+   bulk.querySelector('#bCat').onchange=e=>{if(!e.target.value)return;catalogState.sel.forEach(id=>api.products.update(id,{categoryId:e.target.value},'Moved category'));ui.toast(n+' products moved','success');catalogState.sel.clear();paint()};
+   bulk.querySelector('#bExport').onclick=()=>{const sel=Array.from(catalogState.sel).map(id=>api.products.get(id));download('products-selection.csv',productsToCSV(sel),'text/csv');ui.toast('Exported '+sel.length+' products','success')};
+   const bd=bulk.querySelector('#bDelete');if(bd)bd.onclick=()=>ui.confirm('Delete '+n+' products? This cannot be undone.',()=>{catalogState.sel.forEach(id=>api.products.remove(id));catalogState.sel.clear();paint();ui.toast('Deleted','success')},{danger:true,yes:'Delete'});
+   bulk.querySelector('#bClear').onclick=()=>{catalogState.sel.clear();paint()};
+  } else bulk.innerHTML='';
+  // wire
+  const cn=root.querySelector('#cNew');if(cn)cn.onclick=createProductFlowImpl;
+  root.querySelector('#cExport').onclick=()=>{download('products-all.csv',productsToCSV(list),'text/csv');ui.toast('Exported '+list.length+' products','success')};
+  root.querySelectorAll('[data-status]').forEach(el=>el.onclick=()=>{catalogState.status=el.dataset.status;paint()});
+  root.querySelector('#cCat').onchange=e=>{catalogState.category=e.target.value;paint()};
+  root.querySelector('#cComp').onchange=e=>{catalogState.comp=e.target.value;paint()};
+  const sb=root.querySelector('#cSearch');sb.oninput=()=>{catalogState.q=sb.value;const pos=sb.selectionStart;paint();const ns=root.querySelector('#cSearch');ns.focus();try{ns.setSelectionRange(pos,pos)}catch(e){}};
+  root.querySelectorAll('[data-sort]').forEach(el=>el.onclick=()=>{if(catalogState.sort===el.dataset.sort)catalogState.dir*=-1;else{catalogState.sort=el.dataset.sort;catalogState.dir=el.dataset.sort==='name'?1:-1}paint()});
+  root.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>openProductDrawer(tr.dataset.id));
+  root.querySelectorAll('[data-check]').forEach(cb=>cb.onclick=e=>{e.stopPropagation();const id=cb.dataset.check;catalogState.sel.has(id)?catalogState.sel.delete(id):catalogState.sel.add(id);paint()});
+  root.querySelector('#cAll').onclick=()=>{if(allOn)list.forEach(p=>catalogState.sel.delete(p.id));else list.forEach(p=>catalogState.sel.add(p.id));paint()};
+ };
+ paint();
+};
+
+function createProductFlowImpl(){
+ if(!state.can('edit'))return ui.toast('Your current role cannot create products','error');
+ ui.modal({title:'New product',body:`
+  <div class="field"><label>Name <span class="req-star">*</span></label><input class="input" id="npName" placeholder="e.g. Wireless Charging Pad"></div>
+  <div class="field-row"><div class="field"><label>Product type</label><select class="input" id="npType">${api.types.all().map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div>
+  <div class="field"><label>Category</label><select class="input" id="npCat"><option value="">— Uncategorized —</option>${categoryOptions(null)}</select></div></div>`,
+  actions:[{label:'Cancel',close:true},{label:'Create & edit',cls:'primary',onClick:(mb)=>{const name=mb.querySelector('#npName').value.trim()||'Untitled product';const ptId=mb.querySelector('#npType').value;const catId=mb.querySelector('#npCat').value||null;const sku=ptId.split('_')[1].slice(0,3).toUpperCase()+'-'+(1000+api.products.all().length);const p=api.products.create({name,productTypeId:ptId,categoryId:catId,sku,variantAxes:ptId==='pt_apparel'?['color','size']:ptId==='pt_electronics'?['color']:[]});setTimeout(()=>openProductDrawer(p.id),60)}}],
+  onOpen:(mb)=>setTimeout(()=>mb.querySelector('#npName').focus(),50)
+ });
+}
+Views._createProduct=createProductFlowImpl;
+Views._openProduct=id=>openProductDrawer(id);
+
+/* ---------- product editor drawer ---------- */
+let editorState={id:null,tab:'overview',loc:DEFAULT_LOCALE,axisPick:new Set()};
+function openProductDrawer(id){const p=api.products.get(id);if(!p)return;editorState={id,tab:'overview',loc:DEFAULT_LOCALE,axisPick:new Set()};ui.openDrawer(editorHTML(),{wide:true,onOpen:wireEditor})}
+function refreshEditor(){if(!ui.drawerOpen)return;const d=$('#drawer');d.innerHTML=editorHTML();wireEditor()}
+function closeEditor(){ui.closeDrawer();renderRoute()}
+
+function tabWarnings(p){const comp=engine.completeness(p);const val=engine.validate(p);const locWarn=api.locales.active().some(l=>l.code!==DEFAULT_LOCALE&&engine.localeCompleteness(p,l.code)<100);const chWarn=['approved','published'].includes(p.status)&&api.channels.all().some(c=>!engine.channelReadiness(p,c).ready);return{completeness:comp.pct<100||val.length>0,localization:locWarn,channels:chWarn}}
+function statusActions(p){const a=[];if(p.status==='draft'&&state.can('edit'))a.push(['review','Submit for review','primary']);if(p.status==='review'){if(state.can('approve'))a.push(['approved','Approve','success']);a.push(['draft','Send back','']);}if(p.status==='approved'){if(state.can('publish'))a.push(['published','Publish','success']);a.push(['draft','Back to draft','']);}if(p.status==='published')a.push(['archived','Archive','']);if(p.status==='archived')a.push(['draft','Restore','']);if(!a.length)return '<span class="save-state">Auto-saved · '+timeAgo(p.updatedAt)+'</span>';return a.map(([s,l,c])=>`<button class="btn ${c} small" data-setstatus="${s}">${esc(l)}</button>`).join('')}
+function editorHTML(){
+ const p=api.products.get(editorState.id);if(!p)return '<div class="empty"><h2>Product not found</h2></div>';
+ const comp=engine.completeness(p);const warns=tabWarnings(p);
+ const tabs=[['overview','Overview'],['attributes','Attributes'],['variants','Variants'+(p.variants.length?` <span class="tcount">${p.variants.length}</span>`:'')],['media','Media'],['localization','Localization'],['relationships','Relationships'],['channels','Channels'],['completeness','Completeness'],['history','History']];
+ const body={overview:tabOverview,attributes:tabAttributes,variants:tabVariants,media:tabMedia,localization:tabLocalization,relationships:tabRelationships,channels:tabChannels,completeness:tabCompleteness,history:tabHistory}[editorState.tab](p);
+ return `
+  <div class="drawer-head">
+   <img class="prod-thumb" style="width:54px;height:54px" src="${productThumb(p)}">
+   <div class="drawer-head-main"><h2>${esc(p.name)}</h2><div class="sku">${esc(p.sku)} <span>·</span> ${statusPill(p.status)} <span>·</span> <span id="edScore" class="quality-pct ${comp.q}">${comp.pct}% complete</span></div></div>
+   <button class="drawer-close" data-close>×</button>
+  </div>
+  <div class="drawer-tabs">${tabs.map(([k,l])=>`<span class="drawer-tab ${editorState.tab===k?'active':''}" data-tab="${k}">${l}${warns[k]?' <span class="warn"></span>':''}</span>`).join('')}</div>
+  <div class="drawer-body">${body}</div>
+  <div class="drawer-foot"><button class="btn ai" id="edAI">${icon('ai')} AI enrich</button><div class="spacer"></div>${statusActions(p)}</div>`;
+}
+function updateEditorChrome(){const p=api.products.get(editorState.id);if(!p)return;const comp=engine.completeness(p);const el=$('#edScore');if(el){el.textContent=comp.pct+'% complete';el.className='quality-pct '+comp.q}const warns=tabWarnings(p);$$('#drawer .drawer-tab').forEach(t=>{const k=t.dataset.tab;let w=t.querySelector('.warn');if(warns[k]){if(!w){w=document.createElement('span');w.className='warn';t.appendChild(w)}}else if(w)w.remove()})}
+
+const AI_FIELD={at_desc:'description',at_short:'shortDescription',at_seotitle:'seoTitle',at_seodesc:'seoDescription'};
+function attrControl(p,def,loc){
+ const v=def.localizable?attrValue(p,def.id,loc):p.attributes[def.id];
+ const da=`data-attr="${def.id}" data-locale="${loc}"`;
+ switch(def.type){
+  case 'richtext':case 'textarea':return `<textarea class="input" data-kind="area" ${da} rows="${def.type==='richtext'?5:3}">${esc(v||'')}</textarea>`;
+  case 'number':case 'decimal':return `<input class="input" type="number" data-kind="num" ${da} value="${v!=null?esc(v):''}">`;
+  case 'measurement':return `<div style="display:flex;gap:8px;align-items:center"><input class="input" type="number" data-kind="num" ${da} value="${v!=null?esc(v):''}"><span class="muted">${esc(def.unit||'')}</span></div>`;
+  case 'price':return `<div style="position:relative"><span class="muted" style="position:absolute;left:11px;top:9px">$</span><input class="input" type="number" step="0.01" data-kind="num" ${da} value="${v!=null?esc(v):''}" style="padding-left:24px"></div>`;
+  case 'boolean':return `<div class="switch ${v?'on':''}" data-kind="bool" ${da}></div>`;
+  case 'select':return `<select class="input" data-kind="select" ${da}><option value="">— none —</option>${def.options.map(o=>`<option ${v===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  case 'multiselect':{const arr=Array.isArray(v)?v:[];return `<div class="chips">${def.options.map(o=>`<span class="filter-pill ${arr.includes(o)?'active':''}" data-kind="multi" ${da} data-opt="${esc(o)}">${esc(o)}</span>`).join('')}</div>`}
+  case 'date':return `<input class="input" type="date" data-kind="date" ${da} value="${esc(v||'')}">`;
+  case 'url':return `<input class="input" type="text" data-kind="url" ${da} value="${esc(v||'')}" placeholder="https://">`;
+  case 'media':return `<div class="muted" style="font-size:12px">Managed in the <strong>Media</strong> tab.</div>`;
+  default:return `<input class="input" type="text" data-kind="text" ${da} value="${esc(v||'')}">`;
+ }
+}
+function attrField(p,def,loc){const ai=AI_FIELD[def.id];return `<div class="field"><label>${esc(def.name)}${def.localizable?` <span class="localized-tag">${loc}</span>`:''}${def.required?'<span class="req-star">*</span>':''}${ai?`<button class="btn ai small" data-ai-task="${ai}" data-ai-attr="${def.id}" data-ai-locale="${loc}" style="float:right;padding:1px 8px">${icon('ai')} AI</button>`:''}</label>${attrControl(p,def,loc)}${def.help?`<div class="hint">${esc(def.help)}</div>`:''}</div>`}
+
+function tabOverview(p){
+ const brandDef=api.attributes.get('at_brand'),priceDef=api.attributes.get('at_price'),descDef=api.attributes.getByKey('description'),shortDef=api.attributes.getByKey('shortDescription');
+ return `
+  <div class="field-row"><div class="field"><label>Product name <span class="req-star">*</span></label><input class="input" data-field="name" value="${esc(p.name)}"></div><div class="field" style="max-width:170px"><label>SKU</label><input class="input mono" data-field="sku" value="${esc(p.sku)}"></div></div>
+  <div class="field-row"><div class="field"><label>Product type</label><select class="input" data-field="productTypeId">${api.types.all().map(x=>`<option value="${x.id}" ${p.productTypeId===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+   <div class="field"><label>Category <button class="btn ai small" data-ai-cat style="float:right;padding:1px 8px">${icon('ai')} Suggest</button></label><select class="input" data-field="categoryId"><option value="">— Uncategorized —</option>${categoryOptions(p.categoryId)}</select></div></div>
+  <div class="field-row">${attrField(p,brandDef,DEFAULT_LOCALE)}${attrField(p,priceDef,DEFAULT_LOCALE)}</div>
+  <div class="section-cap">Marketing copy<span class="line"></span></div>
+  ${attrField(p,shortDef,DEFAULT_LOCALE)}
+  ${attrField(p,descDef,DEFAULT_LOCALE)}`;
+}
+function tabAttributes(p){
+ const loc=editorState.loc||DEFAULT_LOCALE;const defs=api.attributes.forType(p.productTypeId);const hasLoc=defs.some(d=>d.localizable);
+ let html=hasLoc?`<div class="toggle-row" style="background:var(--surface2);padding:9px 12px;border-radius:8px;margin-bottom:16px"><span class="tr-label">Editing locale</span><select class="input sm" id="edLoc" style="width:auto">${api.locales.active().map(l=>`<option value="${l.code}" ${loc===l.code?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>`:'';
+ api.groups.all().forEach(g=>{const gd=defs.filter(d=>d.groupId===g.id);if(!gd.length)return;html+=`<div class="section-cap">${esc(g.name)}<span class="line"></span></div>`+gd.map(d=>attrField(p,d,d.localizable?loc:DEFAULT_LOCALE)).join('')});
+ return html;
+}
+function tabVariants(p){
+ if(!p.variantAxes||!p.variantAxes.length){const sel=api.attributes.forType(p.productTypeId).filter(a=>a.type==='select'||a.type==='multiselect');return `<div class="notice">${icon('products')}<div>This product has no variant axes. Variants let one product carry multiple SKUs — e.g. <strong>color × size</strong> — each with its own stock and price.</div></div><div class="field"><label>Choose variant axes</label><div class="chips">${sel.length?sel.map(a=>`<span class="filter-pill ${editorState.axisPick.has(a.key)?'active':''}" data-axis="${a.key}">${esc(a.name)}</span>`).join(''):'<span class="muted">No select-type attributes available for this product type.</span>'}</div></div><button class="btn primary" id="vGen" ${editorState.axisPick.size?'':'disabled'}>${icon('plus')} Create variant matrix</button>`}
+ const axes=p.variantAxes;
+ return `<div class="section-cap">Variants <span class="count">${p.variants.length}</span><span class="line"></span><button class="btn small" id="vAdd">${icon('plus')} Add</button></div>
+  <div class="table-wrap"><table class="fpu"><thead><tr><th>SKU</th>${axes.map(a=>`<th>${esc(a)}</th>`).join('')}<th>Stock</th><th>Price</th><th></th></tr></thead><tbody>
+  ${p.variants.map(v=>`<tr style="cursor:default"><td class="mono">${esc(v.sku)}</td>${axes.map(a=>`<td>${esc(v.axes[a]||'—')}</td>`).join('')}<td><input class="input sm" type="number" data-vstock="${v.id}" value="${v.stock}" style="width:78px"></td><td><input class="input sm" type="number" step="0.01" data-vprice="${v.id}" value="${v.price}" style="width:90px"></td><td><span class="btn ghost small" data-vdel="${v.id}">${icon('trash')}</span></td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function tabMedia(p){
+ const assets=(p.assetIds||[]).map(id=>api.assets.get(id)).filter(Boolean);
+ return `<div class="section-cap">Linked media <span class="count">${assets.length}</span><span class="line"></span><button class="btn small" id="mLink">${icon('plus')} Link asset</button></div>
+  ${assets.length?`<div class="grid cols-2">${assets.map(a=>`<div class="tile" style="display:flex;gap:12px;padding:12px"><img class="prod-thumb" style="width:60px;height:60px" src="${assetSrc(a)}"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><strong style="color:var(--white);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.name)}</strong>${p.primaryAssetId===a.id?'<span class="pill published" style="padding:1px 7px">Primary</span>':''}</div><div class="field" style="margin:8px 0 0"><label style="display:flex;justify-content:space-between;align-items:center">Alt text <button class="btn ai small" data-ai-alt="${a.id}" style="padding:1px 7px">${icon('ai')}</button></label><input class="input sm" data-alt="${a.id}" value="${esc((a.alt&&a.alt[DEFAULT_LOCALE])||'')}" placeholder="Describe image…"></div><div style="display:flex;gap:6px;margin-top:8px">${p.primaryAssetId!==a.id?`<button class="btn small" data-setprimary="${a.id}">Set primary</button>`:''}<button class="btn ghost small" data-unlink="${a.id}">Unlink</button></div></div></div>`).join('')}</div>`:`<div class="empty"><h2>No media linked</h2><p>Link an asset from the library.</p></div>`}`;
+}
+function tabLocalization(p){
+ const locs=api.locales.active();const defs=api.attributes.forType(p.productTypeId).filter(a=>a.localizable);
+ return `<div class="notice">${icon('localization')}<div>Translate localizable content across ${locs.length} locales. Use <strong>AI translate</strong> to draft from ${DEFAULT_LOCALE}, then refine.</div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${locs.map(l=>{const c=engine.localeCompleteness(p,l.code);return `<div class="tile" style="padding:10px 12px;flex:1;min-width:128px"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:12px;color:var(--white)">${esc(l.code)}</strong>${l.code===DEFAULT_LOCALE?'<span class="pill blue" style="padding:1px 7px">Source</span>':`<button class="btn ai small" data-translate="${l.code}" style="padding:1px 7px">${icon('ai')}</button>`}</div><div class="quality-bar" style="width:100%;margin-top:8px"><div class="quality-fill" data-q="${qBand(c)}" style="width:${c}%"></div></div><div class="muted" style="font-size:10px;margin-top:4px">${c}% · ${esc(l.name)}</div></div>`}).join('')}</div>
+  <div class="table-wrap"><table class="fpu"><thead><tr><th>Attribute</th>${locs.map(l=>`<th>${esc(l.code)}</th>`).join('')}</tr></thead><tbody>
+   ${defs.map(d=>`<tr style="cursor:default"><td><strong style="color:var(--white)">${esc(d.name)}</strong></td>${locs.map(l=>{const v=attrValue(p,d.id,l.code);return `<td style="cursor:pointer" data-loccell="${d.id}|${l.code}">${isFilled(v)?`<span class="muted" style="display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(String(v).replace(/<[^>]+>/g,''))}</span>`:'<span style="color:var(--red);opacity:.65">— empty —</span>'}</td>`}).join('')}</tr>`).join('')}
+  </tbody></table></div>`;
+}
+function tabRelationships(p){
+ return [['crosssell','Cross-sell'],['upsell','Up-sell'],['accessories','Accessories'],['bundle','Bundle with']].map(([k,label])=>{const ids=p.relationships[k]||[];return `<div class="section-cap">${esc(label)} <span class="count">${ids.length}</span><span class="line"></span><button class="btn small" data-reladd="${k}">${icon('plus')} Add</button></div><div class="chips" style="margin-bottom:14px">${ids.length?ids.map(id=>{const rp=api.products.get(id);return rp?`<span class="chip"><img class="prod-thumb" style="width:22px;height:22px;border-radius:5px" src="${productThumb(rp)}">${esc(rp.name)}<span class="x" data-reldel="${k}|${id}">×</span></span>`:''}).join(''):'<span class="muted" style="font-size:12px">None linked.</span>'}</div>`}).join('');
+}
+function tabChannels(p){
+ return api.channels.all().map(ch=>{const r=engine.channelReadiness(p,ch);const pub=p.channelStatus[ch.id]==='published';return `<div class="tile" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:50%;background:${ch.color};flex-shrink:0"></span><strong style="color:var(--white)">${esc(ch.name)}</strong><span class="pill ${pub?'published':r.ready?'approved':'draft'}" style="margin-left:4px">${pub?'Published':r.ready?'Ready':'Not ready'}</span><div style="flex:1"></div>${pub?`<button class="btn small" data-unpub="${ch.id}">Unpublish</button>`:`<button class="btn ${r.ready?'success':''} small" data-pub="${ch.id}" ${r.ready?'':'disabled'}>${icon('publish')} Publish</button>`}</div>${r.missing.length?`<div class="muted" style="font-size:11px;margin-top:8px">Missing required: ${r.missing.map(m=>esc(m.name)).join(', ')}</div>`:''}${!r.statusOK?`<div class="muted" style="font-size:11px;margin-top:6px">Product must be Approved or Published first.</div>`:''}<div class="muted" style="font-size:10px;margin-top:8px">Locales: ${ch.locales.join(', ')}</div></div>`}).join('');
+}
+function tabCompleteness(p){
+ const comp=engine.completeness(p);const val=engine.validate(p);const req=requiredAttrsFor(p).map(id=>api.attributes.get(id)).filter(Boolean);
+ return `<div class="tile" style="display:flex;align-items:center;gap:18px;margin-bottom:16px"><div style="font-size:42px;font-weight:800;min-width:88px;color:var(--${comp.q==='high'?'green':comp.q==='mid'?'yellow':'red'})">${comp.pct}%</div><div style="flex:1"><div class="quality-bar" style="width:100%;height:8px"><div class="quality-fill" data-q="${comp.q}" style="width:${comp.pct}%"></div></div><div class="muted" style="font-size:11px;margin-top:6px">${comp.filled} of ${comp.total} required complete${val.length?` · <span style="color:var(--orange)">${val.length} validation issue${val.length>1?'s':''}</span>`:''}</div></div><button class="btn ai" id="cFill">${icon('ai')} Fill gaps</button></div>
+  <div class="section-cap">Required attributes<span class="line"></span></div>
+  ${req.map(d=>{const v=d.localizable?attrValue(p,d.id,DEFAULT_LOCALE):p.attributes[d.id];const ok=isFilled(v);return `<div class="req-item ${ok?'pass':'fail'}"><span class="req-icon">${ok?'✓':'!'}</span><span class="rq-name">${esc(d.name)}</span><span class="rq-val">${ok?esc(valDisplay(d,v)):'<span style="color:var(--red)">missing</span>'}</span></div>`}).join('')}
+  ${val.length?`<div class="section-cap">Validation issues<span class="line"></span></div>${val.map(e=>`<div class="req-item fail"><span class="req-icon">!</span><span class="rq-name">${esc(e.msg)}</span><span class="muted" style="font-size:11px">${esc(e.locale||'')}</span></div>`).join('')}`:''}`;
+}
+function tabHistory(p){const entries=DB().auditLog.filter(a=>a.entityId===p.id);if(!entries.length)return '<div class="empty"><h2>No history yet</h2><p>Edits to this product will appear here.</p></div>';return `<div class="timeline">${entries.map(a=>{const u=api.users.get(a.userId);return `<div class="tl-item"><div class="tl-action">${esc(a.summary)}</div><div class="tl-meta">${u?esc(u.name):'System'} · ${fmtDate(a.ts)} · ${timeAgo(a.ts)}</div></div>`}).join('')}</div>`}
+
+async function runFieldAI(btn){const task=btn.dataset.aiTask,aid=btn.dataset.aiAttr,loc=btn.dataset.aiLocale||DEFAULT_LOCALE;const p=api.products.get(editorState.id);btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';const payload={product:p,locale:loc};if(task==='translate')payload.text=attrValue(p,aid,DEFAULT_LOCALE);const out=await ai.run(task,payload);api.products.setAttr(p.id,aid,out,loc);ui.toast('AI updated '+((api.attributes.get(aid)||{}).name||'field'),'ai');refreshEditor()}
+function aiEnrichModal(p){
+ ui.modal({title:'AI enrich — '+p.name,body:`<p class="muted" style="margin-bottom:12px">Generate content with the ${DB().settings.aiProvider==='live'?'live model':'built-in simulated'} provider. Toggle what to run:</p>
+  ${[['description','Marketing description'],['seo','SEO title + meta description'],['fill','Fill missing required attributes'],['category','Suggest category'],['translate','Translate to all active locales']].map(([k,l])=>`<div class="toggle-row"><span class="tr-label">${esc(l)}</span><span class="switch on" data-enr="${k}"></span></div>`).join('')}<div id="enrLog" style="margin-top:12px"></div>`,
+  actions:[{label:'Cancel',close:true},{label:'Run',cls:'ai',close:false,onClick:async(mb)=>{const sel=Array.from(mb.querySelectorAll('[data-enr].on')).map(e=>e.dataset.enr);const log=mb.querySelector('#enrLog');const run=mb.querySelector('[data-act="1"]');run.disabled=true;run.innerHTML='<span class="spinner"></span> Running…';
+   for(const k of sel){log.innerHTML+=`<div class="muted" style="font-size:12px;margin-bottom:3px">${icon('ai')} ${esc(k)}…</div>`;
+    if(k==='description'){api.products.setAttr(p.id,'at_desc',await ai.run('description',{product:p}),DEFAULT_LOCALE)}
+    else if(k==='seo'){api.products.setAttr(p.id,'at_seotitle',await ai.run('seoTitle',{product:p}),DEFAULT_LOCALE);api.products.setAttr(p.id,'at_seodesc',await ai.run('seoDescription',{product:p}),DEFAULT_LOCALE)}
+    else if(k==='fill'){const o=await ai.run('suggestAttributes',{product:p});Object.entries(o).forEach(([aid,val])=>api.products.setAttr(p.id,aid,val))}
+    else if(k==='category'){const o=await ai.run('suggestCategory',{product:p});if(o.categoryId)api.products.update(p.id,{categoryId:o.categoryId},'AI set category')}
+    else if(k==='translate'){for(const l of api.locales.active()){if(l.code===DEFAULT_LOCALE)continue;for(const d of api.attributes.forType(p.productTypeId).filter(a=>a.localizable)){const src=attrValue(p,d.id,DEFAULT_LOCALE);if(isFilled(src)&&!isFilled(attrValue(p,d.id,l.code)))api.products.setAttr(p.id,d.id,await ai.run('translate',{product:p,text:src,locale:l.code}),l.code)}}}
+   }
+   ui.toast('AI enrichment complete','ai');mb.querySelector('[data-close]').click();refreshEditor()}}],
+  onOpen:(mb)=>mb.querySelectorAll('[data-enr]').forEach(s=>s.onclick=()=>s.classList.toggle('on'))});
+}
+function pickProducts(opts){const list=api.products.all().filter(p=>!(opts.exclude||[]).includes(p.id));ui.modal({title:opts.title||'Select product',lg:true,body:`<input class="input" id="ppSearch" placeholder="Search products…" style="margin-bottom:12px"><div id="ppList" style="max-height:50vh;overflow:auto"></div>`,actions:[{label:'Close',close:true}],onOpen:(mb)=>{const paint=q=>{const items=list.filter(p=>!q||p.name.toLowerCase().includes(q.toLowerCase())||p.sku.toLowerCase().includes(q.toLowerCase()));mb.querySelector('#ppList').innerHTML=items.length?items.map(p=>`<div class="req-item" data-pick="${p.id}" style="cursor:pointer"><img class="prod-thumb" style="width:30px;height:30px" src="${productThumb(p)}"><span class="rq-name">${esc(p.name)}</span><span class="muted mono" style="font-size:11px">${esc(p.sku)}</span></div>`).join(''):'<div class="empty"><p>No matches</p></div>';mb.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{opts.onPick(el.dataset.pick);mb.querySelector('[data-close]').click()})};paint('');mb.querySelector('#ppSearch').oninput=e=>paint(e.target.value);setTimeout(()=>mb.querySelector('#ppSearch').focus(),40)}})}
+function pickAsset(onPick){const list=api.assets.all();ui.modal({title:'Link an asset',lg:true,body:`<input class="input" id="paSearch" placeholder="Search assets…" style="margin-bottom:12px"><div id="paList" class="grid cols-3" style="max-height:52vh;overflow:auto"></div>`,actions:[{label:'Close',close:true}],onOpen:(mb)=>{const paint=q=>{const items=list.filter(a=>!q||a.name.toLowerCase().includes(q.toLowerCase()));mb.querySelector('#paList').innerHTML=items.length?items.map(a=>`<div class="tile hover" data-pa="${a.id}" style="padding:8px;text-align:center"><img class="prod-thumb" style="width:100%;height:78px;border-radius:6px" src="${assetSrc(a)}"><div style="font-size:11px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.name)}</div></div>`).join(''):'<div class="empty"><p>No assets</p></div>';mb.querySelectorAll('[data-pa]').forEach(el=>el.onclick=()=>{onPick(el.dataset.pa);mb.querySelector('[data-close]').click()})};paint('');mb.querySelector('#paSearch').oninput=e=>paint(e.target.value)}})}
+function editLocaleCell(pid,attrId,loc){const p=api.products.get(pid);const d=api.attributes.get(attrId);const cur=attrValue(p,attrId,loc)||'';const big=d.type==='richtext'||d.type==='textarea';ui.modal({title:d.name+' · '+loc,body:`${loc!==DEFAULT_LOCALE?`<div class="notice">${icon('localization')}<div><strong>Source (${DEFAULT_LOCALE}):</strong> ${esc(valDisplay(d,attrValue(p,attrId,DEFAULT_LOCALE))||'—')}</div></div>`:''}<div class="field"><label>${esc(d.name)} (${esc(loc)})</label>${big?`<textarea class="input" id="lcVal" rows="5">${esc(cur)}</textarea>`:`<input class="input" id="lcVal" value="${esc(cur)}">`}</div>`,actions:[loc!==DEFAULT_LOCALE?{label:'AI translate',cls:'ai',close:false,onClick:async(mb)=>{const b=mb.querySelector('[data-act="1"]');b.disabled=true;b.innerHTML='<span class="spinner"></span>';const tr=await ai.run('translate',{product:p,text:attrValue(p,attrId,DEFAULT_LOCALE)||'',locale:loc});mb.querySelector('#lcVal').value=tr;b.disabled=false;b.innerHTML='AI translate'}}:null,{label:'Save',cls:'primary',onClick:(mb)=>{api.products.setAttr(pid,attrId,mb.querySelector('#lcVal').value,loc);refreshEditor()}}].filter(Boolean)})}
+
+function wireEditor(){
+ const D=$('#drawer');
+ const cl=D.querySelector('[data-close]');if(cl)cl.onclick=closeEditor;$('#drawerBackdrop').onclick=closeEditor;
+ D.querySelectorAll('.drawer-tab').forEach(t=>t.onclick=()=>{editorState.tab=t.dataset.tab;refreshEditor()});
+ const ea=D.querySelector('#edAI');if(ea)ea.onclick=()=>aiEnrichModal(api.products.get(editorState.id));
+ D.querySelectorAll('[data-setstatus]').forEach(b=>b.onclick=()=>{const s=b.dataset.setstatus;const need={review:'edit',approved:'approve',published:'publish'}[s];if(need&&!state.can(need))return ui.toast('Your role cannot do that','error');api.products.setStatus(editorState.id,s);if(s==='approved')api.tasks.all().filter(t=>t.productId===editorState.id&&t.type==='approval'&&t.status==='open').forEach(t=>api.tasks.resolve(t.id));ui.toast('Status → '+STATUS_LABEL[s],'success');refreshEditor()});
+ D.querySelectorAll('[data-field]').forEach(el=>el.onchange=()=>{api.products.update(editorState.id,{[el.dataset.field]:el.value},'Edited '+el.dataset.field);refreshEditor()});
+ D.querySelectorAll('[data-attr]').forEach(el=>{const kind=el.dataset.kind,aid=el.dataset.attr,loc=el.dataset.locale;
+  if(kind==='bool')el.onclick=()=>{const p=api.products.get(editorState.id);api.products.setAttr(editorState.id,aid,p.attributes[aid]?'':true,loc);refreshEditor()};
+  else if(kind==='multi')el.onclick=()=>{const p=api.products.get(editorState.id);const arr=Array.isArray(p.attributes[aid])?p.attributes[aid].slice():[];const o=el.dataset.opt;const i=arr.indexOf(o);i>=0?arr.splice(i,1):arr.push(o);api.products.setAttr(editorState.id,aid,arr,loc);refreshEditor()};
+  else if(kind==='select'||kind==='date')el.onchange=()=>{api.products.setAttr(editorState.id,aid,el.value,loc);refreshEditor()};
+  else el.onchange=()=>{let v=el.value;if(kind==='num')v=el.value===''?'':+el.value;api.products.setAttr(editorState.id,aid,v,loc);updateEditorChrome()};
+ });
+ const elc=D.querySelector('#edLoc');if(elc)elc.onchange=()=>{editorState.loc=elc.value;refreshEditor()};
+ D.querySelectorAll('[data-ai-task]').forEach(b=>b.onclick=()=>runFieldAI(b));
+ const acb=D.querySelector('[data-ai-cat]');if(acb)acb.onclick=async()=>{acb.disabled=true;acb.innerHTML='<span class="spinner"></span>';const p=api.products.get(editorState.id);const o=await ai.run('suggestCategory',{product:p});if(o.categoryId){api.products.update(p.id,{categoryId:o.categoryId},'AI suggested category');ui.toast('Category: '+catPlain(o.categoryId)+' ('+Math.round(o.confidence*100)+'%)','ai')}refreshEditor()};
+ D.querySelectorAll('[data-ai-alt]').forEach(b=>b.onclick=async()=>{const p=api.products.get(editorState.id);b.disabled=true;b.innerHTML='<span class="spinner"></span>';const o=await ai.run('altText',{product:p});const a=api.assets.get(b.dataset.aiAlt);a.alt=a.alt||{};a.alt[DEFAULT_LOCALE]=o;store.emit();refreshEditor();ui.toast('AI alt text generated','ai')});
+ // variants
+ D.querySelectorAll('[data-axis]').forEach(el=>el.onclick=()=>{const k=el.dataset.axis;editorState.axisPick.has(k)?editorState.axisPick.delete(k):editorState.axisPick.add(k);el.classList.toggle('active');const g=D.querySelector('#vGen');if(g)g.disabled=!editorState.axisPick.size});
+ const vg=D.querySelector('#vGen');if(vg)vg.onclick=()=>{const p=api.products.get(editorState.id);const axes=Array.from(editorState.axisPick);const opts=axes.map(k=>{const def=api.attributes.getByKey(k);return def&&def.options.length?def.options.slice(0,3):['Default']});let combos=[{}];axes.forEach((k,i)=>{const nx=[];combos.forEach(c=>opts[i].forEach(o=>nx.push(Object.assign({},c,{[k]:o}))));combos=nx});p.variantAxes=axes;p.variants=combos.map(c=>({id:uid('v'),sku:p.sku+'-'+axes.map(k=>String(c[k]).slice(0,2).toUpperCase()).join(''),axes:c,stock:0,price:+p.attributes.at_price||0}));api.products.update(p.id,{},'Generated '+p.variants.length+' variants');refreshEditor()};
+ const va=D.querySelector('#vAdd');if(va)va.onclick=()=>{const p=api.products.get(editorState.id);const ax={};p.variantAxes.forEach(k=>ax[k]='');p.variants.push({id:uid('v'),sku:p.sku+'-NEW',axes:ax,stock:0,price:+p.attributes.at_price||0});store.emit();refreshEditor()};
+ D.querySelectorAll('[data-vstock]').forEach(el=>el.onchange=()=>{const p=api.products.get(editorState.id);const v=p.variants.find(x=>x.id===el.dataset.vstock);if(v){v.stock=+el.value;store.emit()}});
+ D.querySelectorAll('[data-vprice]').forEach(el=>el.onchange=()=>{const p=api.products.get(editorState.id);const v=p.variants.find(x=>x.id===el.dataset.vprice);if(v){v.price=+el.value;store.emit()}});
+ D.querySelectorAll('[data-vdel]').forEach(el=>el.onclick=()=>{const p=api.products.get(editorState.id);p.variants=p.variants.filter(x=>x.id!==el.dataset.vdel);store.emit();refreshEditor()});
+ // media
+ D.querySelectorAll('[data-alt]').forEach(el=>el.onchange=()=>{const a=api.assets.get(el.dataset.alt);a.alt=a.alt||{};el.value?a.alt[DEFAULT_LOCALE]=el.value:delete a.alt[DEFAULT_LOCALE];store.emit()});
+ D.querySelectorAll('[data-setprimary]').forEach(el=>el.onclick=()=>{api.products.update(editorState.id,{primaryAssetId:el.dataset.setprimary},'Set primary image');refreshEditor()});
+ D.querySelectorAll('[data-unlink]').forEach(el=>el.onclick=()=>{const p=api.products.get(editorState.id);p.assetIds=p.assetIds.filter(x=>x!==el.dataset.unlink);if(p.primaryAssetId===el.dataset.unlink)p.primaryAssetId=p.assetIds[0]||null;store.emit();refreshEditor()});
+ const ml=D.querySelector('#mLink');if(ml)ml.onclick=()=>pickAsset(aid=>{const p=api.products.get(editorState.id);if(!p.assetIds.includes(aid))p.assetIds.push(aid);if(!p.primaryAssetId)p.primaryAssetId=aid;store.emit();refreshEditor()});
+ // localization
+ D.querySelectorAll('[data-loccell]').forEach(el=>el.onclick=()=>{const[aid,loc]=el.dataset.loccell.split('|');editLocaleCell(editorState.id,aid,loc)});
+ D.querySelectorAll('[data-translate]').forEach(b=>b.onclick=async()=>{const loc=b.dataset.translate;const p=api.products.get(editorState.id);b.disabled=true;b.innerHTML='<span class="spinner"></span>';for(const d of api.attributes.forType(p.productTypeId).filter(a=>a.localizable)){const src=attrValue(p,d.id,DEFAULT_LOCALE);if(isFilled(src))api.products.setAttr(p.id,d.id,await ai.run('translate',{product:p,text:src,locale:loc}),loc)}ui.toast('Translated to '+loc,'ai');refreshEditor()});
+ // relationships
+ D.querySelectorAll('[data-reladd]').forEach(b=>b.onclick=()=>{const k=b.dataset.reladd;const p=api.products.get(editorState.id);pickProducts({title:'Add '+k,exclude:[p.id].concat(p.relationships[k]||[]),onPick:id=>{p.relationships[k]=p.relationships[k]||[];p.relationships[k].push(id);store.emit();refreshEditor()}})});
+ D.querySelectorAll('[data-reldel]').forEach(el=>el.onclick=()=>{const[k,id]=el.dataset.reldel.split('|');const p=api.products.get(editorState.id);p.relationships[k]=(p.relationships[k]||[]).filter(x=>x!==id);store.emit();refreshEditor()});
+ // channels
+ D.querySelectorAll('[data-pub]').forEach(b=>b.onclick=()=>{const p=api.products.get(editorState.id);const ch=b.dataset.pub;p.channelStatus[ch]='published';if(p.status==='approved')p.status='published';store.audit({entity:'product',entityId:p.id,entityName:p.name,action:'publish',summary:'Published to '+api.channels.get(ch).name});store.emit();ui.toast('Published to '+api.channels.get(ch).name,'success');refreshEditor()});
+ D.querySelectorAll('[data-unpub]').forEach(b=>b.onclick=()=>{const p=api.products.get(editorState.id);p.channelStatus[b.dataset.unpub]='unpublished';store.emit();refreshEditor()});
+ // completeness
+ const cf=D.querySelector('#cFill');if(cf)cf.onclick=async()=>{const p=api.products.get(editorState.id);cf.disabled=true;cf.innerHTML='<span class="spinner"></span> Filling…';const o=await ai.run('suggestAttributes',{product:p});Object.entries(o).forEach(([aid,val])=>api.products.setAttr(p.id,aid,val));ui.toast(Object.keys(o).length?'AI filled '+Object.keys(o).length+' attributes':'Nothing to fill','ai');refreshEditor()};
+ if(!(state.can('edit')||state.can('translate'))){D.querySelectorAll('.drawer-body input,.drawer-body textarea,.drawer-body select,.drawer-body .switch,.drawer-body .filter-pill,.drawer-body button,#edAI').forEach(el=>{el.disabled=true;el.style.opacity='0.55';el.style.pointerEvents='none'});const f=D.querySelector('.drawer-foot');if(f)f.insertAdjacentHTML('afterbegin','<span class="pill neutral" style="margin-right:auto">Read-only · '+esc(ROLES[state.user().role].label)+'</span>');}
+}
+
+/* ============================================================================
+   CATEGORIES (taxonomy)
+   ========================================================================== */
+const catView={selected:null,expanded:new Set()};
+function renderTree(pid){return api.categories.children(pid).map(c=>{const kids=api.categories.children(c.id);const open=catView.expanded.has(c.id);return `<div class="tree-node"><div class="tree-row ${catView.selected===c.id?'active':''}" data-cat="${c.id}"><span class="tw ${open?'open':''}" data-toggle="${c.id}" style="${kids.length?'':'visibility:hidden'}">${icon('chevron')}</span><span class="t-name">${esc(c.name)}</span><span class="t-count">${api.categories.count(c.id)}</span></div>${open&&kids.length?`<div class="tree-children">${renderTree(c.id)}</div>`:''}</div>`}).join('')}
+function catDetail(){
+ const c=catView.selected?api.categories.get(catView.selected):null;
+ if(!c)return `<div class="card"><div class="card-body"><div class="empty"><div class="ico">${icon('categories')}</div><h2>Select a category</h2><p>Pick a node from the tree to view its products and settings.</p></div></div></div>`;
+ const kids=api.categories.children(c.id);const direct=api.products.all().filter(p=>p.categoryId===c.id);
+ return `<div class="card"><div class="card-head"><h3>${esc(catPlain(c.id))}</h3><div class="spacer"></div>${state.can('model')?`<button class="btn small" id="caEdit">${icon('edit')} Rename</button> <button class="btn danger small" id="caDel">${icon('trash')}</button>`:''}</div><div class="card-body">
+  <div class="kpi-row" style="margin-bottom:16px"><div class="tile"><div class="tile-cap">Products (incl. sub)</div><div class="tile-num">${api.categories.count(c.id)}</div></div><div class="tile"><div class="tile-cap">Direct</div><div class="tile-num">${direct.length}</div></div><div class="tile"><div class="tile-cap">Subcategories</div><div class="tile-num">${kids.length}</div></div></div>
+  <div class="field-row"><div class="field"><label>Default product type</label><select class="input" id="caType" ${state.can('model')?'':'disabled'}><option value="">— none —</option>${api.types.all().map(x=>`<option value="${x.id}" ${c.productTypeId===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="field"><label>Parent</label><select class="input" id="caParent" ${state.can('model')?'':'disabled'}><option value="">— top level —</option>${api.categories.all().filter(x=>x.id!==c.id&&!api.categories.subtree(c.id).includes(x.id)).map(x=>`<option value="${x.id}" ${c.parentId===x.id?'selected':''}>${esc(catPlain(x.id))}</option>`).join('')}</select></div></div>
+  ${state.can('model')?`<button class="btn small" id="caAddChild">${icon('plus')} Add subcategory</button>`:''}
+  ${direct.length?`<div class="section-cap">Products in this category<span class="line"></span></div>${direct.slice(0,10).map(p=>`<div class="req-item" data-prod="${p.id}" style="cursor:pointer"><img class="prod-thumb" style="width:28px;height:28px" src="${productThumb(p)}"><span class="rq-name">${esc(p.name)}</span>${qualityCell(engine.completeness(p).pct)} ${statusPill(p.status)}</div>`).join('')}`:''}
+ </div></div>`;
+}
+Views.categories=function(root){
+ const paint=()=>{
+  root.innerHTML=`<div class="page-head"><div><h1>Categories</h1><p>Your product taxonomy — ${api.categories.all().length} categories in ${api.categories.children(null).length} top-level groups.</p></div><div class="ph-actions">${state.can('model')?`<button class="btn primary" id="catAdd">${icon('plus')} Add top-level</button>`:''}</div></div>
+   <div class="grid" style="grid-template-columns:328px 1fr;align-items:start">
+    <div class="card"><div class="card-body" id="catTree">${renderTree(null)||'<div class="muted">No categories yet.</div>'}</div></div>
+    <div id="catDetail">${catDetail()}</div></div>`;
+  root.querySelectorAll('[data-toggle]').forEach(el=>el.onclick=e=>{e.stopPropagation();const id=el.dataset.toggle;catView.expanded.has(id)?catView.expanded.delete(id):catView.expanded.add(id);paint()});
+  root.querySelectorAll('[data-cat]').forEach(el=>el.onclick=()=>{catView.selected=el.dataset.cat;catView.expanded.add(el.dataset.cat);paint()});
+  const ca=root.querySelector('#catAdd');if(ca)ca.onclick=()=>{const c=api.categories.create({name:'New category',parentId:null});catView.selected=c.id;paint()};
+  const ct=root.querySelector('#caType');if(ct)ct.onchange=()=>{api.categories.update(catView.selected,{productTypeId:ct.value||null});paint()};
+  const cp=root.querySelector('#caParent');if(cp)cp.onchange=()=>{api.categories.update(catView.selected,{parentId:cp.value||null});paint()};
+  const ce=root.querySelector('#caEdit');if(ce)ce.onclick=()=>{const c=api.categories.get(catView.selected);ui.modal({title:'Rename category',body:`<div class="field"><label>Name</label><input class="input" id="rnVal" value="${esc(c.name)}"></div>`,actions:[{label:'Cancel',close:true},{label:'Save',cls:'primary',onClick:mb=>{api.categories.update(catView.selected,{name:mb.querySelector('#rnVal').value});paint()}}],onOpen:mb=>setTimeout(()=>mb.querySelector('#rnVal').select(),40)})};
+  const cdl=root.querySelector('#caDel');if(cdl)cdl.onclick=()=>ui.confirm('Delete this category and all its subcategories? Affected products become Uncategorized.',()=>{api.categories.remove(catView.selected);catView.selected=null;paint()},{danger:true,yes:'Delete'});
+  const cac=root.querySelector('#caAddChild');if(cac)cac.onclick=()=>{const c=api.categories.create({name:'New subcategory',parentId:catView.selected});catView.expanded.add(catView.selected);catView.selected=c.id;paint()};
+  root.querySelectorAll('#catDetail [data-prod]').forEach(el=>el.onclick=()=>openProductDrawer(el.dataset.prod));
+ };
+ paint();
+};
+
+/* ============================================================================
+   DATA MODEL (attributes, groups, product types)
+   ========================================================================== */
+const modelState={tab:'attributes'};
+function modelBody(){
+ if(modelState.tab==='groups')return `<div class="card"><div class="card-body">${api.groups.all().map(g=>`<div class="req-item" style="justify-content:space-between"><span class="rq-name"><strong style="color:var(--white)">${esc(g.name)}</strong></span><span class="muted">${api.attributes.all().filter(a=>a.groupId===g.id).length} attributes</span></div>`).join('')}${state.can('model')?`<button class="btn small" id="mgAdd" style="margin-top:12px">${icon('plus')} Add group</button>`:''}</div></div>`;
+ if(modelState.tab==='types')return `<div class="grid cols-2">${api.types.all().map(t=>{const reqs=t.required.map(id=>(api.attributes.get(id)||{}).name).filter(Boolean);return `<div class="card"><div class="card-head"><h3>${esc(t.name)}</h3><div class="spacer"></div><span class="muted">${api.products.all().filter(p=>p.productTypeId===t.id).length} products</span></div><div class="card-body"><div class="label">Required attributes (${reqs.length})</div><div class="chips" style="margin-top:8px">${reqs.map(r=>`<span class="chip">${esc(r)}</span>`).join('')||'<span class="muted">none</span>'}</div>${state.can('model')?`<button class="btn small" data-type-edit="${t.id}" style="margin-top:14px">${icon('edit')} Edit requirements</button>`:''}</div></div>`}).join('')}</div>`;
+ return `<div class="table-wrap"><table class="fpu"><thead><tr><th>Attribute</th><th>Key</th><th>Type</th><th>Group</th><th>Flags</th><th>Applies to</th></tr></thead><tbody>
+  ${api.attributes.all().map(a=>`<tr ${state.can('model')?`data-attr-edit="${a.id}"`:'style="cursor:default"'}><td><strong style="color:var(--white)">${esc(a.name)}</strong></td><td class="mono muted">${esc(a.key)}</td><td><span class="pill neutral">${esc(ATTR_TYPES[a.type]||a.type)}</span></td><td>${esc((api.groups.get(a.groupId)||{}).name||'—')}</td><td>${a.required?'<span class="pill blue" style="padding:1px 7px">required</span> ':''}${a.localizable?'<span class="pill" style="padding:1px 7px;background:rgba(56,189,248,.12);color:var(--cyan);border:1px solid rgba(56,189,248,.3)">i18n</span>':''}</td><td class="muted" style="font-size:11px">${a.appliesTo==='all'?'All types':(a.appliesTo||[]).map(id=>(api.types.get(id)||{}).name).filter(Boolean).join(', ')}</td></tr>`).join('')}
+ </tbody></table></div>`;
+}
+Views.model=function(root){
+ const paint=()=>{
+  root.innerHTML=`<div class="page-head"><div><h1>Data model</h1><p>The attributes, groups and product types that shape every product. ${api.attributes.all().length} attributes · ${api.types.all().length} product types.</p></div><div class="ph-actions">${modelState.tab==='attributes'&&state.can('model')?`<button class="btn primary" id="mAdd">${icon('plus')} New attribute</button>`:''}</div></div>
+   <div class="filter-pills" style="margin-bottom:18px">${[['attributes','Attributes'],['groups','Groups'],['types','Product Types']].map(([k,l])=>`<span class="filter-pill ${modelState.tab===k?'active':''}" data-mtab="${k}">${esc(l)}</span>`).join('')}</div>
+   <div>${modelBody()}</div>`;
+  root.querySelectorAll('[data-mtab]').forEach(el=>el.onclick=()=>{modelState.tab=el.dataset.mtab;paint()});
+  const ma=root.querySelector('#mAdd');if(ma)ma.onclick=()=>attrEditModal(null,paint);
+  root.querySelectorAll('[data-attr-edit]').forEach(el=>el.onclick=()=>attrEditModal(el.dataset.attrEdit,paint));
+  const mg=root.querySelector('#mgAdd');if(mg)mg.onclick=()=>ui.modal({title:'Add attribute group',body:`<div class="field"><label>Name</label><input class="input" id="grpName" placeholder="e.g. Sustainability"></div>`,actions:[{label:'Cancel',close:true},{label:'Add',cls:'primary',onClick:mb=>{const n=mb.querySelector('#grpName').value.trim();if(n){DB().attributeGroups.push({id:uid('grp'),name:n,order:DB().attributeGroups.length+1});store.emit();paint()}}}],onOpen:mb=>setTimeout(()=>mb.querySelector('#grpName').focus(),40)});
+  root.querySelectorAll('[data-type-edit]').forEach(el=>el.onclick=()=>typeReqModal(el.dataset.typeEdit,paint));
+ };
+ paint();
+};
+function attrEditModal(id,onSave){
+ const a=id?Object.assign({},api.attributes.get(id)):{name:'',type:'text',groupId:'grp_general',localizable:false,required:false,options:[],unit:'',appliesTo:'all',help:''};
+ a.options=(a.options||[]).slice();
+ ui.modal({title:id?'Edit attribute':'New attribute',body:`
+  <div class="field-row"><div class="field"><label>Name</label><input class="input" id="aeName" value="${esc(a.name)}"></div><div class="field"><label>Type</label><select class="input" id="aeType">${Object.entries(ATTR_TYPES).map(([k,l])=>`<option value="${k}" ${a.type===k?'selected':''}>${esc(l)}</option>`).join('')}</select></div></div>
+  <div class="field-row"><div class="field"><label>Group</label><select class="input" id="aeGroup">${api.groups.all().map(g=>`<option value="${g.id}" ${a.groupId===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select></div><div class="field"><label>Applies to</label><select class="input" id="aeApplies"><option value="all" ${a.appliesTo==='all'?'selected':''}>All product types</option>${api.types.all().map(t=>`<option value="${t.id}" ${Array.isArray(a.appliesTo)&&a.appliesTo.includes(t.id)?'selected':''}>${esc(t.name)} only</option>`).join('')}</select></div></div>
+  <div class="field" id="aeOpts" style="${(a.type==='select'||a.type==='multiselect')?'':'display:none'}"><label>Options</label><div class="chips" id="aeChips"></div></div>
+  <div class="field" id="aeUnit" style="${a.type==='measurement'?'':'display:none'}"><label>Unit</label><input class="input" id="aeUnitV" value="${esc(a.unit||'')}" placeholder="e.g. g, cm, ml"></div>
+  <div class="toggle-row"><span><span class="tr-label">Localizable</span><div class="tr-sub">Holds a separate value per locale</div></span><div class="switch ${a.localizable?'on':''}" id="aeLoc"></div></div>
+  <div class="toggle-row"><span><span class="tr-label">Required</span><div class="tr-sub">Counts toward the completeness score</div></span><div class="switch ${a.required?'on':''}" id="aeReq"></div></div>`,
+  actions:[id&&state.can('model')?{label:'Delete',cls:'danger',close:false,onClick:mb=>ui.confirm('Delete attribute "'+a.name+'"? It is removed from all products.',()=>{api.attributes.remove(id);mb.querySelector('[data-close]').click();onSave&&onSave()},{danger:true,yes:'Delete'})}:null,{label:'Cancel',close:true},{label:'Save',cls:'primary',onClick:mb=>{const data={name:mb.querySelector('#aeName').value.trim()||'Untitled',type:mb.querySelector('#aeType').value,groupId:mb.querySelector('#aeGroup').value,localizable:mb.querySelector('#aeLoc').classList.contains('on'),required:mb.querySelector('#aeReq').classList.contains('on'),options:a.options,unit:mb.querySelector('#aeUnitV').value,appliesTo:mb.querySelector('#aeApplies').value==='all'?'all':[mb.querySelector('#aeApplies').value]};if(id)api.attributes.update(id,data);else{data.key=(data.name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''))||('attr'+_uid);api.attributes.create(data)}onSave&&onSave()}}].filter(Boolean),
+  onOpen:mb=>{const renderChips=()=>{const ch=mb.querySelector('#aeChips');ch.innerHTML=a.options.map((o,i)=>`<span class="chip">${esc(o)}<span class="x" data-oi="${i}">×</span></span>`).join('')+`<input class="input sm" id="aeOptIn" placeholder="add option + Enter" style="width:150px">`;ch.querySelectorAll('[data-oi]').forEach(x=>x.onclick=()=>{a.options.splice(+x.dataset.oi,1);renderChips()});const inp=mb.querySelector('#aeOptIn');inp.onkeydown=e=>{if(e.key==='Enter'&&inp.value.trim()){a.options.push(inp.value.trim());renderChips();mb.querySelector('#aeOptIn').focus()}}};renderChips();
+   mb.querySelector('#aeType').onchange=e=>{const t=e.target.value;mb.querySelector('#aeOpts').style.display=(t==='select'||t==='multiselect')?'':'none';mb.querySelector('#aeUnit').style.display=t==='measurement'?'':'none'};
+   mb.querySelector('#aeLoc').onclick=function(){this.classList.toggle('on')};mb.querySelector('#aeReq').onclick=function(){this.classList.toggle('on')};
+   setTimeout(()=>mb.querySelector('#aeName').focus(),40)}});
+}
+function typeReqModal(typeId,onSave){
+ const t=api.types.get(typeId);const applicable=api.attributes.all().filter(a=>a.appliesTo==='all'||(Array.isArray(a.appliesTo)&&a.appliesTo.includes(typeId)));const req=new Set(t.required);
+ ui.modal({title:'Required attributes — '+t.name,lg:true,body:`<p class="muted" style="margin-bottom:12px">Toggle which attributes a ${esc(t.name)} product needs to be considered complete.</p><div style="max-height:52vh;overflow:auto">${applicable.map(a=>`<div class="toggle-row"><span class="tr-label">${esc(a.name)} <span class="muted">· ${esc(ATTR_TYPES[a.type])}</span></span><div class="switch ${req.has(a.id)?'on':''}" data-req="${a.id}"></div></div>`).join('')}</div>`,actions:[{label:'Cancel',close:true},{label:'Save',cls:'primary',onClick:mb=>{const sel=Array.from(mb.querySelectorAll('[data-req].on')).map(e=>e.dataset.req);api.types.update(typeId,{required:sel});onSave&&onSave()}}],onOpen:mb=>mb.querySelectorAll('[data-req]').forEach(s=>s.onclick=()=>s.classList.toggle('on'))});
+}
+
+/* ============================================================================
+   DIGITAL ASSETS (DAM)
+   ========================================================================== */
+const assetView={q:'',type:'all'};
+Views.assets=function(root){
+ const paint=()=>{
+  let list=api.assets.all();
+  if(assetView.type!=='all')list=list.filter(a=>a.type===assetView.type);
+  if(assetView.q){const q=assetView.q.toLowerCase();list=list.filter(a=>a.name.toLowerCase().includes(q)||(a.tags||[]).join(' ').toLowerCase().includes(q))}
+  const linkedCount=a=>api.products.all().filter(p=>(p.assetIds||[]).includes(a.id)).length;
+  root.innerHTML=`<div class="page-head"><div><h1>Digital assets</h1><p>${api.assets.all().length} assets — images linked across the catalog.</p></div><div class="ph-actions">${state.can('edit')?`<button class="btn primary" id="asUpload">${icon('plus')} Upload image</button><button class="btn" id="asNew">New placeholder</button>`:''}</div></div>
+   <div class="toolbar"><div class="filter-pills">${[['all','All'],['image','Images'],['document','Documents']].map(([k,l])=>`<span class="filter-pill ${assetView.type===k?'active':''}" data-atype="${k}">${esc(l)}</span>`).join('')}</div><div class="toolbar-spacer"></div><input class="input sm" id="asSearch" placeholder="Search assets &amp; tags…" style="width:200px" value="${esc(assetView.q)}"></div>
+   <input type="file" id="asFile" accept="image/*" style="display:none">
+   <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:14px">${list.length?list.map(a=>`<div class="tile hover" data-asset="${a.id}" style="padding:10px"><img src="${assetSrc(a)}" style="width:100%;height:118px;object-fit:cover;border-radius:8px;background:var(--surface2)"><div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.name)}</div><div class="muted" style="font-size:10px;margin-top:2px">${linkedCount(a)} product${linkedCount(a)===1?'':'s'} · ${esc(a.type)}</div></div>`).join(''):'<div class="empty"><h2>No assets match</h2></div>'}</div>`;
+  root.querySelectorAll('[data-atype]').forEach(el=>el.onclick=()=>{assetView.type=el.dataset.atype;paint()});
+  const ss=root.querySelector('#asSearch');if(ss)ss.oninput=()=>{assetView.q=ss.value;const pos=ss.selectionStart;paint();const ns=root.querySelector('#asSearch');ns.focus();try{ns.setSelectionRange(pos,pos)}catch(e){}};
+  root.querySelectorAll('[data-asset]').forEach(el=>el.onclick=()=>assetModal(el.dataset.asset,paint));
+  const an=root.querySelector('#asNew');if(an)an.onclick=()=>{const a=api.assets.create({name:'Placeholder '+(api.assets.all().length+1),color:pick(['#3D74F4','#A78BFF','#34D399','#EC672B','#38BDF8']),glyph:'IMG'});assetModal(a.id,paint)};
+  const au=root.querySelector('#asUpload');if(au)au.onclick=()=>root.querySelector('#asFile').click();
+  const af=root.querySelector('#asFile');if(af)af.onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{api.assets.create({name:f.name,type:'image',source:'data',url:rd.result});ui.toast('Uploaded '+f.name,'success');paint()};rd.readAsDataURL(f)};
+ };
+ paint();
+};
+function assetModal(id,onSave){
+ const a=api.assets.get(id);const linked=api.products.all().filter(p=>(p.assetIds||[]).includes(id));
+ ui.modal({title:a.name,lg:true,body:`<div style="display:flex;gap:18px;flex-wrap:wrap"><img src="${assetSrc(a)}" style="width:200px;height:200px;object-fit:cover;border-radius:10px;flex-shrink:0;background:var(--surface2)"><div style="flex:1;min-width:240px">
+   <div class="field"><label>Name</label><input class="input" id="amName" value="${esc(a.name)}"></div>
+   <div class="field"><label>Alt text (${DEFAULT_LOCALE}) <button class="btn ai small" id="amAlt" style="float:right;padding:1px 8px">${icon('ai')} AI</button></label><input class="input" id="amAltV" value="${esc((a.alt&&a.alt[DEFAULT_LOCALE])||'')}"></div>
+   <div class="field"><label>Tags</label><input class="input" id="amTags" value="${esc((a.tags||[]).join(', '))}" placeholder="comma, separated"></div>
+   <div class="label">Linked products (${linked.length})</div><div class="chips" style="margin-top:6px">${linked.map(p=>`<span class="chip" data-prod="${p.id}" style="cursor:pointer">${esc(p.name)}</span>`).join('')||'<span class="muted">Not linked to any product yet.</span>'}</div>
+  </div></div>`,
+  actions:[state.can('edit')?{label:'Delete',cls:'danger',close:false,onClick:mb=>ui.confirm('Delete this asset? It will be unlinked from all products.',()=>{api.assets.remove(id);mb.querySelector('[data-close]').click();onSave&&onSave()},{danger:true,yes:'Delete'})}:null,{label:'Close',close:true},{label:'Save',cls:'primary',onClick:mb=>{a.name=mb.querySelector('#amName').value;a.alt=a.alt||{};const av=mb.querySelector('#amAltV').value;av?a.alt[DEFAULT_LOCALE]=av:delete a.alt[DEFAULT_LOCALE];a.tags=mb.querySelector('#amTags').value.split(',').map(s=>s.trim()).filter(Boolean);store.emit();onSave&&onSave()}}].filter(Boolean),
+  onOpen:mb=>{mb.querySelector('#amAlt').onclick=async function(){this.disabled=true;this.innerHTML='<span class="spinner"></span>';const o=await ai.run('altText',{product:{name:a.name,attributes:{}}});mb.querySelector('#amAltV').value=o;this.disabled=false;this.innerHTML=icon('ai')+' AI'};mb.querySelectorAll('[data-prod]').forEach(el=>el.onclick=()=>{mb.querySelector('[data-close]').click();openProductDrawer(el.dataset.prod)})}});
+}
+
+/* ============================================================================
+   CHANNELS & SYNDICATION
+   ========================================================================== */
+Views.channels=function(root){
+ const paint=()=>{
+  const ps=api.products.all();
+  root.innerHTML=`<div class="page-head"><div><h1>Channels &amp; syndication</h1><p>${api.channels.all().length} sales channels — each with its own requirements, locale set and export feed.</p></div></div>
+   <div class="grid cols-2">${api.channels.all().map(ch=>{const ready=ps.filter(p=>engine.channelReadiness(p,ch).ready);const pub=ps.filter(p=>p.channelStatus[ch.id]==='published');const pct=Math.round(100*ready.length/(ps.length||1));return `<div class="card"><div class="card-head"><span style="width:12px;height:12px;border-radius:50%;background:${ch.color}"></span><h3>${esc(ch.name)}</h3><div class="spacer"></div>${state.can('model')?`<button class="btn ghost small" data-ched="${ch.id}">${icon('edit')}</button>`:''}</div><div class="card-body">
+     <div class="bar-row"><span class="bl">Ready to publish</span><span class="bt"><span class="bf" style="width:${pct}%;background:${ch.color}"></span></span><span class="bn">${ready.length}/${ps.length}</span></div>
+     <div class="kpi-row" style="margin:12px 0 14px"><div class="tile" style="padding:11px"><div class="tile-cap">Published</div><div class="tile-num" style="font-size:22px">${pub.length}</div></div><div class="tile" style="padding:11px"><div class="tile-cap">Locales</div><div class="tile-num" style="font-size:22px">${ch.locales.length}</div></div></div>
+     <div class="label">Required attributes</div><div class="chips" style="margin:6px 0 14px">${ch.required.map(id=>`<span class="chip">${esc((api.attributes.get(id)||{}).name||id)}</span>`).join('')}</div>
+     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" data-feed="${ch.id}|csv">${icon('importexport')} CSV feed</button><button class="btn small" data-feed="${ch.id}|json">JSON feed</button><button class="btn ghost small" data-chview="${ch.id}">View ready (${ready.length})</button></div>
+    </div></div>`}).join('')}</div>`;
+  root.querySelectorAll('[data-feed]').forEach(b=>b.onclick=()=>{const[cid,fmt]=b.dataset.feed.split('|');exportFeed(cid,fmt)});
+  root.querySelectorAll('[data-ched]').forEach(b=>b.onclick=()=>channelEditModal(b.dataset.ched,paint));
+  root.querySelectorAll('[data-chview]').forEach(b=>b.onclick=()=>{const ch=api.channels.get(b.dataset.chview);const ready=api.products.all().filter(p=>engine.channelReadiness(p,ch).ready);ui.modal({title:'Ready for '+ch.name+' ('+ready.length+')',lg:true,body:ready.length?ready.map(p=>`<div class="req-item" data-prod="${p.id}" style="cursor:pointer"><img class="prod-thumb" style="width:28px;height:28px" src="${productThumb(p)}"><span class="rq-name">${esc(p.name)}</span>${p.channelStatus[ch.id]==='published'?'<span class="pill published" style="padding:1px 7px">Published</span>':'<span class="pill approved" style="padding:1px 7px">Ready</span>'}</div>`).join(''):'<div class="empty"><p>No products are ready for this channel yet.</p></div>',actions:[{label:'Close',close:true}],onOpen:mb=>mb.querySelectorAll('[data-prod]').forEach(el=>el.onclick=()=>{mb.querySelector('[data-close]').click();openProductDrawer(el.dataset.prod)})})});
+ };
+ paint();
+};
+function exportFeed(cid,fmt){const ch=api.channels.get(cid);const ready=api.products.all().filter(p=>engine.channelReadiness(p,ch).ready);if(!ready.length)return ui.toast('No products are ready for '+ch.name+' yet','error');const rows=ready.map(p=>{const o={sku:p.sku,name:p.name};ch.required.forEach(aid=>{const d=api.attributes.get(aid);if(d)o[d.key]=d.localizable?(attrValue(p,aid,DEFAULT_LOCALE)||''):(p.attributes[aid]==null?'':p.attributes[aid])});o.price=p.attributes.at_price;return o});if(fmt==='json'){download(ch.key+'-feed.json',JSON.stringify(rows,null,2),'application/json')}else{const cols=Object.keys(rows[0]);const q=v=>{v=String(v==null?'':Array.isArray(v)?v.join('|'):v).replace(/<[^>]+>/g,'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};download(ch.key+'-feed.csv',[cols.join(',')].concat(rows.map(r=>cols.map(c=>q(r[c])).join(','))).join('\n'),'text/csv')}ui.toast('Exported '+ready.length+' products to '+ch.name,'success')}
+function channelEditModal(cid,onSave){const ch=api.channels.get(cid);const req=new Set(ch.required);ui.modal({title:'Requirements — '+ch.name,lg:true,body:`<p class="muted" style="margin-bottom:12px">Which attributes must be present for a product to be ready for ${esc(ch.name)}?</p><div style="max-height:50vh;overflow:auto">${api.attributes.all().map(a=>`<div class="toggle-row"><span class="tr-label">${esc(a.name)}</span><div class="switch ${req.has(a.id)?'on':''}" data-req="${a.id}"></div></div>`).join('')}</div>`,actions:[{label:'Cancel',close:true},{label:'Save',cls:'primary',onClick:mb=>{api.channels.update(cid,{required:Array.from(mb.querySelectorAll('[data-req].on')).map(e=>e.dataset.req)});onSave&&onSave()}}],onOpen:mb=>mb.querySelectorAll('[data-req]').forEach(s=>s.onclick=()=>s.classList.toggle('on'))})}
+
+/* ============================================================================
+   LOCALIZATION BOARD
+   ========================================================================== */
+Views.localization=function(root){
+ const paint=()=>{
+  const locs=api.locales.active();const ps=api.products.all();
+  const localeAvg=l=>Math.round(sum(ps.map(p=>engine.localeCompleteness(p,l.code)))/(ps.length||1));
+  root.innerHTML=`<div class="page-head"><div><h1>Localization</h1><p>Translation coverage across ${locs.length} locales and ${ps.length} products.</p></div></div>
+   <div class="kpi-row">${locs.map(l=>{const a=localeAvg(l);return `<div class="tile"><div class="tile-cap">${esc(l.code)} ${l.code===DEFAULT_LOCALE?'· source':''}</div><div class="tile-num ${a>=80?'green':a>=50?'yellow':'red'}" style="font-size:24px">${a}%</div><div class="tile-sub">${esc(l.name)}</div></div>`}).join('')}</div>
+   <div class="card"><div class="card-head"><h3>Per-product translation status</h3><div class="spacer"></div>${state.can('translate')?`<select class="input sm" id="locBulk" style="width:auto"><option value="">⚡ AI translate missing…</option>${locs.filter(l=>l.code!==DEFAULT_LOCALE).map(l=>`<option value="${l.code}">Draft missing → ${l.code}</option>`).join('')}</select>`:''}</div>
+   <div class="table-wrap"><table class="fpu"><thead><tr><th>Product</th>${locs.map(l=>`<th>${esc(l.code)}</th>`).join('')}</tr></thead><tbody>
+    ${ps.slice(0,40).map(p=>`<tr data-id="${p.id}">${[`<td><div class="prod-cell"><img class="prod-thumb" src="${productThumb(p)}"><span class="product-name">${esc(p.name)}</span></div></td>`].concat(locs.map(l=>{const c=engine.localeCompleteness(p,l.code);return `<td><span class="quality-cell" style="min-width:84px"><span class="quality-bar" style="width:50px"><span class="quality-fill" data-q="${qBand(c)}" style="width:${c}%"></span></span><span class="quality-pct ${qBand(c)}" style="font-size:11px">${c}%</span></span></td>`})).join('')}</tr>`).join('')}
+   </tbody></table></div><div class="card-body muted" style="font-size:11px">First 40 products · click a row to open its Localization tab.</div></div>`;
+  root.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>{openProductDrawer(tr.dataset.id);setTimeout(()=>{editorState.tab='localization';refreshEditor()},90)});
+  const lb=root.querySelector('#locBulk');if(lb)lb.onchange=()=>{const loc=lb.value;if(!loc)return;let n=0;ps.slice(0,40).forEach(p=>api.attributes.forType(p.productTypeId).filter(a=>a.localizable).forEach(d=>{const src=attrValue(p,d.id,DEFAULT_LOCALE);if(isFilled(src)&&!isFilled(attrValue(p,d.id,loc))){api.products.setAttr(p.id,d.id,ai._sim('translate',{product:p,text:src,locale:loc}),loc);n++}}));ui.toast('Drafted '+n+' translations → '+loc+' (simulated)','ai');paint()};
+ };
+ paint();
+};
+
+/* ============================================================================
+   WORKFLOW (governance inbox + lifecycle)
+   ========================================================================== */
+Views.workflow=function(root){
+ const paint=()=>{
+  const tasks=api.tasks.open();const me=state.user();
+  const mine=tasks.filter(t=>t.assignedRole===me.role||t.assignedUser===me.id);
+  const ps=api.products.all();const byS=groupBy(ps,p=>p.status);
+  const stages=LIFECYCLE.map(s=>({s,n:(byS[s.key]||[]).length}));
+  root.innerHTML=`<div class="page-head"><div><h1>Workflow</h1><p>Approvals, translations and the product lifecycle. ${tasks.length} open task${tasks.length===1?'':'s'} · ${mine.length} in your queue.</p></div></div>
+   <div class="card" style="margin-bottom:16px"><div class="card-head"><h3>Lifecycle pipeline</h3></div><div class="card-body"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${stages.map((x,i)=>`<div class="tile" style="flex:1;min-width:96px;text-align:center;padding:14px 8px"><div class="tile-num" style="font-size:26px">${x.n}</div><div class="tile-cap" style="justify-content:center;margin-top:4px">${esc(x.s.label)}</div></div>${i<stages.length-1?`<div style="color:var(--muted);display:flex;align-items:center">${icon('chevron')}</div>`:''}`).join('')}</div></div></div>
+   <div class="card"><div class="card-head"><h3>Task inbox</h3><div class="spacer"></div><span class="pill blue">Acting as ${esc(ROLES[me.role].label)}</span></div><div class="card-body">${tasks.length?tasks.map(t=>{const p=api.products.get(t.productId);if(!p)return '';return `<div class="req-item" style="gap:12px;padding:11px"><span class="avatar" style="width:30px;height:30px;font-size:9px;background:${t.type==='approval'?'var(--purple)':'var(--cyan)'}">${t.type==='approval'?'APR':'TR'}</span><span style="flex:1;min-width:0"><div style="font-weight:600;color:var(--white);cursor:pointer" data-prod="${p.id}">${esc(p.name)}</div><div class="muted" style="font-size:11px">${esc(t.note||'')} · ${timeAgo(t.createdAt)} · for ${esc(ROLES[t.assignedRole]?ROLES[t.assignedRole].label:'team')}</div></span>${t.type==='approval'?statusPill(p.status):'<span class="pill review" style="padding:2px 8px">Translation</span>'}<span style="display:flex;gap:6px">${t.type==='approval'&&state.can('approve')?`<button class="btn success small" data-approve="${t.id}">${icon('check')} Approve</button>`:`<button class="btn small" data-prod="${p.id}">Open</button>`}<button class="btn ghost small" data-done="${t.id}">Dismiss</button></span></div>`}).join(''):`<div class="empty"><div class="ico">${icon('check')}</div><h2>Inbox zero</h2><p>No open tasks. Submit a draft for review to create an approval task.</p></div>`}</div></div>`;
+  root.querySelectorAll('[data-prod]').forEach(el=>el.onclick=()=>openProductDrawer(el.dataset.prod));
+  root.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>{const t=api.tasks.all().find(x=>x.id===b.dataset.approve);api.products.setStatus(t.productId,'approved');api.tasks.resolve(t.id);ui.toast('Approved '+(api.products.get(t.productId)||{}).name,'success');paint()});
+  root.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>{api.tasks.resolve(b.dataset.done);paint()});
+ };
+ paint();
+};
+
+/* ============================================================================
+   AUDIT LOG
+   ========================================================================== */
+const auditView={user:'all',action:'all'};
+Views.audit=function(root){
+ const paint=()=>{
+  let log=DB().auditLog.slice();
+  if(auditView.user!=='all')log=log.filter(a=>a.userId===auditView.user);
+  if(auditView.action!=='all')log=log.filter(a=>a.action===auditView.action);
+  const actions=uniq(DB().auditLog.map(a=>a.action));
+  root.innerHTML=`<div class="page-head"><div><h1>Audit log</h1><p>${DB().auditLog.length} recorded events — every create, edit, status change and publish is captured.</p></div><div class="ph-actions"><button class="btn" id="auExport">${icon('importexport')} Export</button></div></div>
+   <div class="toolbar"><select class="input sm" id="auUser" style="width:auto"><option value="all">All users</option>${api.users.all().map(u=>`<option value="${u.id}" ${auditView.user===u.id?'selected':''}>${esc(u.name)}</option>`).join('')}</select><select class="input sm" id="auAction" style="width:auto"><option value="all">All actions</option>${actions.map(a=>`<option value="${a}" ${auditView.action===a?'selected':''}>${esc(a)}</option>`).join('')}</select><span class="toolbar-spacer"></span><span class="muted" style="font-size:12px">${log.length} events</span></div>
+   <div class="card"><div class="card-body"><div class="timeline">${log.slice(0,140).map(a=>{const u=api.users.get(a.userId);return `<div class="tl-item"><div class="tl-action">${esc(a.summary)} ${a.entityName?`<span class="muted">· ${esc(a.entityName)}</span>`:''}</div><div class="tl-meta"><span class="avatar" style="width:18px;height:18px;font-size:8px;display:inline-flex;vertical-align:middle;background:${u?u.color:'#888'}">${u?initials(u.name):'?'}</span> ${u?esc(u.name):'System'} · <span class="pill neutral" style="padding:0 7px">${esc(a.action)}</span> · ${timeAgo(a.ts)}</div></div>`}).join('')||'<div class="empty"><p>No matching events.</p></div>'}</div>${log.length>140?`<div class="muted" style="font-size:11px;margin-top:10px">Showing latest 140 of ${log.length} events.</div>`:''}</div></div>`;
+  root.querySelector('#auUser').onchange=e=>{auditView.user=e.target.value;paint()};
+  root.querySelector('#auAction').onchange=e=>{auditView.action=e.target.value;paint()};
+  root.querySelector('#auExport').onclick=()=>{const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};const rows=[['timestamp','user','action','entity','summary']].concat(log.map(a=>[new Date(a.ts).toISOString(),(api.users.get(a.userId)||{}).name||'',a.action,a.entityName||'',a.summary]));download('audit-log.csv',rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv');ui.toast('Audit log exported','success')};
+ };
+ paint();
+};
+
+/* ============================================================================
+   DATA QUALITY
+   ========================================================================== */
+Views.quality=function(root){
+ const paint=()=>{
+  const ps=api.products.all();const comps=ps.map(p=>({p,c:engine.completeness(p)}));
+  const avg=Math.round(sum(comps.map(x=>x.c.pct))/(ps.length||1));
+  const below=comps.filter(x=>x.c.pct<60).length;const withErr=ps.filter(p=>engine.validate(p).length).length;const noImg=ps.filter(p=>!p.primaryAssetId).length;
+  const buckets=[0,0,0,0,0];comps.forEach(x=>buckets[clamp(Math.floor(x.c.pct/20),0,4)]++);
+  const miss={};comps.forEach(x=>x.c.missing.forEach(m=>{miss[m.name]=(miss[m.name]||0)+1}));
+  const missTop=Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const worst=comps.slice().sort((a,b)=>a.c.pct-b.c.pct).slice(0,10);
+  const blabels=['0–20','20–40','40–60','60–80','80–100'];const bmax=Math.max(1,buckets[0],buckets[1],buckets[2],buckets[3],buckets[4]);
+  root.innerHTML=`<div class="page-head"><div><h1>Data quality</h1><p>Catalog health, validation and AI-assisted remediation.</p></div><div class="ph-actions">${state.can('edit')?`<button class="btn ai" id="qFillAll">${icon('ai')} Auto-fill missing required</button>`:''}</div></div>
+   <div class="kpi-row"><div class="tile"><div class="tile-cap">Avg completeness</div><div class="tile-num ${avg>=80?'green':avg>=50?'yellow':'red'}">${avg}%</div></div><div class="tile"><div class="tile-cap">Below 60%</div><div class="tile-num ${below?'yellow':'green'}">${below}</div></div><div class="tile"><div class="tile-cap">Validation issues</div><div class="tile-num ${withErr?'red':'green'}">${withErr}</div></div><div class="tile"><div class="tile-cap">Missing image</div><div class="tile-num ${noImg?'yellow':'green'}">${noImg}</div></div></div>
+   <div class="grid cols-2"><div class="card"><div class="card-head"><h3>Completeness distribution</h3></div><div class="card-body">${blabels.map((l,i)=>`<div class="bar-row"><span class="bl">${l}%</span><span class="bt"><span class="bf" style="width:${Math.round(100*buckets[i]/bmax)}%;background:${i<2?'var(--red)':i<3?'var(--yellow)':'var(--green)'}"></span></span><span class="bn">${buckets[i]}</span></div>`).join('')}</div></div>
+    <div class="card"><div class="card-head"><h3>Most-missing required attributes</h3></div><div class="card-body">${missTop.length?missTop.map(([n,c])=>`<div class="bar-row"><span class="bl">${esc(n)}</span><span class="bt"><span class="bf" style="width:${Math.round(100*c/ps.length)}%;background:var(--orange)"></span></span><span class="bn">${c}</span></div>`).join(''):'<div class="muted">Every required attribute is filled. 🎉</div>'}</div></div></div>
+   <div class="card" style="margin-top:14px"><div class="card-head"><h3>Needs attention</h3><div class="spacer"></div><span class="ch-sub">lowest completeness first</span></div><div class="card-body">${worst.map(({p,c})=>{const errs=engine.validate(p).length;return `<div class="req-item" data-prod="${p.id}" style="cursor:pointer"><img class="prod-thumb" style="width:30px;height:30px" src="${productThumb(p)}"><span class="rq-name">${esc(p.name)} ${errs?`<span class="pill" style="padding:0 6px;background:rgba(235,72,94,.12);color:var(--red);border:1px solid rgba(235,72,94,.3)">${errs} issue${errs>1?'s':''}</span>`:''}</span>${qualityCell(c.pct)}</div>`}).join('')}</div></div>`;
+  root.querySelectorAll('[data-prod]').forEach(el=>el.onclick=()=>openProductDrawer(el.dataset.prod));
+  const qf=root.querySelector('#qFillAll');if(qf)qf.onclick=()=>ui.confirm('Auto-fill missing required attributes across the whole catalog using simulated AI? This drafts values for you to review.',()=>{let n=0;ps.forEach(p=>{const o=ai._sim('suggestAttributes',{product:p});Object.entries(o).forEach(([aid,val])=>{api.products.setAttr(p.id,aid,val);n++})});ui.toast('AI drafted '+n+' attribute values','ai');paint()},{yes:'Auto-fill'});
+ };
+ paint();
+};
+
+/* ============================================================================
+   IMPORT / EXPORT
+   ========================================================================== */
+function splitCSV(line){const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur=''}else cur+=ch}}out.push(cur);return out}
+function parseImport(text){text=text.trim();if(!text)return [];if(text[0]==='['||text[0]==='{'){const j=JSON.parse(text);return Array.isArray(j)?j:(j.products||j.items||j.data||j.rows||[])}const lines=text.split(/\r?\n/).filter(l=>l.trim());const cols=splitCSV(lines[0]).map(c=>c.trim());return lines.slice(1).map(l=>{const cells=splitCSV(l);const o={};cols.forEach((c,i)=>o[c]=cells[i]);return o})}
+function normRow(r){const n={};Object.entries(r||{}).forEach(([k,v])=>n[String(k).toLowerCase().replace(/[^a-z0-9]/g,'')]=v);return n}
+function rowName(r){const n=normRow(r);return n.name||n.itemname||n.title||n.productname}
+const IMPORT_KEYMAP={name:'name',title:'name',productname:'name',itemname:'name',sku:'sku',articleno:'sku',price:'at_price',rrp:'at_price',rrpeur:'at_price',brand:'at_brand',description:'at_desc',shortdescription:'at_desc',desc:'at_desc',color:'at_color',colour:'at_color',material:'at_material',composition:'at_material',gtin:'at_gtin',ean:'at_gtin',size:'at_size',weightg:'at_weight',weight:'at_weight'};
+function importRows(rows){let created=0;rows.forEach(r=>{const norm=normRow(r);const name=rowName(r);if(!name)return;const catRaw=norm.category;let catId=null;if(catRaw){const c=api.categories.all().find(x=>x.name.toLowerCase()===String(catRaw).toLowerCase().trim());catId=c?c.id:null}const ptId=(catId&&api.categories.get(catId).productTypeId)||'pt_apparel';const attrs={};Object.entries(norm).forEach(([k,v])=>{const kk=IMPORT_KEYMAP[k];if(kk&&kk!=='name'&&kk!=='sku'&&v!==''&&v!=null){if(kk==='at_price'||kk==='at_weight')attrs[kk]=parseFloat(String(v).replace(/[^0-9.]/g,''))||undefined;else if(kk==='at_desc')attrs[kk]={[DEFAULT_LOCALE]:String(v)};else attrs[kk]=String(v)}});const sku=norm.sku||norm.articleno||('IMP-'+(1000+api.products.all().length));api.products.create({name:String(name),sku,categoryId:catId,productTypeId:ptId,attributes:attrs,variantAxes:ptId==='pt_apparel'?['color','size']:[]});created++});return created}
+Views.importexport=function(root){
+ let parsed=null;
+ root.innerHTML=`<div class="page-head"><div><h1>Import / Export</h1><p>Bulk-load products from CSV or JSON, or export the catalog for downstream systems.</p></div></div>
+  <div class="grid cols-2">
+   <div class="card"><div class="card-head"><h3>Import</h3></div><div class="card-body">
+    <div class="notice">${icon('importexport')}<div>Paste CSV or JSON, or upload a file. Recognized columns: <span class="mono">name, sku, price, brand, description, category, color, material, gtin</span>.</div></div>
+    <input type="file" id="impFile" accept=".csv,.json,.txt" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button class="btn" id="impUpload">${icon('plus')} Upload file</button><button class="btn" id="impSample">Load supplier sample</button></div>
+    <textarea class="input" id="impText" rows="7" placeholder="Paste CSV or JSON here…" style="font-family:'Menlo',monospace;font-size:12px"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" id="impPreview">Preview</button><button class="btn primary" id="impCommit" disabled>Import</button></div>
+    <div id="impResult" style="margin-top:12px"></div>
+   </div></div>
+   <div class="card"><div class="card-head"><h3>Export</h3></div><div class="card-body">
+    <div class="field"><label>Format</label><select class="input" id="expFmt"><option value="csv">CSV</option><option value="json">JSON (full)</option></select></div>
+    <div class="field"><label>Scope</label><select class="input" id="expScope"><option value="all">All products</option>${LIFECYCLE.map(s=>`<option value="${s.key}">${esc(s.label)} only</option>`).join('')}</select></div>
+    <button class="btn primary" id="expGo">${icon('importexport')} Export catalog</button>
+    <div class="section-cap" style="margin-top:22px">Per-channel feeds<span class="line"></span></div>
+    <div>${api.channels.all().map(ch=>`<button class="btn small" data-feed="${ch.id}|csv" style="margin:0 6px 6px 0"><span style="width:8px;height:8px;border-radius:50%;background:${ch.color};display:inline-block;margin-right:6px;vertical-align:middle"></span>${esc(ch.name)}</button>`).join('')}</div>
+   </div></div></div>`;
+ const setR=h=>root.querySelector('#impResult').innerHTML=h;
+ root.querySelector('#impUpload').onclick=()=>root.querySelector('#impFile').click();
+ root.querySelector('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{root.querySelector('#impText').value=rd.result;ui.toast('Loaded '+f.name+' — click Preview')};rd.readAsText(f)};
+ root.querySelector('#impSample').onclick=async()=>{try{const res=await fetch('sample-data/northern-textiles-spring-2026.json');root.querySelector('#impText').value=await res.text();ui.toast('Loaded supplier sample — click Preview')}catch(e){ui.toast('Could not load sample (run from the dev server)','error')}};
+ root.querySelector('#impPreview').onclick=()=>{try{parsed=parseImport(root.querySelector('#impText').value);const valid=parsed.filter(r=>r&&rowName(r));setR(`<div class="notice">${icon('check')}<div>Parsed <strong>${parsed.length}</strong> rows · <strong>${valid.length}</strong> with a usable name.${parsed[0]?` Keys: <span class="mono">${esc(Object.keys(parsed[0]).slice(0,8).join(', '))}</span>`:''}</div></div>`);root.querySelector('#impCommit').disabled=!valid.length}catch(e){setR(`<div class="notice warn">${icon('importexport')}<div>Parse error: ${esc(e.message)}</div></div>`);root.querySelector('#impCommit').disabled=true}};
+ root.querySelector('#impCommit').onclick=()=>{if(!parsed)return;const n=importRows(parsed);setR(`<div class="notice">${icon('check')}<div>Imported <strong>${n}</strong> products as drafts — find them under Products.</div></div>`);ui.toast('Imported '+n+' products','success');parsed=null;root.querySelector('#impCommit').disabled=true};
+ root.querySelector('#expGo').onclick=()=>{const fmt=root.querySelector('#expFmt').value;const scope=root.querySelector('#expScope').value;let ps=api.products.all();if(scope!=='all')ps=ps.filter(p=>p.status===scope);if(fmt==='json')download('catalog.json',JSON.stringify(ps,null,2),'application/json');else download('catalog.csv',productsToCSV(ps),'text/csv');ui.toast('Exported '+ps.length+' products','success')};
+ root.querySelectorAll('[data-feed]').forEach(b=>b.onclick=()=>{const[cid,fmt]=b.dataset.feed.split('|');exportFeed(cid,fmt)});
+};
+
+/* ============================================================================
+   SETTINGS
+   ========================================================================== */
+Views.settings=function(root){
+ const s=DB().settings;
+ root.innerHTML=`<div class="page-head"><div><h1>Settings</h1><p>Configure the AI provider, active locales and demo data.</p></div></div>
+  <div class="grid cols-2"><div>
+   <div class="card"><div class="card-head"><h3>${icon('ai')} AI provider</h3></div><div class="card-body">
+    <div class="toggle-row"><span><span class="tr-label">Use a live LLM</span><div class="tr-sub">Off = built-in simulated provider (offline, deterministic)</div></span><div class="switch ${s.aiProvider==='live'?'on':''}" id="setAiLive"></div></div>
+    <div id="liveCfg" style="${s.aiProvider==='live'?'':'opacity:.45;pointer-events:none'}">
+     <div class="field"><label>Endpoint URL</label><input class="input" id="setEndpoint" value="${esc(s.aiEndpoint)}" placeholder="https://your-proxy/ai"></div>
+     <div class="field-row"><div class="field"><label>API key</label><input class="input" id="setKey" type="password" value="${esc(s.aiKey)}" placeholder="stored locally only"></div><div class="field"><label>Model</label><input class="input" id="setModel" value="${esc(s.aiModel)}"></div></div>
+    </div>
+    <div class="notice" style="margin-top:6px">${icon('ai')}<div>Pluggable: AI actions post <span class="mono">{task,payload,model}</span> and expect <span class="mono">{result}</span>. Until a live endpoint is configured, deterministic simulated output is used so the demo always works.</div></div>
+   </div></div>
+   <div>
+   <div class="card" style="margin-bottom:14px"><div class="card-head"><h3>${icon('localization')} Active locales</h3></div><div class="card-body">${LOCALES.map(l=>`<div class="toggle-row"><span class="tr-label">${esc(l.name)} <span class="muted mono">${esc(l.code)}</span></span><div class="switch ${s.activeLocales.includes(l.code)?'on':''}" data-loc="${l.code}"></div></div>`).join('')}</div></div>
+   <div class="card"><div class="card-head"><h3>${icon('settings')} Demo data</h3></div><div class="card-body"><p class="muted" style="font-size:12px;margin-bottom:12px">Redstone PIM stores everything in your browser via localStorage — no backend. Reseed to restore the original mixed-retail catalog (70 products).</p><button class="btn danger" id="setReset">${icon('trash')} Reseed demo catalog</button></div></div>
+   </div></div>`;
+ root.querySelector('#setAiLive').onclick=()=>{s.aiProvider=s.aiProvider==='live'?'simulated':'live';store.emit()};
+ ['setEndpoint','setKey','setModel'].forEach(id=>{const el=root.querySelector('#'+id);if(el)el.onchange=()=>{s.aiEndpoint=root.querySelector('#setEndpoint').value;s.aiKey=root.querySelector('#setKey').value;s.aiModel=root.querySelector('#setModel').value;store.save()}});
+ root.querySelectorAll('[data-loc]').forEach(sw=>sw.onclick=()=>{const code=sw.dataset.loc;if(code===DEFAULT_LOCALE)return ui.toast('The source locale stays active','error');const i=s.activeLocales.indexOf(code);i>=0?s.activeLocales.splice(i,1):s.activeLocales.push(code);store.emit()});
+ root.querySelector('#setReset').onclick=()=>ui.confirm('Reseed the demo catalog? All local changes will be lost.',()=>{store.reset();ui.toast('Demo data reseeded','success');go('dashboard')},{danger:true,yes:'Reseed'});
+};
+
+/* ===== @VIEWS@ — additional view modules are inserted above this line ===== */
+
+/* ============================================================================
+   BOOT
+   ========================================================================== */
+function wireGlobal(){
+ $('#settingsBtn').onclick=()=>go('settings');
+ $('#userChip').onclick=(e)=>openUserMenu(e.currentTarget);
+ const gs=$('#globalSearch');
+ gs.addEventListener('focus',()=>openCmdk(gs.value));
+ gs.addEventListener('input',()=>{if($('#cmdk').classList.contains('open'))renderCmdk(gs.value)});
+ document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCmdk('')}
+  if(e.key==='Escape'){if($('#cmdk').classList.contains('open'))closeCmdk();else if(ui.drawerOpen)ui.closeDrawer();}
+ });
+ $('#cmdkInput').addEventListener('input',e=>renderCmdk(e.target.value));
+ $('#cmdkInput').addEventListener('keydown',cmdkKey);
+ $('#cmdk').addEventListener('click',e=>{if(e.target.id==='cmdk')closeCmdk()});
+ $('#drawerBackdrop').onclick=()=>ui.closeDrawer();
+}
+function openUserMenu(anchor){
+ const r=anchor.getBoundingClientRect();
+ const m=document.createElement('div');m.className='menu';m.style.top=(r.bottom+6)+'px';m.style.right=(window.innerWidth-r.right)+'px';
+ m.innerHTML='<div class="menu-label">Switch user / role</div>'+api.users.all().map(u=>`<div class="menu-item" data-u="${u.id}"><span class="avatar" style="width:24px;height:24px;font-size:9px;background:${u.color}">${initials(u.name)}</span><span><div style="font-weight:600">${esc(u.name)}</div><div class="muted" style="font-size:11px">${esc(ROLES[u.role].label)}</div></span>${u.id===state.user().id?'<span style="margin-left:auto;color:var(--blue)">'+icon('check')+'</span>':''}</div>`).join('');
+ document.body.appendChild(m);
+ const close=()=>{m.remove();document.removeEventListener('click',out,true)};
+ const out=e=>{if(!m.contains(e.target)&&e.target!==anchor&&!anchor.contains(e.target))close()};
+ setTimeout(()=>document.addEventListener('click',out,true),0);
+ m.querySelectorAll('[data-u]').forEach(el=>el.onclick=()=>{state.setUser(el.dataset.u);ui.toast('Now acting as '+api.users.get(el.dataset.u).name+' ('+ROLES[api.users.get(el.dataset.u).role].label+')');close()});
+}
+/* command palette */
+let cmdkSel=0, cmdkItems=[];
+function openCmdk(q){$('#cmdk').classList.add('open');const inp=$('#cmdkInput');inp.value=q||'';renderCmdk(inp.value);setTimeout(()=>inp.focus(),30)}
+function closeCmdk(){$('#cmdk').classList.remove('open');$('#globalSearch').blur()}
+function renderCmdk(q){
+ q=(q||'').trim().toLowerCase();const res=$('#cmdkResults');cmdkItems=[];
+ const navItems=NAV.flatMap(g=>g.items).filter(it=>!q||it.label.toLowerCase().includes(q));
+ const prods=q?api.products.all().filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)).slice(0,6):[];
+ let html='';
+ if(navItems.length){html+='<div class="cmdk-sec">Navigate</div>'+navItems.map(it=>{cmdkItems.push({type:'go',id:it.id});return `<div class="cmdk-item" data-i="${cmdkItems.length-1}">${icon(it.icon)}<span>${esc(it.label)}</span></div>`}).join('')}
+ if(prods.length){html+='<div class="cmdk-sec">Products</div>'+prods.map(p=>{cmdkItems.push({type:'prod',id:p.id});return `<div class="cmdk-item" data-i="${cmdkItems.length-1}"><img class="prod-thumb" style="width:22px;height:22px;border-radius:5px" src="${productThumb(p)}"><span>${esc(p.name)}</span><span class="ci-sub">${esc(p.sku)}</span></div>`}).join('')}
+ if(!q){html+='<div class="cmdk-sec">Actions</div>';[['New product','create'],['Import data','importexport'],['Reseed demo data','reset']].forEach(([l,a])=>{cmdkItems.push({type:'action',id:a});html+=`<div class="cmdk-item" data-i="${cmdkItems.length-1}">${icon(a==='create'?'plus':a==='reset'?'settings':'importexport')}<span>${esc(l)}</span></div>`})}
+ if(!cmdkItems.length)html='<div class="empty" style="padding:30px"><p>No matches for "'+esc(q)+'"</p></div>';
+ res.innerHTML=html;cmdkSel=0;hiliteCmdk();
+ res.querySelectorAll('[data-i]').forEach(el=>el.onclick=()=>runCmdk(+el.dataset.i));
+}
+function hiliteCmdk(){$$('#cmdkResults .cmdk-item').forEach((el,i)=>el.classList.toggle('sel',i===cmdkSel))}
+function cmdkKey(e){if(e.key==='ArrowDown'){e.preventDefault();cmdkSel=clamp(cmdkSel+1,0,cmdkItems.length-1);hiliteCmdk();}else if(e.key==='ArrowUp'){e.preventDefault();cmdkSel=clamp(cmdkSel-1,0,cmdkItems.length-1);hiliteCmdk();}else if(e.key==='Enter'){runCmdk(cmdkSel)}}
+function runCmdk(i){const it=cmdkItems[i];if(!it)return;closeCmdk();if(it.type==='go')go(it.id);else if(it.type==='prod')openProduct(it.id);else if(it.type==='action'){if(it.id==='create')createProductFlow();else if(it.id==='reset')ui.confirm('Reseed the demo catalog? This replaces all local changes.',()=>{store.reset();rerender();ui.toast('Demo data reseeded','success')},{yes:'Reseed',danger:true});else go(it.id)}}
+
+function boot(){
+ store.load();
+ try{const fsvg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='51,9 77,21 58,51' fill='#D23145'/><polygon points='4,55 41,45 25,77' fill='#D23145'/><polygon points='41,87 69,93 47,100' fill='#D23145'/><polygon points='17,35 48,8 47,47' fill='#1F2937'/><polygon points='44,47 76,60 38,86' fill='#1F2937'/><polygon points='13,77 35,83 19,99' fill='#1F2937'/></svg>";const fav=document.createElement('link');fav.rel='icon';fav.href='data:image/svg+xml,'+encodeURIComponent(fsvg);document.head.appendChild(fav)}catch(e){}
+ store.onChange(()=>{ renderUserChip(); renderNav(); if(Views[state.route])renderRoute(); });
+ renderUserChip();
+ if(!location.hash)location.hash='#/dashboard';
+ window.addEventListener('hashchange',()=>{renderRoute();window.scrollTo(0,0)});
+ wireGlobal();
+ renderRoute();
+}
+boot();
+</script>
+</body>
+</html>
