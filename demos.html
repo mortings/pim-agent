@@ -175,6 +175,9 @@
             <li>Honest in live: workflow, relations, publish &amp; DAM-upload are flagged, not faked</li>
           </ul>
         </div>
+        <div style="border-top:1px solid var(--border);padding:18px 30px;font-size:13px;color:var(--muted);line-height:1.65">
+          <strong style="color:var(--red)">Reality check.</strong> A few days of vibe-coding buy the <em>experience</em> — the UX, the data model, the fit-for-purpose interface. They do <strong>not</strong> buy the backend. The scaled, governed platform under an enterprise PIM — 1M+ products, 150+ languages, faceted search, workflow, audit, compliance, multi-tenancy — is a multi-year, multi-team, tens-of-millions-of-euros build. That's exactly what Bluestone already is, and exactly what the live toggle above leans on. You don't conjure a PIM out of the blue; you vibe-code the front-of-house and stand it on a real backend.
+        </div>
       </a>
     </section>
 
@@ -332,7 +335,7 @@
 <pre class="how-arch"><span class="b">Browser</span>  ─►  <span class="g">Cloudflare Worker</span>  ─►  <span class="p">Bluestone PIM MCP</span>  ─►  Bluestone PIM
 demo.html      pim-agent-proxy        jsonrpc 2.0           tenant
 shared-secret  3 Bluestone headers    tools/call</pre>
-      <p style="margin-top:16px"><strong>Redstone PIM</strong> takes it further: the same single-file app runs fully standalone on local data, and a <code>?mcp=1</code> toggle swaps its data layer onto the live tenant through the very same Worker → MCP path — real reads, real completeness scores, and attribute writes (<code>set_product_attribute</code>, <code>create_product</code>, <code>update_product_name</code>) — degrading gracefully wherever the MCP has no matching tool. Same UI, flip a switch, and it's editing your real catalog.</p>
+      <p style="margin-top:16px"><strong>Redstone PIM</strong> takes it further: the same single-file app runs fully standalone on local data, and a <code>?mcp=1</code> toggle swaps its data layer onto the live tenant through the very same Worker → MCP path — real reads, real completeness scores, and attribute writes (<code>set_product_attribute</code>, <code>create_product</code>, <code>update_product_name</code>) — degrading gracefully wherever the MCP has no matching tool. Same UI, flip a switch, and it's editing your real catalog — which is the honest division of labour: vibe-coding produced the <em>front-of-house</em> in days, while the scaled, multi-language, governed backend it depends on is a multi-year platform you keep and build on, not something you conjure from scratch.</p>
     </section>
 
     <p class="footnote">
