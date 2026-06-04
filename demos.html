@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+  <script>(function(){try{var t=localStorage.getItem('labs-theme');if(!t)t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bluestone PIM LABS — Fit-for-purpose UIs on the PIM MCP</title>
@@ -15,8 +16,23 @@
       --blue:#3D74F4; --electric:#0F05CC;
       --green:#34D399; --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --orange:#EC672B; --teal:#2DD4BF;
       --white:#111827; --muted:rgba(0,0,0,0.45); --text:rgba(0,0,0,0.78);
+      --text-soft:rgba(0,0,0,0.68); --shadow:rgba(0,0,0,0.1);
       --radius:10px;
     }
+    html[data-theme="dark"]{
+      --bg:#050D1F; --surface:#0C1829; --surface2:#111F35;
+      --border:rgba(255,255,255,0.09);
+      --white:#FFFFFF; --muted:rgba(255,255,255,0.46); --text:rgba(255,255,255,0.86);
+      --text-soft:rgba(255,255,255,0.66); --shadow:rgba(0,0,0,0.5);
+    }
+    html{transition:background-color .25s ease}
+    .theme-toggle{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .theme-toggle:hover{color:var(--text);border-color:rgba(61,116,244,0.4)}
+    .theme-toggle svg{width:16px;height:16px}
+    html[data-theme="dark"] .icon-moon{display:none}
+    html[data-theme="light"] .icon-sun{display:none}
+    .rs-shard-dark{fill:#16110F}
+    html[data-theme="dark"] .rs-shard-dark{fill:#F5F7FA}
     html,body{min-height:100%;font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
     body{background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(61,116,244,0.08),transparent 60%),var(--bg)}
 
@@ -37,7 +53,7 @@
     .hero h1{font-size:56px;font-weight:800;color:var(--white);line-height:1.08;letter-spacing:-0.02em;margin-bottom:18px;max-width:880px;margin-left:auto;margin-right:auto}
     .hero h1 .line-main{display:block}
     .hero h1 .accent{display:block;font-size:38px;margin-top:6px;background:linear-gradient(90deg,#5687f5,#A78BFF);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .hero p{font-size:16px;color:rgba(0,0,0,0.65);max-width:680px;margin:0 auto;line-height:1.55}
+    .hero p{font-size:16px;color:var(--text-soft);max-width:680px;margin:0 auto;line-height:1.55}
 
     .pitch{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:880px;margin:0 auto 60px;padding:0 8px}
     .pitch-item{text-align:center;padding:0 8px}
@@ -54,7 +70,7 @@
       transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s;
       text-decoration:none;color:inherit;
     }
-    .card:hover{transform:translateY(-2px);border-color:rgba(61,116,244,0.4);box-shadow:0 12px 32px rgba(0,0,0,0.1)}
+    .card:hover{transform:translateY(-2px);border-color:rgba(61,116,244,0.4);box-shadow:0 12px 32px var(--shadow)}
     .card-accent{height:5px}
     .card-accent.blue{background:linear-gradient(90deg,var(--blue),var(--electric))}
     .card-accent.green{background:linear-gradient(90deg,var(--green),#10b981)}
@@ -72,9 +88,9 @@
     .card-icon.teal{background:rgba(45,212,191,0.12);color:var(--teal)}
     .card-persona{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
     .card h2{font-size:20px;font-weight:700;color:var(--white);line-height:1.25;margin-bottom:8px}
-    .card-desc{font-size:13px;color:rgba(0,0,0,0.7);margin-bottom:16px;flex:1}
+    .card-desc{font-size:13px;color:var(--text-soft);margin-bottom:16px;flex:1}
     .card-points{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px}
-    .card-points li{font-size:12px;color:rgba(0,0,0,0.65);display:flex;gap:8px;line-height:1.45}
+    .card-points li{font-size:12px;color:var(--text-soft);display:flex;gap:8px;line-height:1.45}
     .card-points li::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-top:7px;flex-shrink:0}
     .pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:18px}
     .tool-pill{font-size:10px;font-weight:600;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:100px;font-family:'Menlo','SF Mono',monospace}
@@ -88,7 +104,7 @@
       max-width:880px;margin:0 auto 48px;
     }
     .how h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:8px}
-    .how p{font-size:13px;color:rgba(0,0,0,0.7);margin-bottom:16px}
+    .how p{font-size:13px;color:var(--text-soft);margin-bottom:16px}
     .how-arch{font-family:'Menlo','SF Mono',monospace;font-size:11px;line-height:1.7;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;white-space:pre;overflow-x:auto}
     .how-arch .b{color:var(--blue);font-weight:600}
     .how-arch .g{color:var(--green);font-weight:600}
@@ -118,6 +134,10 @@
       Bluestone PIM LABS
     </div>
     <div class="header-spacer"></div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark / light mode" aria-label="Toggle dark and light mode">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    </button>
     <a class="header-link" href="https://github.com/mortings/pim-agent" target="_blank" rel="noopener">View source ↗</a>
   </header>
 
@@ -152,7 +172,7 @@
         <div class="card-accent red"></div>
         <div class="card-body" style="display:grid;grid-template-columns:1.25fr 1fr;gap:30px;padding:30px">
           <div>
-            <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px"><svg width="44" height="44" viewBox="0 0 100 100" fill="none" aria-hidden="true"><polygon points="51,9 77,21 58,51" fill="#BE2434"/><polygon points="4,55 41,45 25,77" fill="#BE2434"/><polygon points="41,87 69,93 47,100" fill="#BE2434"/><polygon points="17,35 48,8 47,47" fill="#16110F"/><polygon points="44,47 76,60 38,86" fill="#16110F"/><polygon points="13,77 35,83 19,99" fill="#16110F"/></svg><div class="card-persona" style="color:var(--red);margin:0">The benchmark · standalone ↔ live tenant</div></div>
+            <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px"><svg width="44" height="44" viewBox="0 0 100 100" fill="none" aria-hidden="true"><polygon points="51,9 77,21 58,51" fill="#BE2434"/><polygon points="4,55 41,45 25,77" fill="#BE2434"/><polygon points="41,87 69,93 47,100" fill="#BE2434"/><polygon points="17,35 48,8 47,47" class="rs-shard-dark"/><polygon points="44,47 76,60 38,86" class="rs-shard-dark"/><polygon points="13,77 35,83 19,99" class="rs-shard-dark"/></svg><div class="card-persona" style="color:var(--red);margin:0">The benchmark · standalone ↔ live tenant</div></div>
             <h2 style="font-size:26px">Redstone PIM — a complete Enterprise PIM, vibe-coded from scratch</h2>
             <p class="card-desc">Not a UI on top of a PIM — this <strong>is</strong> the PIM: its own data model, completeness engine, workflow, localization and pluggable AI in one self-contained file with no backend. Then flip a single toggle and the same screens hook onto a <strong>real Bluestone tenant</strong> through the PIM MCP — live browsing, real completeness scores and attribute writes — with everything the MCP can't back clearly flagged, not faked. One vibe-coded app, two modes.</p>
             <div class="pill-row">
@@ -342,5 +362,8 @@ shared-secret  3 Bluestone headers    tools/call</pre>
       Built with the <a href="https://github.com/mortings/pim-agent" target="_blank" rel="noopener">bluestone-pim-ui</a> Claude skill on top of the Bluestone PIM MCP — see <a href="https://labs.bluestonepim.com" target="_blank" rel="noopener">labs.bluestonepim.com</a>.
     </p>
   </main>
+  <script>
+  (function(){var b=document.getElementById('themeToggle');if(!b)return;b.addEventListener('click',function(){var cur=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';var nx=cur==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',nx);try{localStorage.setItem('labs-theme',nx)}catch(e){}});})();
+  </script>
 </body>
 </html>
