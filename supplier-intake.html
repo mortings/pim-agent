@@ -119,6 +119,11 @@
     .toast.show{transform:translateY(0);opacity:1}
     .toast.success{border-color:rgba(52,211,153,0.4);color:var(--green)}
     .toast.error{border-color:rgba(235,72,94,0.4);color:var(--red)}
+    @media(max-width:720px){
+      #header{padding:0 14px;gap:8px;flex-wrap:wrap;height:auto;min-height:52px}
+      .header-supplier{display:none}
+      main{padding:16px 14px}
+    }
   </style>
 </head>
 <body>

@@ -50,7 +50,7 @@ a{color:inherit;text-decoration:none}
 .icon-btn:hover{color:var(--text);border-color:var(--border2)}
 .icon-btn svg{width:16px;height:16px}
 
-#app{display:grid;grid-template-columns:228px 1fr;min-height:calc(100vh - 54px)}
+#app{display:grid;grid-template-columns:228px minmax(0,1fr);min-height:calc(100vh - 54px)}
 #sidebar{background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto}
 .nav-group{margin-bottom:14px}
 .nav-group-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:0 10px;margin-bottom:6px}
@@ -318,10 +318,41 @@ del{background:rgba(235,72,94,0.16);color:var(--red);text-decoration:line-throug
 .local-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--orange);background:rgba(236,103,43,0.12);border:1px solid rgba(236,103,43,0.3);padding:2px 8px;border-radius:100px;vertical-align:middle;text-transform:none}
 .notice.live{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.25)}
 .notice.live svg{color:var(--green)}
+.icon-btn.menu-btn{display:none}
+#sidebarBackdrop{display:none}
+@media(max-width:760px){
+  #header{padding:0 12px;gap:8px}
+  .icon-btn.menu-btn{display:flex}
+  .logo{font-size:14px;gap:7px}
+  .logo small{display:none}
+  .logo .mark,.logo .mark svg{width:28px;height:28px}
+  .gsearch{display:none}
+  .pim-badge{display:none}
+  .user-chip>span:not(.avatar){display:none}
+  .user-chip{padding:4px}
+  #app{grid-template-columns:minmax(0,1fr)}
+  #sidebar{position:fixed;top:54px;bottom:0;left:0;height:auto;width:266px;max-width:84vw;transform:translateX(-100%);transition:transform .25s ease;z-index:65;box-shadow:8px 0 40px rgba(0,0,0,0.55)}
+  #sidebar.open{transform:translateX(0)}
+  #sidebarBackdrop{display:block;position:fixed;inset:54px 0 0 0;background:rgba(2,6,16,0.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:64;backdrop-filter:blur(2px)}
+  #sidebarBackdrop.open{opacity:1;pointer-events:auto}
+  #view{padding:16px 14px}
+  .page-head h1{font-size:20px}
+  .page-head .ph-actions{margin-left:0}
+  .kpi-row{grid-template-columns:1fr 1fr;gap:10px}
+  .tile-num{font-size:24px}
+  .drawer,.drawer.wide{width:100vw;max-width:100vw}
+  .drawer-foot{flex-wrap:wrap}
+  .modal,.modal.lg{width:100%;max-width:100%}
+  .modal-backdrop{padding:10px}
+  #modeBanner{padding:8px 12px;font-size:11px}
+  .field-row{flex-direction:column;gap:0}
+  .grid[style*="grid-template-columns:320px"]{grid-template-columns:1fr !important}
+}
 </style>
 </head>
 <body>
 <div id="header">
+  <button class="icon-btn menu-btn" id="hamburger" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="logo">
     <span class="mark"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><polygon points="51,9 77,21 58,51" fill="#D23145"/><polygon points="4,55 41,45 25,77" fill="#D23145"/><polygon points="41,87 69,93 47,101" fill="#D23145"/><polygon points="17,35 48,8 47,47" fill="#F5F7FA"/><polygon points="44,47 76,60 38,86" fill="#F5F7FA"/><polygon points="13,77 35,83 19,99" fill="#F5F7FA"/></svg></span>
     <span>Redstone PIM <small>Enterprise</small></span>
@@ -342,6 +373,7 @@ del{background:rgba(235,72,94,0.16);color:var(--red);text-decoration:line-throug
   </div>
 </div>
 <div id="modeBanner"></div>
+<div id="sidebarBackdrop"></div>
 <div id="app">
   <nav id="sidebar"></nav>
   <main id="view"></main>
@@ -858,7 +890,8 @@ function renderNav(){
   +`</div>`).join('');
  $$('#sidebar .nav-item').forEach(el=>el.onclick=()=>go(el.dataset.route));
 }
-function go(route){location.hash='#/'+route}
+function closeMobileNav(){const s=document.getElementById('sidebar');if(s)s.classList.remove('open');const b=document.getElementById('sidebarBackdrop');if(b)b.classList.remove('open')}
+function go(route){closeMobileNav();location.hash='#/'+route}
 function parseHash(){const h=location.hash.replace(/^#\/?/,'').split('/');return{route:h[0]||'dashboard',arg:h[1]}}
 function renderRoute(){const{route,arg}=parseHash();state.route=route;renderNav();const root=$('#view');root.innerHTML='';const fn=Views[route];if(fn){try{fn(root,arg)}catch(e){root.innerHTML='<div class="empty"><h2>Something broke rendering this view</h2><p class="mono">'+esc(e.message)+'</p></div>';console.error(e)}}else{root.innerHTML=`<div class="empty"><div class="ico">${icon('settings')}</div><h2>Module coming online</h2><p>The <strong>${esc(route)}</strong> module is being wired up.</p></div>`}}
 function rerender(){renderNav();renderRoute()}
@@ -1601,6 +1634,8 @@ const _statusActions2=statusActions;statusActions=function(p){if(state.live)retu
    ========================================================================== */
 function wireGlobal(){
  $('#settingsBtn').onclick=()=>go('settings');
+ const _hb=$('#hamburger');if(_hb)_hb.onclick=()=>{$('#sidebar').classList.add('open');$('#sidebarBackdrop').classList.add('open')};
+ const _sbk=$('#sidebarBackdrop');if(_sbk)_sbk.onclick=closeMobileNav;
  $('#userChip').onclick=(e)=>openUserMenu(e.currentTarget);
  const gs=$('#globalSearch');
  gs.addEventListener('focus',()=>openCmdk(gs.value));
