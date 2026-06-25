@@ -768,9 +768,9 @@
         checks.push((j.webhookConfigured?'✓':'✗')+' WEBHOOK_SECRET');
         if(settings.workerSecret){
           const r2=await fetch(settings.workerUrl+'/api/rules',{method:'GET',headers:{'X-Demo-Secret':settings.workerSecret}});
-          if(r2.status===404) checks.push('✗ rules API (deploy updated worker.js)');
+          if(r2.status===404||r2.status===405) checks.push('✗ rules API — deploy the updated worker.js (wrangler deploy)');
           else if(r2.status===401) checks.push('✗ rules API (secret mismatch)');
-          else if(r2.status===500) checks.push('✗ rules store (bind RULES KV)');
+          else if(r2.status===500) checks.push('✗ rules store (bind the RULES KV namespace)');
           else if(r2.ok) checks.push('✓ rules store');
           else checks.push('✗ rules API (HTTP '+r2.status+')');
         }
