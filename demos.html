@@ -78,6 +78,7 @@
     .card-accent.orange{background:linear-gradient(90deg,var(--orange),#f57a3f)}
     .card-accent.red{background:linear-gradient(90deg,var(--red),#b91c1c)}
     .card-accent.teal{background:linear-gradient(90deg,var(--teal),var(--blue))}
+    .card-accent.indigo{background:linear-gradient(90deg,#6366f1,var(--electric))}
     .card-body{padding:24px;display:flex;flex-direction:column;flex:1}
     .card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:20px}
     .card-icon.blue{background:rgba(61,116,244,0.12);color:var(--blue)}
@@ -86,6 +87,7 @@
     .card-icon.orange{background:rgba(236,103,43,0.12);color:var(--orange)}
     .card-icon.red{background:rgba(235,72,94,0.12);color:var(--red)}
     .card-icon.teal{background:rgba(45,212,191,0.12);color:var(--teal)}
+    .card-icon.indigo{background:rgba(99,102,241,0.12);color:#6366f1}
     .card-persona{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
     .card h2{font-size:20px;font-weight:700;color:var(--white);line-height:1.25;margin-bottom:8px}
     .card-desc{font-size:13px;color:var(--text-soft);margin-bottom:16px;flex:1}
@@ -207,7 +209,7 @@
       </a>
     </section>
 
-    <div class="section-cap">Six fit-for-purpose UIs on the live PIM MCP</div>
+    <div class="section-cap">Seven fit-for-purpose UIs on the live PIM MCP</div>
 
     <section class="grid">
       <a class="card" href="index.html" target="_blank" rel="noopener">
@@ -344,6 +346,30 @@
           </ul>
           <div class="pill-row">
             <span class="tool-pill">list_contexts</span>
+            <span class="tool-pill">get_product</span>
+            <span class="tool-pill">set_product_attribute</span>
+          </div>
+          <div class="card-cta">
+            <span class="open">Open demo</span>
+            <span class="arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="conversion-rules.html" target="_blank" rel="noopener">
+        <div class="card-accent indigo"></div>
+        <div class="card-body">
+          <div class="card-icon indigo">🔁</div>
+          <div class="card-persona">Data ops / Integration</div>
+          <h2>AI Conversion Engine</h2>
+          <p class="card-desc">Set up small transformation rules — Imperial→metric, simple maths, text fixes like "USA" → "United States of America" — then let Bluestone's webhooks run them automatically. A value enters PIM, the engine converts it, and writes the clean value straight back.</p>
+          <ul class="card-points">
+            <li>Visual rule builder with live before→after preview</li>
+            <li>Webhook-driven — transforms fire the moment data changes</li>
+            <li>Signed <code>x-bs-signature</code> receiver, writes back via MCP</li>
+          </ul>
+          <div class="pill-row">
+            <span class="tool-pill">webhooks</span>
             <span class="tool-pill">get_product</span>
             <span class="tool-pill">set_product_attribute</span>
           </div>
