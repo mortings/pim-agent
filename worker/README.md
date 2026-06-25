@@ -29,12 +29,20 @@ wrangler secret put SHARED_SECRET                 # pick a passphrase; you'll pa
 wrangler secret put BLUESTONE_PAPI_KEY            # your Bluestone PAPI key
 wrangler secret put BLUESTONE_MAPI_CLIENT_ID      # your Bluestone MAPI client id
 wrangler secret put BLUESTONE_MAPI_CLIENT_SECRET  # your Bluestone MAPI client secret
+wrangler secret put WEBHOOK_SECRET                # AI Conversion Engine only: the Bluestone webhook's signing secret
+
+# AI Conversion Engine only — rules store (skip if not using conversion-rules.html):
+wrangler kv namespace create RULES                # then uncomment [[kv_namespaces]] in wrangler.toml and paste the printed id
 
 wrangler deploy
 ```
 
 Wrangler prints the deployed URL — something like
-`https://pim-agent-proxy.<your-account>.workers.dev`.
+`https://pim-agent-proxy.<your-account>.workers.dev`. That URL **must match**
+the Worker URL in the demo's Settings. If `wrangler whoami` shows a different
+account than the one hosting your live Worker, `wrangler deploy` lands on a
+*different* Worker and the live one never changes — the usual reason a deploy
+"succeeds" but `/api/health` still shows the old fields.
 
 ## Configure the demo
 
@@ -50,8 +58,13 @@ PIM via this Worker.
 ## Endpoints
 
 ```
-GET  /api/health           → { ok, mcpConfigured, authConfigured, bluestoneConfigured }
-POST /api/create-product   → { success, result }
+GET     /api/health         → { ok, mcpConfigured, authConfigured, bluestoneConfigured, webhookConfigured, rulesStoreConfigured }
+POST    /api/create-product → { success, result }
+POST    /api/mcp-call       → generic MCP tools/call: { tool, args }
+POST    /api/mcp-list       → MCP tools/list
+POST    /api/papi           → read-only Bluestone PAPI passthrough
+POST    /api/webhook        → AI Conversion Engine receiver (Bluestone webhook target; verifies x-bs-signature)
+GET/PUT /api/rules          → AI Conversion Engine rules store (KV-backed)
 ```
 
 `POST /api/create-product` body:
