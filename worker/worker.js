@@ -35,7 +35,7 @@ export default {
     const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
     const cors = {
       'Access-Control-Allow-Origin': allowed,
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, X-Demo-Secret',
       'Access-Control-Max-Age': '86400',
       'Vary': 'Origin'
