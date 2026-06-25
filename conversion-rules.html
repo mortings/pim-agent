@@ -196,31 +196,31 @@
   <main>
     <div class="hero">
       <span class="eyebrow">Webhook-driven transforms</span>
-      <h1>Normalize values the moment they enter Bluestone</h1>
-      <p>Define small conversion rules — Imperial→metric, simple maths, text replacements like <code style="font-family:inherit">USA → United States of America</code>. Bluestone fires a webhook when a value changes, the engine transforms it, and writes the clean value straight back. No batch jobs, no spreadsheets.</p>
+      <h1>Fix values automatically, as they enter Bluestone</h1>
+      <p>Set a rule once. Bluestone's webhook runs it on every change — convert units, do the maths, tidy text — then writes the result straight back.</p>
     </div>
 
     <div class="flow">
-      <div class="flow-step"><span class="n">1 · Source</span><span class="t">Value enters Bluestone</span><span class="d">An editor or import sets e.g. width = 12 in</span></div>
+      <div class="flow-step"><span class="n">1 · Source</span><span class="t">Value enters Bluestone</span><span class="d">e.g. width = 12 in</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="n">2 · Trigger</span><span class="t">Webhook fires</span><span class="d">Bluestone POSTs the change event to the engine</span></div>
+      <div class="flow-step"><span class="n">2 · Trigger</span><span class="t">Webhook fires</span><span class="d">Bluestone POSTs it here</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step engine"><span class="n">3 · Engine</span><span class="t">Rule transforms it</span><span class="d">12 in → 30.48 cm (this UI's rules)</span></div>
+      <div class="flow-step engine"><span class="n">3 · Engine</span><span class="t">Rule runs</span><span class="d">12 in → 30.48 cm</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="n">4 · Write back</span><span class="t">Clean value in PIM</span><span class="d">Engine writes the result to the product</span></div>
+      <div class="flow-step"><span class="n">4 · Write back</span><span class="t">Saved to PIM</span><span class="d">Clean value, instantly</span></div>
     </div>
 
     <div class="section-head"><h2>Engine endpoint</h2></div>
     <div class="endpoint">
-      <h3>Point your Bluestone webhooks here</h3>
-      <p>When you create a webhook in Bluestone PIM, paste this URL as its delivery target. Every product change event lands here; the engine matches the changed attribute against your rules below and writes back the converted value.</p>
+      <h3>Point your Bluestone webhook here</h3>
+      <p>Paste this as the webhook's delivery URL. Every change lands here and runs against your rules.</p>
       <div class="url-row">
         <div class="url-box empty" id="engine-url">Set your Worker URL in ⚙ Settings to generate the endpoint</div>
         <button class="btn primary" id="copy-engine" onclick="copyEngineUrl()" disabled>Copy</button>
       </div>
       <div class="events" id="event-list"></div>
       <div class="setup-note">
-        <b>One-time setup:</b> create the webhook in the Bluestone PIM UI → delivery URL = the endpoint above → subscribe to the events shown → copy the webhook <code>secret</code> into the engine as <code>WEBHOOK_SECRET</code> (the engine verifies the <code>x-bs-signature</code> on every call). Then <b>Sync rules to engine</b> so it knows what to do. <span id="sync-state"></span>
+        <b>Setup:</b> in Bluestone, create a webhook → delivery URL = above → subscribe to these events → set its <code>secret</code> as the engine's <code>WEBHOOK_SECRET</code>. Then <b>Sync rules</b>. <span id="sync-state"></span>
       </div>
     </div>
 
@@ -228,19 +228,19 @@
       <h2>Conversion rules</h2>
       <span class="count" id="rule-count"></span>
       <div class="spacer"></div>
-      <button class="btn" onclick="syncRules()" title="Push these rules to the engine (Worker KV)">⟳ Sync rules to engine</button>
+      <button class="btn" onclick="syncRules()" title="Push these rules to the engine (Worker KV)">⟳ Sync to engine</button>
       <button class="btn primary" onclick="openEditor()">+ New rule</button>
     </div>
     <div class="rules" id="rules"></div>
 
-    <p class="footnote">Rules live in your browser (and sync to the engine on demand). Built on the Bluestone PIM webhooks + MCP, with the bluestone-pim-ui skill.</p>
+    <p class="footnote">Rules live in your browser; sync to the engine when ready.</p>
   </main>
 
   <!-- Rule editor -->
   <div class="modal-overlay" id="editor-modal">
     <div class="modal wide">
       <h2 id="editor-title">New conversion rule</h2>
-      <p class="hint">Pick what kind of transform, choose which attribute it reads and writes, and watch the live preview confirm it before you save.</p>
+      <p class="hint">Pick a transform, choose the attribute, watch the preview.</p>
 
       <div class="type-picker" id="type-picker">
         <div class="type-opt" data-type="unit" onclick="pickType('unit')"><div class="ico">📏</div><div class="nm">Unit convert</div></div>
@@ -258,7 +258,7 @@
         <div class="field">
           <label>Source attribute (read)</label>
           <input type="text" id="f-source" placeholder="e.g. width" oninput="onSourceChange()">
-          <div class="sub">Attribute name the webhook event touches.</div>
+          <div class="sub">The attribute to read.</div>
         </div>
         <div class="field">
           <label>Target attribute (write)</label>
@@ -282,13 +282,13 @@
           <div class="field"><label>Expression (use x for the value)</label><input type="text" id="f-expr" placeholder="x * 1.25" oninput="livePreview()"><div class="sub">Allowed: numbers, x, + − × ÷ and ( ). E.g. round VAT: <code>x * 1.25</code></div></div>
           <div class="field"><label>Decimals</label><input type="number" id="f-dec-m" value="2" min="0" max="6" oninput="livePreview()"></div>
         </div>
-        <div class="field sub" style="color:var(--orange)">⚠ Maths isn't idempotent — to avoid re-triggering loops, write to a <b>different</b> target attribute, or the engine only runs it on the <code>PRODUCT_CREATED</code> event.</div>
+        <div class="field sub" style="color:var(--orange)">⚠ To avoid loops, point maths at a <b>different</b> target attribute.</div>
       </div>
 
       <div id="cfg-replace" class="cfg" style="display:none">
         <div class="field-row">
-          <div class="field"><label>Find</label><input type="text" id="f-find" placeholder="USA" oninput="livePreview()"></div>
-          <div class="field"><label>Replace with</label><input type="text" id="f-replace" placeholder="United States of America" oninput="livePreview()"></div>
+          <div class="field"><label>Find</label><input type="text" id="f-find" placeholder="old text" oninput="livePreview()"></div>
+          <div class="field"><label>Replace with</label><input type="text" id="f-replace" placeholder="new text" oninput="livePreview()"></div>
         </div>
         <div class="field-row">
           <div class="field"><label>Match</label><select id="f-rmode" onchange="livePreview()"><option value="substring">Anywhere in the value</option><option value="whole">Whole value only</option></select></div>
@@ -326,9 +326,9 @@
       </div>
 
       <div class="field">
-        <label>Bluestone webhook URL <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">(optional — paste the one you created in Bluestone)</span></label>
-        <input type="text" id="f-webhook" placeholder="https://...  — for your reference / 1:1 mapping">
-        <div class="sub">All webhooks can share the one engine endpoint above. Pasting the specific webhook here just labels the link — and if its URL ends with <code>?rule=THIS_ID</code>, the engine runs only this rule for it.</div>
+        <label>Bluestone webhook URL <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="f-webhook" placeholder="https://… — just for your reference">
+        <div class="sub">All webhooks can share the one endpoint above. Add <code>?rule=THIS_ID</code> to run only this rule.</div>
       </div>
 
       <div class="modal-preview">
@@ -474,14 +474,7 @@
     function persist(){ localStorage.setItem('conv-rules', JSON.stringify(rules)); }
     function uid(){ return 'rule_' + Math.random().toString(36).slice(2,9); }
 
-    function seedRules(){
-      return [
-        {id:uid(),name:'Inches → Centimeters',enabled:true,type:'unit',source:'width',target:'width_cm',fromUnit:'in',toUnit:'cm',decimals:2,appendUnit:false,webhook:''},
-        {id:uid(),name:'Pounds → Kilograms',enabled:true,type:'unit',source:'weight',target:'weight',fromUnit:'lb',toUnit:'kg',decimals:3,appendUnit:true,webhook:''},
-        {id:uid(),name:'USA → United States of America',enabled:true,type:'replace',source:'country_of_origin',target:'',find:'USA',replace:'United States of America',mode:'whole',caseSensitive:false,webhook:''},
-        {id:uid(),name:'Ex-VAT → Incl. VAT (×1.25)',enabled:false,type:'math',source:'price_ex_vat',target:'price_inc_vat',expression:'x * 1.25',decimals:2,webhook:''}
-      ];
-    }
+    function seedRules(){ return []; }  // start empty — no preloaded rules
 
     /* ============================================================
        RENDER
@@ -540,9 +533,9 @@
       if(r._sample!=null) return r._sample;
       if(r.type==='unit') return '12';
       if(r.type==='math') return '100';
-      if(r.type==='replace') return r.mode==='whole' ? (r.find||'USA') : ('Made in '+(r.find||'USA'));
+      if(r.type==='replace') return r.mode==='whole' ? (r.find||'old text') : ('contains '+(r.find||'old text'));
       if(r.type==='advanced'){
-        if(r.op==='lookup') return (r.lookup&&r.lookup[0]&&r.lookup[0].from)||'NO';
+        if(r.op==='lookup') return (r.lookup&&r.lookup[0]&&r.lookup[0].from)||'code';
         if(r.op==='trim') return '  too   much   space ';
         return 'sample text';
       }
@@ -553,7 +546,7 @@
       const host=document.getElementById('rules');
       document.getElementById('rule-count').textContent = rules.length ? `${rules.filter(r=>r.enabled).length} active · ${rules.length} total` : '';
       if(!rules.length){
-        host.innerHTML = `<div class="empty"><h3>No rules yet</h3><p>Create your first conversion rule — say, inches to centimeters, or "USA" → "United States of America".</p></div>`;
+        host.innerHTML = `<div class="empty"><h3>No rules yet</h3><p>Add a rule to start converting values automatically.</p><button class="btn primary" style="margin-top:14px" onclick="openEditor()">+ New rule</button></div>`;
         return;
       }
       host.innerHTML = rules.map(ruleCard).join('');
