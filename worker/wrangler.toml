@@ -16,6 +16,6 @@ compatibility_date = "2025-01-01"
 # would make the deploy fail). Enable it in two steps:
 #   1. wrangler kv namespace create RULES
 #   2. uncomment the three lines below and paste the printed id
-# [[kv_namespaces]]
-# binding = "RULES"
-# id = "PASTE_KV_NAMESPACE_ID_HERE"
+[[kv_namespaces]]
+binding = "RULES"
+id = "271ba7f6ce4d42d3b076e8a777e8d654"
