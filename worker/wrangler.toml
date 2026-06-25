@@ -11,8 +11,11 @@ compatibility_date = "2025-01-01"
 #                                         # verifies x-bs-signature against it.
 
 # AI Conversion Engine: KV store for the conversion rules the console saves and
-# the /api/webhook receiver reads. Create it once, then paste the id below:
-#   wrangler kv namespace create RULES
-[[kv_namespaces]]
-binding = "RULES"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+# the /api/webhook receiver reads. The engine needs this to store rules — but it
+# stays commented out so `wrangler deploy` works immediately (a placeholder id
+# would make the deploy fail). Enable it in two steps:
+#   1. wrangler kv namespace create RULES
+#   2. uncomment the three lines below and paste the printed id
+# [[kv_namespaces]]
+# binding = "RULES"
+# id = "PASTE_KV_NAMESPACE_ID_HERE"
