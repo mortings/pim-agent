@@ -50,7 +50,9 @@ export default {
         ok: true,
         mcpConfigured: !!env.MCP_URL,
         authConfigured: !!env.SHARED_SECRET,
-        bluestoneConfigured: !!(env.BLUESTONE_PAPI_KEY && env.BLUESTONE_MAPI_CLIENT_ID && env.BLUESTONE_MAPI_CLIENT_SECRET)
+        bluestoneConfigured: !!(env.BLUESTONE_PAPI_KEY && env.BLUESTONE_MAPI_CLIENT_ID && env.BLUESTONE_MAPI_CLIENT_SECRET),
+        webhookConfigured: !!env.WEBHOOK_SECRET,
+        rulesStoreConfigured: !!env.RULES
       }, 200, cors);
     }
 

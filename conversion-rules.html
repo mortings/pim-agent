@@ -352,9 +352,19 @@
   <div class="modal-overlay" id="settings-modal">
     <div class="modal">
       <h2>Engine backend (Cloudflare Worker)</h2>
-      <p class="hint">Paste your Worker URL and the passphrase you set with <code>wrangler secret put SHARED_SECRET</code>. The Worker holds the Bluestone credentials and hosts the webhook receiver; this page never sees them.</p>
+      <p class="hint">This page stores only the Worker URL + shared passphrase. Every Bluestone credential lives as a Worker secret, so it never reaches the browser.</p>
       <div class="field"><label>Worker URL</label><input type="text" id="worker-url" placeholder="https://pim-agent-proxy.your-account.workers.dev"></div>
       <div class="field"><label>Shared secret</label><input type="password" id="worker-secret" placeholder="The SHARED_SECRET passphrase"></div>
+      <div class="hint" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin:4px 0 0">
+        <b style="color:var(--text)">Reads &amp; write-backs to Bluestone</b> use the Worker's MAPI/PAPI credentials — set once, server-side, never entered here:
+        <div style="margin-top:7px;display:flex;flex-direction:column;gap:3px">
+          <code>wrangler secret put BLUESTONE_PAPI_KEY</code>
+          <code>wrangler secret put BLUESTONE_MAPI_CLIENT_ID</code>
+          <code>wrangler secret put BLUESTONE_MAPI_CLIENT_SECRET</code>
+          <code>wrangler secret put WEBHOOK_SECRET</code>
+        </div>
+        <div style="margin-top:7px">Hit <b>Test</b> to confirm the Worker has them all.</div>
+      </div>
       <div class="modal-actions">
         <div class="modal-status" id="modal-status"><span class="dot"></span><span>Not tested</span></div>
         <button class="btn" onclick="testBackend()">Test</button>
@@ -752,16 +762,19 @@
         const r=await fetch(settings.workerUrl+'/api/health'); const j=await r.json().catch(()=>({}));
         if(!r.ok){ setModalStatus('err','HTTP '+r.status); return; }
         const checks=[];
-        checks.push((j.mcpConfigured?'✓':'✗')+' MCP'); checks.push((j.authConfigured?'✓':'✗')+' secret'); checks.push((j.bluestoneConfigured?'✓':'✗')+' Bluestone creds');
+        checks.push((j.mcpConfigured?'✓':'✗')+' MCP');
+        checks.push((j.authConfigured?'✓':'✗')+' shared secret');
+        checks.push((j.bluestoneConfigured?'✓':'✗')+' MAPI/PAPI creds');
+        checks.push((j.webhookConfigured?'✓':'✗')+' WEBHOOK_SECRET');
         if(settings.workerSecret){
           const r2=await fetch(settings.workerUrl+'/api/rules',{method:'GET',headers:{'X-Demo-Secret':settings.workerSecret}});
-          if(r2.status===404) checks.push('✗ /api/rules (deploy updated worker.js)');
-          else if(r2.status===401) checks.push('✗ /api/rules (secret mismatch)');
-          else if(r2.ok) checks.push('✓ engine /api/rules');
-          else checks.push('✗ /api/rules (HTTP '+r2.status+')');
+          if(r2.status===404) checks.push('✗ rules API (deploy updated worker.js)');
+          else if(r2.status===401) checks.push('✗ rules API (secret mismatch)');
+          else if(r2.status===500) checks.push('✗ rules store (bind RULES KV)');
+          else if(r2.ok) checks.push('✓ rules store');
+          else checks.push('✗ rules API (HTTP '+r2.status+')');
         }
-        const last=checks[checks.length-1];
-        setModalStatus(/✗/.test(last)?'err':'ok', checks.join('  •  '));
+        setModalStatus(checks.some(c=>c.includes('✗'))?'err':'ok', checks.join('  •  '));
       }catch(e){
         setModalStatus('err', /failed to fetch|cors/i.test(String(e.message))?'Network/CORS error — check Worker URL + ALLOWED_ORIGINS':'Unreachable: '+e.message);
       }
