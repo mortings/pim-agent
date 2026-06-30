@@ -7,6 +7,13 @@
       "runtimeArgs": ["-m", "http.server", "8000"],
       "port": 8000,
       "autoPort": false
+    },
+    {
+      "name": "conversion-rules",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8011"],
+      "port": 8011,
+      "autoPort": true
     }
   ]
 }

@@ -153,6 +153,15 @@
     .gl p{font-size:12.5px;color:var(--muted);line-height:1.5}
     .live-banner{display:flex;align-items:center;gap:10px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.35);border-radius:10px;padding:13px 15px;font-size:13px;color:var(--green-d);font-weight:600;margin-top:4px}
     .live-banner .dot{width:9px;height:9px;border-radius:50%;background:#10b981;box-shadow:0 0 7px #10b981}
+    .backfill-result{font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+    .bf-run{display:flex;align-items:center;gap:9px;color:var(--muted)}
+    .bf-head{font-size:13.5px;color:var(--text);margin-bottom:7px}
+    .bf-lines{display:flex;flex-direction:column;gap:4px}
+    .bf-line{font-family:'Menlo','SF Mono',monospace;font-size:12px;color:var(--muted)}
+    .bf-line.ok{color:var(--green-d)} .bf-line.err{color:#c43048}
+    .bf-err{color:#c43048}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(99,102,241,0.25);border-top-color:var(--indigo);border-radius:50%;animation:spin .7s linear infinite;flex:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
 
     /* ── editor modal (rule builder) ── */
     .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.4);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:36px 16px;overflow-y:auto}
@@ -317,6 +326,17 @@
               <h4>Sync your rules to the engine</h4>
               <p>Pushes the rules above to the Worker so the webhook knows what to do. <span id="sync-state"></span></p>
               <button class="btn primary" onclick="syncRules()">⟳ Sync rules to engine</button>
+            </div>
+          </div>
+          <div class="gl">
+            <div class="gl-body">
+              <h4>Run rules now <span style="font-weight:500;color:var(--muted)">— on demand</span></h4>
+              <p>Apply your rules across products that already exist, without waiting for a change event. Convert a whole catalog in one pass, or use it as a fallback to sweep up anything a webhook missed.</p>
+              <div class="copyrow">
+                <input type="text" id="backfill-category" placeholder="Category name (leave blank for the whole catalog)" style="flex:1;min-width:0;padding:11px 13px;font-family:inherit;font-size:14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text)">
+                <button class="btn primary" id="backfill-btn" onclick="runBackfill()">▶ Run rules now</button>
+              </div>
+              <div id="backfill-result" class="backfill-result" style="display:none;margin-top:11px"></div>
             </div>
           </div>
         </div>
@@ -792,6 +812,49 @@
     }
     function syncRules(){ if(!isConnected()){ goStep(1); toast('Connect the engine first (step 1)','error'); return; } pushRules(false); }
     function maybeAutosync(){ if(isConnected()) pushRules(true); }
+
+    async function runBackfill(){
+      if(!isConnected()){ goStep(1); toast('Connect the engine first (step 1)','error'); return; }
+      const enabled = rules.filter(r=>r&&r.enabled).length;
+      if(!enabled){ toast('No enabled rules to run — add and enable a rule first','error'); return; }
+      const btn=document.getElementById('backfill-btn');
+      const out=document.getElementById('backfill-result');
+      const cat=gv('backfill-category').trim();
+      // Push the current rules first so the engine runs exactly what's on screen.
+      await pushRules(true);
+      btn.disabled=true; const label=btn.textContent; btn.textContent='Running…';
+      out.style.display='block';
+      out.innerHTML=`<div class="bf-run"><span class="spinner"></span> Running ${enabled} rule${enabled!==1?'s':''} across ${cat?'“'+esc(cat)+'”':'the whole catalog'}…</div>`;
+      try{
+        const body={}; if(cat) body.categoryName=cat;
+        const r=await fetch(settings.workerUrl+'/api/backfill',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Secret':settings.workerSecret},body:JSON.stringify(body)});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok||j.success===false) throw new Error(j.error||('HTTP '+r.status));
+        renderBackfill(j);
+      }catch(e){
+        const legacy=/404|not found/i.test(e.message);
+        out.innerHTML=`<div class="bf-err">✗ ${esc(legacy?'Worker has no /api/backfill route yet — deploy the updated worker.js':e.message)}</div>`;
+      }finally{ btn.disabled=false; btn.textContent=label; }
+    }
+    function renderBackfill(j){
+      const out=document.getElementById('backfill-result');
+      const results=Array.isArray(j.results)?j.results:[];
+      const errs=results.filter(x=>x.error).length;
+      // Flatten every rule application across products into changed / skipped tallies.
+      let changed=0, skipped=0; const lines=[];
+      for(const r of results){
+        for(const a of (r.applied||[])){
+          if(a&&a.status){ changed++; lines.push(`<div class="bf-line ok"><b>${esc(a.attribute||a.rule)}</b> ${esc(String(a.from))} → ${esc(String(a.to))}</div>`); }
+          else if(a&&a.skipped){ skipped++; }
+          else if(a&&a.writeError){ lines.push(`<div class="bf-line err">${esc(a.rule||'rule')}: ${esc(a.writeError)}</div>`); }
+        }
+      }
+      if(j.products===0){ out.innerHTML=`<div class="bf-err">No products matched${j.note?' — '+esc(j.note):''}.</div>`; return; }
+      const head=`<div class="bf-head"><b>${j.writes||changed} change${(j.writes||changed)!==1?'s':''} written</b> across ${j.products} product${j.products!==1?'s':''} · ${skipped} unchanged${errs?` · <span style="color:var(--red,#dc2626)">${errs} error${errs!==1?'s':''}</span>`:''}</div>`;
+      const detail = lines.length ? `<div class="bf-lines">${lines.slice(0,12).join('')}${lines.length>12?`<div class="bf-line">…and ${lines.length-12} more</div>`:''}</div>` : `<div class="bf-line">Nothing to change — every product is already converted.</div>`;
+      out.innerHTML=head+detail;
+      toast((j.writes||changed)+' conversion'+((j.writes||changed)!==1?'s':'')+' written across '+j.products+' products','success');
+    }
 
     /* ============================================================
        CONNECT (step 1)

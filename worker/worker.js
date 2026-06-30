@@ -117,6 +117,14 @@ export default {
       }
     }
 
+    // ── On-demand backfill (run rules across a catalog now) ───────────────
+    // Pull-based counterpart to the webhook: instead of waiting for Bluestone
+    // to push a change, list products and run the SAME conversion engine on
+    // each one. Body: { categoryName?, categoryId?, context?, limit?, productIds? }.
+    if (url.pathname === '/api/backfill') {
+      return handleBackfill(env, body, cors);
+    }
+
     // ── List available tools (new) ────────────────────────────────────────
     if (url.pathname === '/api/mcp-list') {
       try {
@@ -289,7 +297,69 @@ async function handleWebhook(request, env, url, cors) {
   return json({ success: true, count: processed.length, processed }, 200, cors);
 }
 
-async function processProduct(env, productId, rules, isCreate) {
+// ── On-demand backfill ────────────────────────────────────────────────────
+// Runs the saved rules across a set of products without waiting for a webhook.
+// Target products come from an explicit productIds list, or from a
+// search_products call scoped to a category (default: the whole catalog tree).
+async function handleBackfill(env, body, cors) {
+  if (!env.RULES) return json({ error: 'RULES KV namespace not bound' }, 500, cors);
+  let rules = [];
+  try { const s = await env.RULES.get('rules'); if (s) rules = JSON.parse(s); }
+  catch (e) { return json({ error: 'KV read/parse error: ' + e.message }, 500, cors); }
+  rules = rules.filter(r => r && r.enabled);
+  if (!rules.length) return json({ error: 'No enabled rules to run. Sync rules first.' }, 400, cors);
+
+  // 1. Resolve which products to process.
+  let ids = [];
+  if (Array.isArray(body.productIds) && body.productIds.length) {
+    ids = body.productIds.map(String).filter(Boolean);
+  } else {
+    const args = { categoryScope: 'catalog_with_subcategories', limit: Math.min(Number(body.limit) || 200, 500) };
+    if (body.categoryId) args.categoryId = String(body.categoryId);
+    else if (body.categoryName) args.categoryName = String(body.categoryName);
+    if (body.context) args.context = String(body.context);
+    let parsed;
+    try { parsed = parseMcpJson(extractText(await callMcpTool(env, 'search_products', args))); }
+    catch (e) { return json({ error: 'search_products failed: ' + e.message }, 502, cors); }
+    ids = extractProductIds(parsed);
+  }
+  if (!ids.length) return json({ success: true, products: 0, writes: 0, results: [], note: 'No products matched — check the category name.' }, 200, cors);
+
+  // 2. Fetch the data model once and reuse it for every product in the batch.
+  let defsMap = null;
+  try { defsMap = await getDefsMap(env); } catch (e) { /* processProduct will retry lazily */ }
+
+  // 3. Run the same engine the webhook uses. isCreate=false → in-place math is
+  //    skipped (it's not idempotent); source→target rules still run.
+  const results = [];
+  let writes = 0;
+  for (const id of ids) {
+    try {
+      const applied = await processProduct(env, id, rules, false, defsMap);
+      writes += applied.filter(a => a && a.status).length;
+      results.push({ id, applied });
+    } catch (e) {
+      results.push({ id, error: e.message });
+    }
+  }
+  console.log('[backfill] ' + ids.length + ' product(s), ' + writes + ' write(s)');
+  return json({ success: true, products: ids.length, writes, results }, 200, cors);
+}
+
+// Pull product IDs out of a parsed search_products payload (tolerates the
+// common list shapes: top-level array, .products, .items, .data.products).
+function extractProductIds(parsed) {
+  if (!parsed) return [];
+  let list = Array.isArray(parsed) ? parsed
+    : Array.isArray(parsed.products) ? parsed.products
+    : Array.isArray(parsed.items) ? parsed.items
+    : (parsed.data && Array.isArray(parsed.data.products)) ? parsed.data.products
+    : null;
+  if (!list) return [];
+  return list.map(p => p && (p.id || p.productId || p._id)).filter(Boolean).map(String);
+}
+
+async function processProduct(env, productId, rules, isCreate, defsMap) {
   // get_product returns a summary line + the product JSON. attributes are
   // [{ definitionId, values:[...] }] — identified by id, not name.
   const product = parseMcpJson(extractText(await callMcpTool(env, 'get_product', { productId })));
@@ -297,7 +367,9 @@ async function processProduct(env, productId, rules, isCreate) {
   const attrs = Array.isArray(product.attributes) ? product.attributes : [];
   const valOf = (defId) => { const a = attrs.find(x => x.definitionId === defId); return (a && Array.isArray(a.values) && a.values.length) ? String(a.values[0]) : ''; };
 
-  let defsMap = null; // definitionId/name/number map, fetched once per product
+  // definitionId/name/number map. Caller may pass one in to reuse across a
+  // batch; otherwise it's fetched lazily, once, on first rule that needs it.
+  defsMap = defsMap || null;
   const applied = [];
   for (const rule of rules) {
     if (!defsMap) defsMap = await getDefsMap(env);
