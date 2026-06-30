@@ -318,8 +318,14 @@ async function processProduct(env, productId, rules, isCreate) {
     // idempotent, so the resulting attribute event is a server-side no-op).
     if (String(next) === valOf(targetDef.id)) { applied.push({ rule: rule.name, skipped: 'no change (already ' + next + ')' }); continue; }
 
-    await callMcpTool(env, 'set_product_attribute', { productId, definitionId: targetDef.id, values: [String(next)], attributeName: targetDef.name });
-    applied.push({ rule: rule.name, attribute: targetDef.name, from: current, to: next });
+    // The MCP's set_product_attribute uses add-semantics (409s on an attribute
+    // that already exists), so update the value directly via the MAPI PUT.
+    try {
+      const status = await mapiUpdateAttribute(env, productId, targetDef.id, [String(next)], product.context);
+      applied.push({ rule: rule.name, attribute: targetDef.name, from: current, to: next, status });
+    } catch (e) {
+      applied.push({ rule: rule.name, attribute: targetDef.name, from: current, to: next, writeError: e.message });
+    }
   }
   return applied;
 }
@@ -329,6 +335,38 @@ async function hmacHex(secret, raw) {
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(raw));
   return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ── Bluestone MAPI direct write (OAuth2 client-credentials) ───────────────
+// The MCP's set_product_attribute uses add-semantics and 409s on an attribute
+// that already exists on the product, so value UPDATES go straight to the
+// Management API's PUT /products/{id}/attributes/{definitionId} (returns 204).
+let _mapiToken = null; // { token, exp } cached per isolate
+async function getMapiToken(env) {
+  if (_mapiToken && _mapiToken.exp > Date.now() + 5000) return _mapiToken.token;
+  const body = new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: env.BLUESTONE_MAPI_CLIENT_ID,
+    client_secret: env.BLUESTONE_MAPI_CLIENT_SECRET,
+    scope: 'openid profile systemRoles permissions organization email name nickname'
+  });
+  const r = await fetch('https://idp.test.bluestonepim.com/op/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body
+  });
+  const txt = await r.text();
+  if (!r.ok) throw new Error('token ' + r.status + ': ' + txt.slice(0, 160));
+  const j = JSON.parse(txt);
+  _mapiToken = { token: j.access_token, exp: Date.now() + (j.expires_in ? j.expires_in * 1000 : 300000) };
+  return _mapiToken.token;
+}
+async function mapiUpdateAttribute(env, productId, definitionId, values, context) {
+  const token = await getMapiToken(env);
+  const url = 'https://api.test.bluestonepim.com/pim/products/' + productId + '/attributes/' + definitionId;
+  const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  if (context) headers['context'] = context;
+  const r = await fetch(url, { method: 'PUT', headers, body: JSON.stringify({ values }) });
+  if (r.status === 204 || r.ok) return r.status;
+  throw new Error('PUT ' + r.status + ': ' + (await r.text()).slice(0, 160));
 }
 
 // ── MCP result → product attributes ──────────────────────────────────────
