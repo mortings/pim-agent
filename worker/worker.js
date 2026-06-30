@@ -237,7 +237,13 @@ async function handleWebhook(request, env, url, cors) {
   if (env.WEBHOOK_SECRET) {
     const got = (request.headers.get('x-bs-signature') || '').replace(/^sha256=/i, '').trim().toLowerCase();
     const want = await hmacHex(env.WEBHOOK_SECRET, raw);
-    if (!got || !constantTimeEqual(got, want)) return json({ error: 'Invalid x-bs-signature' }, 401, cors);
+    if (!got || !constantTimeEqual(got, want)) {
+      console.warn('[webhook] ✗ signature mismatch (header ' + (got ? 'present' : 'MISSING') + ') — the Bluestone webhook secret must equal WEBHOOK_SECRET');
+      return json({ error: 'Invalid x-bs-signature' }, 401, cors);
+    }
+    console.log('[webhook] ✓ signature verified');
+  } else {
+    console.log('[webhook] no WEBHOOK_SECRET set — accepting unsigned call');
   }
   // (If WEBHOOK_SECRET is unset the engine accepts unsigned calls — fine for a
   //  local test, but set it before pointing a real Bluestone webhook here.)
@@ -265,17 +271,26 @@ async function handleWebhook(request, env, url, cors) {
     for (const id of list) { ids.add(id); if (et === 'PRODUCT_CREATED') created.add(id); }
   }
 
+  console.log('[webhook] received ' + events.length + ' event group(s); products: ' + JSON.stringify([...ids]) + '; enabled rules: ' + rules.length);
+
   // 4. Process. Return 2xx only after the work is accepted.
   const processed = [];
   for (const id of ids) {
-    try { processed.push({ id, applied: await processProduct(env, id, rules, created.has(id)) }); }
-    catch (e) { processed.push({ id, error: e.message }); }
+    try {
+      const applied = await processProduct(env, id, rules, created.has(id));
+      console.log('[webhook] product ' + id + ' → ' + JSON.stringify(applied));
+      processed.push({ id, applied });
+    } catch (e) {
+      console.warn('[webhook] product ' + id + ' error: ' + e.message);
+      processed.push({ id, error: e.message });
+    }
   }
   return json({ success: true, count: processed.length, processed }, 200, cors);
 }
 
 async function processProduct(env, productId, rules, isCreate) {
   const prod = extractAttributes(extractText(await callMcpTool(env, 'get_product', { productId })));
+  console.log('[webhook] product ' + productId + ' attributes: ' + JSON.stringify(prod.attrs.map(a => a.name)));
   const applied = [];
   let defCache = null; // lazy list_attribute_definitions for target resolution
 
