@@ -3,303 +3,363 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Conversion Engine — Bluestone PIM LABS</title>
+  <title>AI Conversion Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#F5F7FA; --surface:#FFFFFF; --surface2:#F0F2F5;
       --border:rgba(0,0,0,0.08);
       --blue:#3D74F4; --electric:#0F05CC; --orange:#EC672B;
-      --green:#34D399; --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --teal:#2DD4BF;
+      --green:#34D399; --green-d:#0f9b6c; --red:#EB485E; --yellow:#FBE74D; --purple:#A78BFF; --indigo:#6366f1;
       --white:#111827; --muted:rgba(0,0,0,0.45); --text:rgba(0,0,0,0.78);
-      --radius:10px;
+      --radius:12px;
     }
-    html,body{min-height:100%;font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+    html,body{min-height:100%;font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+    body{background:radial-gradient(ellipse 90% 55% at 50% -10%,rgba(99,102,241,0.10),transparent 60%),var(--bg)}
 
-    #header{display:flex;align-items:center;gap:14px;padding:0 20px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
-    .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--white)}
-    .logo svg{width:24px;height:24px}
-    .pim-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.35);font-size:11px;font-weight:600;color:#0f9b6c;letter-spacing:0.2px}
-    .pim-badge .pim-dot{width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;animation:pimPulse 2.4s ease-in-out infinite}
-    @keyframes pimPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+    /* ── Header ── */
+    #header{display:flex;align-items:center;gap:14px;padding:0 24px;height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--indigo),var(--electric));display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(99,102,241,0.35)}
+    .brand .mark svg{width:21px;height:21px}
+    .brand-title{font-size:19px;font-weight:800;color:var(--white);letter-spacing:-0.01em;line-height:1.1}
+    .brand-sub{font-size:11.5px;color:var(--muted);font-weight:500}
     .header-spacer{flex:1}
+    .conn-pill{display:flex;align-items:center;gap:7px;padding:6px 13px;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s}
+    .conn-pill:hover{border-color:rgba(99,102,241,0.4)}
+    .conn-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+    .conn-pill.on{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.4);color:var(--green-d)}
+    .conn-pill.on .dot{background:#10b981;box-shadow:0 0 7px #10b981;animation:pulse 2.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
     .header-link{color:var(--muted);font-size:12px;text-decoration:none;font-weight:600}
     .header-link:hover{color:var(--text)}
 
-    .btn{background:rgba(0,0,0,0.03);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
-    .btn:hover{background:rgba(61,116,244,0.1);border-color:rgba(61,116,244,0.3);color:var(--blue)}
-    .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-    .btn.primary:hover{background:#5687f5;color:#fff}
-    .btn.success{background:var(--green);border-color:var(--green);color:#04221a}
-    .btn.small{padding:5px 10px;font-size:11px}
+    main{max-width:880px;margin:0 auto;padding:30px 22px 70px}
+
+    .lede{text-align:center;margin-bottom:26px}
+    .lede h1{font-size:27px;font-weight:800;color:var(--white);letter-spacing:-0.015em;line-height:1.15}
+    .lede p{font-size:14.5px;color:var(--muted);margin-top:8px;max-width:560px;margin-left:auto;margin-right:auto}
+
+    /* ── Stepper ── */
+    .stepper{display:flex;align-items:center;justify-content:center;gap:0;margin:0 auto 26px;max-width:620px}
+    .stp{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;flex-shrink:0;width:108px}
+    .stp .circ{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;background:var(--surface);border:2px solid var(--border);color:var(--muted);transition:all .2s}
+    .stp .lbl{font-size:12px;font-weight:700;color:var(--muted);transition:color .2s;text-align:center}
+    .stp.active .circ{border-color:var(--indigo);background:var(--indigo);color:#fff;box-shadow:0 6px 16px rgba(99,102,241,0.35)}
+    .stp.active .lbl{color:var(--white)}
+    .stp.done .circ{border-color:var(--green);background:var(--green);color:#04221a}
+    .stp.done .lbl{color:var(--green-d)}
+    .stp-line{height:2px;flex:1;background:var(--border);margin:0 -8px 26px;min-width:24px;border-radius:2px}
+    .stp-line.done{background:var(--green)}
+
+    /* ── Panels ── */
+    .panel{display:none;animation:fade .25s ease}
+    .panel.active{display:block}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+    .card + .card{margin-top:16px}
+    .panel-head{margin-bottom:18px}
+    .panel-head h2{font-size:19px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:9px}
+    .panel-head .pico{width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,0.12);color:var(--indigo);display:inline-flex;align-items:center;justify-content:center;font-size:16px}
+    .panel-head p{font-size:13.5px;color:var(--muted);margin-top:6px}
+
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+    .field input,.field select,.field textarea{width:100%;padding:11px 13px;font-family:inherit;font-size:14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text)}
+    .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--indigo);background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,0.12)}
+    .field .sub{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45}
+    .field .sub code,.note code{background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:11px;font-family:'Menlo','SF Mono',monospace}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .field-row.three{grid-template-columns:1fr 1fr 1fr}
+
+    .btn{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+    .btn:hover{background:rgba(99,102,241,0.08);border-color:rgba(99,102,241,0.3);color:var(--indigo)}
+    .btn.primary{background:var(--indigo);border-color:var(--indigo);color:#fff}
+    .btn.primary:hover{background:#5158d8;color:#fff}
+    .btn.primary:disabled{opacity:0.5;cursor:not-allowed;background:var(--indigo)}
+    .btn.lg{padding:12px 22px;font-size:14px}
+    .btn.small{padding:6px 11px;font-size:12px}
     .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
     .btn.ghost:hover{color:var(--red);background:rgba(235,72,94,0.08)}
-    .btn:disabled{opacity:0.5;cursor:not-allowed}
+    .panel-nav{display:flex;align-items:center;gap:10px;margin-top:20px}
+    .panel-nav .spacer{flex:1}
 
-    main{padding:28px 24px 60px;max-width:1080px;margin:0 auto}
+    /* connect status checklist */
+    .checks{display:flex;flex-direction:column;gap:7px;margin-top:14px;font-size:13px}
+    .chk{display:flex;align-items:center;gap:9px;color:var(--muted)}
+    .chk .ic{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;background:var(--surface2);color:var(--muted)}
+    .chk.ok{color:var(--text)} .chk.ok .ic{background:rgba(52,211,153,0.18);color:var(--green-d)}
+    .chk.bad{color:var(--text)} .chk.bad .ic{background:rgba(235,72,94,0.15);color:#c43048}
+    .connect-status{font-size:12.5px;margin-top:12px;min-height:18px;color:var(--muted)}
+    .connect-status.ok{color:var(--green-d)} .connect-status.err{color:#c43048}
 
-    .hero{margin-bottom:22px}
-    .hero .eyebrow{display:inline-block;font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1.5px;background:rgba(61,116,244,0.1);padding:5px 12px;border-radius:100px;border:1px solid rgba(61,116,244,0.25);margin-bottom:12px}
-    .hero h1{font-size:30px;font-weight:800;color:var(--white);letter-spacing:-0.01em;line-height:1.12}
-    .hero p{font-size:14px;color:var(--muted);margin-top:8px;max-width:680px}
+    .note{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:14px}
+    .note b{color:var(--text)}
+    .note .cmds{display:flex;flex-direction:column;gap:3px;margin-top:7px}
 
-    /* flow strip */
-    .flow{display:flex;align-items:stretch;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:22px;overflow-x:auto}
-    .flow-step{display:flex;flex-direction:column;gap:2px;padding:0 14px;min-width:140px;flex:1}
-    .flow-step .n{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px}
-    .flow-step .t{font-size:13px;font-weight:700;color:var(--white)}
-    .flow-step .d{font-size:11px;color:var(--muted);line-height:1.4}
-    .flow-arrow{display:flex;align-items:center;color:var(--blue);font-size:18px;flex-shrink:0}
-    .flow-step.engine .t{color:var(--blue)}
-
-    .section-head{display:flex;align-items:center;gap:10px;margin:26px 0 12px}
-    .section-head h2{font-size:16px;font-weight:700;color:var(--white)}
-    .section-head .count{font-size:12px;color:var(--muted);font-weight:600}
-    .section-head .spacer{flex:1}
-
-    /* endpoint card */
-    .endpoint{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
-    .endpoint h3{font-size:13px;font-weight:700;color:var(--white);margin-bottom:4px}
-    .endpoint p{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5}
-    .endpoint p code{background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:'Menlo','SF Mono',monospace}
-    .url-row{display:flex;gap:8px;align-items:stretch}
-    .url-box{flex:1;display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'Menlo','SF Mono',monospace;font-size:12px;color:var(--text);overflow-x:auto;white-space:nowrap}
-    .url-box.empty{color:var(--muted);font-style:italic;font-family:inherit}
-    .events{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-    .ev-pill{font-size:10px;font-weight:600;font-family:'Menlo','SF Mono',monospace;background:rgba(167,139,255,0.1);border:1px solid rgba(167,139,255,0.3);color:#7c5cf0;padding:3px 8px;border-radius:100px}
-    .setup-note{margin-top:14px;font-size:11px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:12px}
-    .setup-note b{color:var(--text)}
-    .setup-note code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px;font-family:'Menlo','SF Mono',monospace}
-    .secret-block{margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
-    .secret-label{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
-    .secret-label .opt{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
-    .url-box.secret{font-size:12px;letter-spacing:0.3px}
-
-    /* rule card */
+    /* ── rules (step 2) ── */
+    .rules-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .rules-head .ct{font-size:12.5px;color:var(--muted);font-weight:600}
+    .rules-head .spacer{flex:1}
     .rules{display:flex;flex-direction:column;gap:12px}
-    .rule{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color 0.15s,box-shadow 0.15s}
-    .rule:hover{border-color:rgba(61,116,244,0.25);box-shadow:0 6px 18px rgba(0,0,0,0.05)}
-    .rule.disabled{opacity:0.6}
+    .rule{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .15s,box-shadow .15s}
+    .rule:hover{border-color:rgba(99,102,241,0.28);box-shadow:0 6px 18px rgba(0,0,0,0.05)}
+    .rule.disabled{opacity:0.55}
     .rule-top{display:flex;align-items:flex-start;gap:12px}
-    .rule-title{flex:1}
+    .rule-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .rule-ico.unit{background:rgba(61,116,244,0.12)}.rule-ico.math{background:rgba(236,103,43,0.12)}.rule-ico.replace{background:rgba(52,211,153,0.14)}.rule-ico.advanced{background:rgba(167,139,255,0.16)}
+    .rule-title{flex:1;min-width:0}
     .rule-title .name{font-size:15px;font-weight:700;color:var(--white)}
-    .rule-title .path{font-size:11px;color:var(--muted);margin-top:3px;font-family:'Menlo','SF Mono',monospace}
-    .rule-title .path b{color:var(--blue)}
-    .type-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 9px;border-radius:100px}
-    .type-badge.unit{background:rgba(61,116,244,0.12);color:#2c5fd0}
-    .type-badge.math{background:rgba(236,103,43,0.12);color:#c9531c}
-    .type-badge.replace{background:rgba(52,211,153,0.14);color:#0f9b6c}
-    .type-badge.advanced{background:rgba(167,139,255,0.14);color:#7c5cf0}
+    .rule-title .type{font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
     .rule-actions{display:flex;gap:4px;align-items:center}
-
-    /* toggle */
     .switch{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0;cursor:pointer}
     .switch input{display:none}
-    .switch .track{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:100px;transition:all 0.2s}
-    .switch .knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border:1px solid var(--border);border-radius:50%;transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.15)}
+    .switch .track{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:100px;transition:all .2s}
+    .switch .knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border:1px solid var(--border);border-radius:50%;transition:all .2s;box-shadow:0 1px 2px rgba(0,0,0,0.15)}
     .switch input:checked + .track{background:var(--green);border-color:var(--green)}
     .switch input:checked + .track .knob{left:18px;border-color:transparent}
-
-    .rule-body{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .rule-summary{font-size:12px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;line-height:1.6}
-    .rule-summary .lbl{color:var(--muted);font-weight:600}
-    .rule-summary code{background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:3px;font-family:'Menlo','SF Mono',monospace;font-size:11px}
-    .rule-summary .arrow{color:var(--blue);font-weight:700;margin:0 4px}
-
-    /* mini tester */
-    .tester{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+    .rule-body{margin-top:13px;display:flex;flex-direction:column;gap:10px}
+    .rule-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+    .chip-attr{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 9px;font-family:'Menlo','SF Mono',monospace;font-size:11.5px;color:var(--text)}
+    .rule-flow .op{font-size:12px;color:var(--muted);font-weight:600}
+    .rule-flow .ar{color:var(--indigo);font-weight:800}
+    .tester{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 12px}
     .tester .cap{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:7px}
-    .tester-row{display:flex;align-items:center;gap:8px}
-    .tester input{flex:1;min-width:0;padding:7px 10px;font-family:inherit;font-size:12px;background:#fff;border:1px solid var(--border);border-radius:7px;color:var(--text)}
-    .tester input:focus{outline:none;border-color:var(--blue)}
-    .tester .res{flex:1;min-width:0;padding:7px 10px;font-size:12px;font-weight:600;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:7px;color:#0f9b6c;white-space:nowrap;overflow-x:auto}
+    .tester-row{display:flex;align-items:center;gap:9px}
+    .tester input{flex:1;min-width:0;padding:8px 11px;font-family:inherit;font-size:13px;background:#fff;border:1px solid var(--border);border-radius:7px;color:var(--text)}
+    .tester input:focus{outline:none;border-color:var(--indigo)}
+    .tester .res{flex:1;min-width:0;padding:8px 11px;font-size:13px;font-weight:700;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:7px;color:var(--green-d);white-space:nowrap;overflow-x:auto}
     .tester .res.same{background:var(--surface);border-color:var(--border);color:var(--muted);font-weight:500}
-    .tester .res.err{background:rgba(235,72,94,0.1);border-color:rgba(235,72,94,0.3);color:#c43048}
-    .tester .ar{color:var(--blue);font-size:15px;flex-shrink:0}
+    .tester .ar{color:var(--indigo);font-size:15px;flex-shrink:0;font-weight:800}
+    .empty{padding:46px 24px;text-align:center;color:var(--muted);border:2px dashed var(--border);border-radius:12px;background:var(--surface)}
+    .empty .big{font-size:34px;margin-bottom:8px}
+    .empty h3{font-weight:700;color:var(--text);margin-bottom:6px;font-size:16px}
+    .empty p{font-size:13px;margin-bottom:14px}
 
-    .webhook-field{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
-    .webhook-field label{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
-    .webhook-field .hint-q{width:14px;height:14px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:9px;display:inline-flex;align-items:center;justify-content:center;cursor:help;font-weight:700}
-    .webhook-field input{width:100%;padding:8px 11px;font-family:'Menlo','SF Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text)}
-    .webhook-field input:focus{outline:none;border-color:var(--blue);background:#fff}
+    /* ── go live (step 3) ── */
+    .copyrow{display:flex;gap:9px;align-items:stretch;margin-top:6px}
+    .copybox{flex:1;display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;font-family:'Menlo','SF Mono',monospace;font-size:12.5px;color:var(--text);overflow-x:auto;white-space:nowrap}
+    .copybox.empty{color:var(--muted);font-style:italic;font-family:inherit}
+    .events{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .ev-pill{font-size:10px;font-weight:600;font-family:'Menlo','SF Mono',monospace;background:rgba(167,139,255,0.12);border:1px solid rgba(167,139,255,0.3);color:#7c5cf0;padding:3px 8px;border-radius:100px}
+    .golive-steps{counter-reset:gl;display:flex;flex-direction:column;gap:16px}
+    .gl{display:flex;gap:13px}
+    .gl::before{counter-increment:gl;content:counter(gl);width:26px;height:26px;border-radius:50%;background:rgba(99,102,241,0.12);color:var(--indigo);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .gl .gl-body{flex:1}
+    .gl h4{font-size:14px;font-weight:700;color:var(--white);margin-bottom:4px}
+    .gl p{font-size:12.5px;color:var(--muted);line-height:1.5}
+    .live-banner{display:flex;align-items:center;gap:10px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.35);border-radius:10px;padding:13px 15px;font-size:13px;color:var(--green-d);font-weight:600;margin-top:4px}
+    .live-banner .dot{width:9px;height:9px;border-radius:50%;background:#10b981;box-shadow:0 0 7px #10b981}
 
-    .empty{padding:50px 24px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:12px;background:var(--surface)}
-    .empty h3{font-weight:700;color:var(--text);margin-bottom:6px;font-size:15px}
-    .empty p{font-size:13px}
-
-    /* modal */
-    .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.35);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:40px 16px;overflow-y:auto}
+    /* ── editor modal (rule builder) ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.4);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:36px 16px;overflow-y:auto}
     .modal-overlay.open{display:flex}
-    .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:560px;max-width:96vw;box-shadow:0 24px 60px rgba(0,0,0,0.18)}
-    .modal.wide{width:620px}
-    .modal h2{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--white)}
-    .modal .hint{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px}
-    .modal .hint code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px;font-family:'Menlo','SF Mono',monospace}
-    .field{margin-bottom:13px}
-    .field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
-    .field input,.field select,.field textarea{width:100%;padding:9px 12px;font-family:inherit;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text)}
-    .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);background:#fff}
-    .field .sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
-    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .field-row.three{grid-template-columns:1fr 1fr 1fr}
-    .type-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-    .type-opt{border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2)}
-    .type-opt:hover{border-color:rgba(61,116,244,0.4)}
-    .type-opt.sel{border-color:var(--blue);background:rgba(61,116,244,0.08)}
-    .type-opt .ico{font-size:20px;margin-bottom:4px}
-    .type-opt .nm{font-size:11px;font-weight:700;color:var(--text)}
-    .modal-preview{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin:6px 0 4px}
-    .modal-preview .cap{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:8px}
-    .modal-preview .pv-row{display:flex;align-items:center;gap:10px}
-    .modal-preview .pv-row .ar{color:var(--blue);font-size:16px}
-    .modal-preview .out{font-weight:700;color:#0f9b6c}
-    .modal-preview .out.err{color:var(--red)}
-    .modal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:20px}
-    .modal-status{flex:1;font-size:11px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:600px;max-width:96vw;box-shadow:0 24px 70px rgba(0,0,0,0.2)}
+    .modal h2{font-size:18px;font-weight:800;margin-bottom:4px;color:var(--white)}
+    .modal .hint{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:16px}
+    .type-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px}
+    .type-opt{border:1.5px solid var(--border);border-radius:11px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2)}
+    .type-opt:hover{border-color:rgba(99,102,241,0.45);transform:translateY(-1px)}
+    .type-opt.sel{border-color:var(--indigo);background:rgba(99,102,241,0.1)}
+    .type-opt .ico{font-size:23px;margin-bottom:5px}
+    .type-opt .nm{font-size:11.5px;font-weight:700;color:var(--text)}
+    .modal-preview{background:linear-gradient(135deg,rgba(99,102,241,0.07),rgba(52,211,153,0.07));border:1px solid var(--border);border-radius:11px;padding:14px;margin:8px 0 4px}
+    .modal-preview .cap{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:9px}
+    .modal-preview .pv-row{display:flex;align-items:center;gap:11px}
+    .modal-preview .ar{color:var(--indigo);font-size:18px;font-weight:800}
+    .modal-preview .out{font-weight:800;color:var(--green-d);font-size:15px}
+    .modal-preview .out.err{color:var(--red);font-size:13px}
+    .modal-actions{display:flex;gap:9px;justify-content:flex-end;align-items:center;margin-top:20px}
+    .modal-status{flex:1;font-size:12px;display:flex;align-items:center;gap:7px;color:var(--muted)}
     .modal-status .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
-    .modal-status.ok{color:#0f9b6c} .modal-status.ok .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
-    .modal-status.err{color:var(--red)} .modal-status.err .dot{background:var(--red)}
+    .modal-status.err{color:#c43048} .modal-status.err .dot{background:var(--red)}
+    .cfg .field-row{margin-bottom:0}
     .lookup-rows{display:flex;flex-direction:column;gap:6px}
     .lookup-row{display:flex;gap:6px;align-items:center}
     .lookup-row input{flex:1}
-    .lookup-row .ar{color:var(--blue);font-weight:700}
+    .lookup-row .ar{color:var(--indigo);font-weight:800}
     .lookup-row .rm{cursor:pointer;color:var(--muted);font-size:16px;padding:0 4px}
     .lookup-row .rm:hover{color:var(--red)}
+    .inline-check{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0}
+    .inline-check input{width:auto}
 
-    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);padding:11px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.12);transform:translateY(120px);opacity:0;transition:all 0.25s;z-index:200;max-width:360px;color:var(--text)}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);padding:12px 17px;border-radius:11px;font-size:13px;box-shadow:0 8px 26px rgba(0,0,0,0.14);transform:translateY(120px);opacity:0;transition:all .25s;z-index:200;max-width:360px;color:var(--text);font-weight:600}
     .toast.show{transform:translateY(0);opacity:1}
-    .toast.success{border-color:rgba(52,211,153,0.4);color:#0f9b6c}
+    .toast.success{border-color:rgba(52,211,153,0.4);color:var(--green-d)}
     .toast.error{border-color:rgba(235,72,94,0.4);color:#c43048}
 
-    .footnote{text-align:center;font-size:12px;color:var(--muted);padding:30px 0 8px;margin-top:30px;border-top:1px solid var(--border)}
-
-    @media(max-width:720px){
-      .rule-body{grid-template-columns:1fr}
-      .type-picker{grid-template-columns:repeat(2,1fr)}
-      .field-row,.field-row.three{grid-template-columns:1fr}
-      .flow{flex-direction:column}
-      .flow-arrow{transform:rotate(90deg);padding:4px 0}
+    @media(max-width:640px){
+      .field-row,.field-row.three,.type-picker{grid-template-columns:1fr 1fr}
+      .stp{width:84px}.stp .lbl{font-size:11px}
+      .brand-sub{display:none}
     }
   </style>
 </head>
 <body>
   <header id="header">
-    <div class="logo">
-      <svg viewBox="0 0 34 34" fill="none"><polygon points="17,3 31,29 3,29" fill="url(#lg)"/><defs><linearGradient id="lg" x1="3" y1="3" x2="31" y2="29"><stop offset="0%" stop-color="#3D74F4"/><stop offset="100%" stop-color="#0F05CC"/></linearGradient></defs></svg>
-      AI Conversion Engine
+    <div class="brand">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>
+      <div>
+        <div class="brand-title">AI Conversion Engine</div>
+        <div class="brand-sub">Auto-normalize values in Bluestone PIM</div>
+      </div>
     </div>
-    <div class="pim-badge" title="Engine for Bluestone PIM LABS"><span class="pim-dot"></span>Bluestone PIM LABS</div>
     <div class="header-spacer"></div>
-    <a class="header-link" href="demos.html">← All demos</a>
-    <button class="btn" onclick="openSettings()">⚙ Settings</button>
+    <a class="header-link" href="demos.html" style="margin-right:14px">All demos</a>
+    <div class="conn-pill" id="conn-pill" onclick="goStep(1)"><span class="dot"></span><span id="conn-text">Not connected</span></div>
   </header>
 
   <main>
-    <div class="hero">
-      <span class="eyebrow">Webhook-driven transforms</span>
-      <h1>Fix values automatically, as they enter Bluestone</h1>
-      <p>Set a rule once. Bluestone's webhook runs it on every change — convert units, do the maths, tidy text — then writes the result straight back.</p>
+    <div class="lede">
+      <h1>Convert values automatically, as they enter Bluestone</h1>
+      <p>Set a rule once — convert units, do the maths, tidy text. Bluestone's webhook runs it on every change and writes the clean value straight back.</p>
     </div>
 
-    <div class="flow">
-      <div class="flow-step"><span class="n">1 · Source</span><span class="t">Value enters Bluestone</span><span class="d">e.g. width = 12 in</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="n">2 · Trigger</span><span class="t">Webhook fires</span><span class="d">Bluestone POSTs it here</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step engine"><span class="n">3 · Engine</span><span class="t">Rule runs</span><span class="d">12 in → 30.48 cm</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="n">4 · Write back</span><span class="t">Saved to PIM</span><span class="d">Clean value, instantly</span></div>
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="stp" data-step="1" onclick="goStep(1)"><div class="circ">1</div><div class="lbl">Connect</div></div>
+      <div class="stp-line" data-line="1"></div>
+      <div class="stp" data-step="2" onclick="goStep(2)"><div class="circ">2</div><div class="lbl">Build rules</div></div>
+      <div class="stp-line" data-line="2"></div>
+      <div class="stp" data-step="3" onclick="goStep(3)"><div class="circ">3</div><div class="lbl">Go live</div></div>
     </div>
 
-    <div class="section-head"><h2>Engine endpoint</h2></div>
-    <div class="endpoint">
-      <h3>Point your Bluestone webhook here</h3>
-      <p>Paste this as the webhook's delivery URL. Every change lands here and runs against your rules.</p>
-      <div class="url-row">
-        <div class="url-box empty" id="engine-url">Set your Worker URL in ⚙ Settings to generate the endpoint</div>
-        <button class="btn primary" id="copy-engine" onclick="copyEngineUrl()" disabled>Copy</button>
-      </div>
-      <div class="events" id="event-list"></div>
-      <div class="setup-note">
-        <b>Setup:</b> in Bluestone, create a webhook → delivery URL = above → subscribe to these events → set its <b>Secret</b> (see below). Then <b>Sync rules</b>. <span id="sync-state"></span>
-      </div>
-
-      <div class="secret-block">
-        <div class="secret-label">Webhook signing secret <span class="opt">— must be the same value in Bluestone and on the Worker</span></div>
-        <div class="url-row">
-          <div class="url-box secret empty" id="webhook-secret">Click “New” to generate a secret →</div>
-          <button class="btn" onclick="regenSecret()" title="Generate a new random secret">↻ New</button>
-          <button class="btn primary" id="copy-secret" onclick="copySecret()" disabled>Copy</button>
+    <!-- STEP 1 — CONNECT -->
+    <section class="panel" data-step="1">
+      <div class="card">
+        <div class="panel-head">
+          <h2><span class="pico">🔌</span> Connect your engine</h2>
+          <p>Point this console at your Cloudflare Worker. This page only stores the URL + passphrase — all Bluestone credentials live on the Worker.</p>
         </div>
-        <div class="setup-note" style="margin-top:10px">
-          Put this <b>exact value in two places</b> so the signatures match:
-          <b>1)</b> the Bluestone webhook’s <b>Secret</b> field, and
-          <b>2)</b> the Worker — run <code>wrangler secret put WEBHOOK_SECRET</code> and paste the same value.
-          The page can’t read the Worker’s secret (it’s server-side), so it just helps you set both the same.
-          <br><b>Don’t want a secret?</b> Leave Bluestone’s blank <i>and</i> remove the Worker’s <code>WEBHOOK_SECRET</code> — the engine then accepts unsigned calls (simpler, less secure).
+        <div class="field"><label>Worker URL</label><input type="text" id="worker-url" placeholder="https://pim-agent-proxy.your-account.workers.dev"></div>
+        <div class="field"><label>Shared secret</label><input type="password" id="worker-secret" placeholder="The SHARED_SECRET passphrase"></div>
+        <button class="btn primary" onclick="testBackend()">Test connection</button>
+        <div class="checks" id="checks" style="display:none"></div>
+        <div class="connect-status" id="modal-status"></div>
+        <div class="note">
+          <b>Server-side credentials</b> (set once on the Worker, never entered here):
+          <div class="cmds">
+            <code>wrangler secret put BLUESTONE_PAPI_KEY</code>
+            <code>wrangler secret put BLUESTONE_MAPI_CLIENT_ID</code>
+            <code>wrangler secret put BLUESTONE_MAPI_CLIENT_SECRET</code>
+            <code>wrangler secret put WEBHOOK_SECRET</code>
+          </div>
+        </div>
+        <div class="panel-nav">
+          <div class="spacer"></div>
+          <button class="btn primary lg" onclick="goStep(2)">Continue →</button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="section-head">
-      <h2>Conversion rules</h2>
-      <span class="count" id="rule-count"></span>
-      <div class="spacer"></div>
-      <button class="btn" onclick="syncRules()" title="Push these rules to the engine (Worker KV)">⟳ Sync to engine</button>
-      <button class="btn primary" onclick="openEditor()">+ New rule</button>
-    </div>
-    <div class="rules" id="rules"></div>
+    <!-- STEP 2 — RULES -->
+    <section class="panel" data-step="2">
+      <div class="card">
+        <div class="panel-head">
+          <h2><span class="pico">🔁</span> Build your conversion rules</h2>
+          <p>Each rule reads one attribute, transforms it, and writes the result back. Try any value in the live preview before you save.</p>
+        </div>
+        <div class="rules-head">
+          <span class="ct" id="rule-count"></span>
+          <div class="spacer"></div>
+          <button class="btn primary" onclick="openEditor()">+ Add a rule</button>
+        </div>
+        <div class="rules" id="rules"></div>
+        <div class="panel-nav">
+          <button class="btn" onclick="goStep(1)">← Back</button>
+          <div class="spacer"></div>
+          <button class="btn primary lg" onclick="goStep(3)">Continue →</button>
+        </div>
+      </div>
+    </section>
 
-    <p class="footnote">Rules live in your browser; sync to the engine when ready.</p>
+    <!-- STEP 3 — GO LIVE -->
+    <section class="panel" data-step="3">
+      <div class="card">
+        <div class="panel-head">
+          <h2><span class="pico">🚀</span> Connect Bluestone &amp; go live</h2>
+          <p>Create a webhook in Bluestone pointing at your engine, then sync your rules. After that, every product change runs through automatically.</p>
+        </div>
+        <div class="golive-steps">
+          <div class="gl">
+            <div class="gl-body">
+              <h4>Copy your engine URL</h4>
+              <p>In Bluestone, create a webhook and paste this as its delivery URL.</p>
+              <div class="copyrow">
+                <div class="copybox empty" id="engine-url">Connect in step 1 to generate the URL</div>
+                <button class="btn primary" id="copy-engine" onclick="copyEngineUrl()" disabled>Copy</button>
+              </div>
+            </div>
+          </div>
+          <div class="gl">
+            <div class="gl-body">
+              <h4>Set the signing secret</h4>
+              <p>Use this <b>same value</b> in the webhook's <b>Secret</b> field and on the Worker (<code>wrangler secret put WEBHOOK_SECRET</code>). The page can't read the Worker's secret, so generate one here and set both.</p>
+              <div class="copyrow">
+                <div class="copybox secret empty" id="webhook-secret">Click “New” to generate a secret →</div>
+                <button class="btn" onclick="regenSecret()" title="Generate a new random secret">↻ New</button>
+                <button class="btn primary" id="copy-secret" onclick="copySecret()" disabled>Copy</button>
+              </div>
+            </div>
+          </div>
+          <div class="gl">
+            <div class="gl-body">
+              <h4>Subscribe to product events</h4>
+              <p>Pick these change events on the webhook so updates reach the engine.</p>
+              <div class="events" id="event-list"></div>
+            </div>
+          </div>
+          <div class="gl">
+            <div class="gl-body">
+              <h4>Sync your rules to the engine</h4>
+              <p>Pushes the rules above to the Worker so the webhook knows what to do. <span id="sync-state"></span></p>
+              <button class="btn primary" onclick="syncRules()">⟳ Sync rules to engine</button>
+            </div>
+          </div>
+        </div>
+        <div class="live-banner" id="live-banner" style="display:none"><span class="dot"></span><span>You're live — change a value on a product in Bluestone and watch it convert.</span></div>
+        <div class="panel-nav">
+          <button class="btn" onclick="goStep(2)">← Back</button>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- Rule editor -->
+  <!-- Rule builder -->
   <div class="modal-overlay" id="editor-modal">
-    <div class="modal wide">
+    <div class="modal">
       <h2 id="editor-title">New conversion rule</h2>
       <p class="hint">Pick a transform, choose the attribute, watch the preview.</p>
 
       <div class="type-picker" id="type-picker">
-        <div class="type-opt" data-type="unit" onclick="pickType('unit')"><div class="ico">📏</div><div class="nm">Unit convert</div></div>
-        <div class="type-opt" data-type="math" onclick="pickType('math')"><div class="ico">🧮</div><div class="nm">Math</div></div>
-        <div class="type-opt" data-type="replace" onclick="pickType('replace')"><div class="ico">🔤</div><div class="nm">Find &amp; replace</div></div>
-        <div class="type-opt" data-type="advanced" onclick="pickType('advanced')"><div class="ico">⚙️</div><div class="nm">Advanced text</div></div>
+        <div class="type-opt" data-type="unit" onclick="pickType('unit')"><div class="ico">📏</div><div class="nm">Convert units</div></div>
+        <div class="type-opt" data-type="math" onclick="pickType('math')"><div class="ico">🧮</div><div class="nm">Do maths</div></div>
+        <div class="type-opt" data-type="replace" onclick="pickType('replace')"><div class="ico">🔤</div><div class="nm">Replace text</div></div>
+        <div class="type-opt" data-type="advanced" onclick="pickType('advanced')"><div class="ico">⚙️</div><div class="nm">Advanced</div></div>
       </div>
 
-      <div class="field">
-        <label>Rule name</label>
-        <input type="text" id="f-name" placeholder="e.g. Inches → Centimeters" oninput="livePreview()">
-      </div>
+      <div class="field"><label>Rule name</label><input type="text" id="f-name" placeholder="e.g. Grams → Kilograms" oninput="livePreview()"></div>
 
       <div class="field-row">
-        <div class="field">
-          <label>Source attribute (read)</label>
-          <input type="text" id="f-source" placeholder="e.g. width" oninput="onSourceChange()">
-          <div class="sub">The attribute to read.</div>
-        </div>
-        <div class="field">
-          <label>Target attribute (write)</label>
-          <input type="text" id="f-target" placeholder="defaults to source" oninput="livePreview()">
-          <div class="sub" id="target-sub">Leave blank to overwrite the source attribute.</div>
-        </div>
+        <div class="field"><label>Source attribute (read)</label><input type="text" id="f-source" placeholder="e.g. Weight (g)" oninput="onSourceChange()"><div class="sub">The attribute to read.</div></div>
+        <div class="field"><label>Target attribute (write)</label><input type="text" id="f-target" placeholder="defaults to source"><div class="sub" id="target-sub">Leave blank to overwrite the source attribute.</div></div>
       </div>
 
-      <!-- type-specific -->
       <div id="cfg-unit" class="cfg" style="display:none">
         <div class="field-row three">
           <div class="field"><label>From unit</label><select id="f-from" onchange="livePreview()"></select></div>
           <div class="field"><label>To unit</label><select id="f-to" onchange="livePreview()"></select></div>
           <div class="field"><label>Decimals</label><input type="number" id="f-dec-u" value="2" min="0" max="6" oninput="livePreview()"></div>
         </div>
-        <div class="field"><label style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--text);display:flex;gap:8px;align-items:center"><input type="checkbox" id="f-appendunit" style="width:auto" onchange="livePreview()"> Append unit symbol to the result (e.g. "30.48 cm")</label></div>
+        <div class="field"><label class="inline-check"><input type="checkbox" id="f-appendunit" onchange="livePreview()"> Append unit symbol to the result (e.g. “2.5 kg”)</label></div>
       </div>
 
       <div id="cfg-math" class="cfg" style="display:none">
         <div class="field-row">
-          <div class="field"><label>Expression (use x for the value)</label><input type="text" id="f-expr" placeholder="x * 1.25" oninput="livePreview()"><div class="sub">Allowed: numbers, x, + − × ÷ and ( ). E.g. round VAT: <code>x * 1.25</code></div></div>
+          <div class="field"><label>Expression (use x for the value)</label><input type="text" id="f-expr" placeholder="x * 1.25" oninput="livePreview()"><div class="sub">Allowed: numbers, x, + − × ÷ and ( ). E.g. add VAT: <code>x * 1.25</code></div></div>
           <div class="field"><label>Decimals</label><input type="number" id="f-dec-m" value="2" min="0" max="6" oninput="livePreview()"></div>
         </div>
         <div class="field sub" style="color:var(--orange)">⚠ To avoid loops, point maths at a <b>different</b> target attribute.</div>
@@ -312,7 +372,7 @@
         </div>
         <div class="field-row">
           <div class="field"><label>Match</label><select id="f-rmode" onchange="livePreview()"><option value="substring">Anywhere in the value</option><option value="whole">Whole value only</option></select></div>
-          <div class="field"><label style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--text);display:flex;gap:8px;align-items:center;margin-top:22px"><input type="checkbox" id="f-case" style="width:auto" onchange="livePreview()"> Case sensitive</label></div>
+          <div class="field"><label style="visibility:hidden">x</label><label class="inline-check"><input type="checkbox" id="f-case" onchange="livePreview()"> Case sensitive</label></div>
         </div>
       </div>
 
@@ -345,16 +405,12 @@
         </div>
       </div>
 
-      <div class="field">
-        <label>Bluestone webhook URL <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="f-webhook" placeholder="https://… — just for your reference">
-        <div class="sub">All webhooks can share the one endpoint above. Add <code>?rule=THIS_ID</code> to run only this rule.</div>
-      </div>
+      <input type="hidden" id="f-webhook">
 
       <div class="modal-preview">
         <div class="cap">Live preview</div>
         <div class="pv-row">
-          <input type="text" id="pv-input" placeholder="Type an example incoming value…" oninput="livePreview()" style="flex:1;min-width:0;padding:7px 10px;font-family:inherit;font-size:13px;background:#fff;border:1px solid var(--border);border-radius:7px;color:var(--text)">
+          <input type="text" id="pv-input" placeholder="Type an example incoming value…" oninput="livePreview()" style="flex:1;min-width:0;padding:9px 12px;font-family:inherit;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;color:var(--text)">
           <span class="ar">→</span>
           <span class="out" id="pv-output">—</span>
         </div>
@@ -364,32 +420,6 @@
         <div class="modal-status" id="editor-status"><span class="dot"></span><span>Draft</span></div>
         <button class="btn" onclick="closeEditor()">Cancel</button>
         <button class="btn primary" onclick="saveRule()">Save rule</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Settings -->
-  <div class="modal-overlay" id="settings-modal">
-    <div class="modal">
-      <h2>Engine backend (Cloudflare Worker)</h2>
-      <p class="hint">This page stores only the Worker URL + shared passphrase. Every Bluestone credential lives as a Worker secret, so it never reaches the browser.</p>
-      <div class="field"><label>Worker URL</label><input type="text" id="worker-url" placeholder="https://pim-agent-proxy.your-account.workers.dev"></div>
-      <div class="field"><label>Shared secret</label><input type="password" id="worker-secret" placeholder="The SHARED_SECRET passphrase"></div>
-      <div class="hint" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin:4px 0 0">
-        <b style="color:var(--text)">Reads &amp; write-backs to Bluestone</b> use the Worker's MAPI/PAPI credentials — set once, server-side, never entered here:
-        <div style="margin-top:7px;display:flex;flex-direction:column;gap:3px">
-          <code>wrangler secret put BLUESTONE_PAPI_KEY</code>
-          <code>wrangler secret put BLUESTONE_MAPI_CLIENT_ID</code>
-          <code>wrangler secret put BLUESTONE_MAPI_CLIENT_SECRET</code>
-          <code>wrangler secret put WEBHOOK_SECRET</code>
-        </div>
-        <div style="margin-top:7px">Hit <b>Test</b> to confirm the Worker has them all.</div>
-      </div>
-      <div class="modal-actions">
-        <div class="modal-status" id="modal-status"><span class="dot"></span><span>Not tested</span></div>
-        <button class="btn" onclick="testBackend()">Test</button>
-        <button class="btn primary" onclick="saveSettings()">Save</button>
-        <button class="btn" onclick="closeSettings()">Close</button>
       </div>
     </div>
   </div>
@@ -438,7 +468,6 @@
       try{ return Function('x','"use strict";return ('+expr.replace(/X/g,'x').replace(/,/g,'.')+')')(x); }
       catch(e){ return NaN; }
     }
-    // Pure: given an incoming value + rule, return the converted value (string).
     function applyRule(value, rule){
       const v = value==null ? '' : String(value);
       try{
@@ -483,6 +512,7 @@
     }
 
     const TYPE_LABEL = {unit:'Unit convert', math:'Math', replace:'Find & replace', advanced:'Advanced'};
+    const TYPE_ICON = {unit:'📏', math:'🧮', replace:'🔤', advanced:'⚙️'};
     const EVENTS = ['PRODUCT_WATCH_ATTRIBUTE_UPDATE_VALUE','PRODUCT_CREATED','PRODUCT_WATCH_METADATA_NAME','PRODUCT_WATCH_METADATA_DESCRIPTION'];
 
     /* ============================================================
@@ -496,53 +526,82 @@
     let editingId = null;
     let draftType = 'unit';
     let draftLookup = [];
+    let step = 1;
 
     function loadRules(){
       try{ const r=JSON.parse(localStorage.getItem('conv-rules')||'null'); if(Array.isArray(r)) return r; }catch(e){}
-      return seedRules();
+      return [];
     }
     function persist(){ localStorage.setItem('conv-rules', JSON.stringify(rules)); }
     function uid(){ return 'rule_' + Math.random().toString(36).slice(2,9); }
-
-    function seedRules(){ return []; }  // start empty — no preloaded rules
-
-    /* ============================================================
-       RENDER
-       ============================================================ */
+    function isConnected(){ return !!(settings.workerUrl && settings.workerSecret); }
     function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-    function ruleSummary(r){
-      const tgt = r.target && r.target!==r.source ? r.target : r.source;
-      const route = `<span class="lbl">reads</span> <code>${esc(r.source||'?')}</code> <span class="arrow">→</span> <span class="lbl">writes</span> <code>${esc(tgt||'?')}</code>`;
-      let what='';
-      if(r.type==='unit') what = `Convert <code>${esc(UNITS[r.fromUnit]?.sym||r.fromUnit)}</code> → <code>${esc(UNITS[r.toUnit]?.sym||r.toUnit)}</code>${r.appendUnit?' (with unit)':''}`;
-      else if(r.type==='math') what = `Apply <code>${esc(r.expression)}</code>, round to ${r.decimals}`;
-      else if(r.type==='replace') what = `${r.mode==='whole'?'Whole-value':'Substring'} replace <code>${esc(r.find)}</code> → <code>${esc(r.replace)}</code>`;
-      else if(r.type==='advanced'){
-        const map={uppercase:'UPPERCASE',lowercase:'lowercase',titlecase:'Title Case',trim:'Trim spaces',prefix:'Add prefix "'+esc(r.text||'')+'"',suffix:'Add suffix "'+esc(r.text||'')+'"',regex:'Regex /'+esc(r.pattern)+'/'+esc(r.flags||''),lookup:(r.lookup||[]).length+' lookup mapping(s)'};
-        what = map[r.op]||r.op;
-      }
-      return `<div class="rule-summary">${route}<br>${what}</div>`;
+    /* ============================================================
+       WIZARD NAV
+       ============================================================ */
+    function goStep(n){
+      step=n;
+      document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', +p.dataset.step===n));
+      refreshStepper();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+    function refreshStepper(){
+      const connected = isConnected();
+      const haveRules = rules.length>0;
+      const done = {1:connected, 2:haveRules, 3:false};
+      document.querySelectorAll('.stp').forEach(el=>{
+        const s=+el.dataset.step;
+        el.classList.toggle('active', s===step);
+        el.classList.toggle('done', s!==step && done[s]);
+        el.querySelector('.circ').textContent = (s!==step && done[s]) ? '✓' : s;
+      });
+      document.querySelector('[data-line="1"]').classList.toggle('done', connected);
+      document.querySelector('[data-line="2"]').classList.toggle('done', haveRules);
+    }
+    function refreshConn(){
+      const pill=document.getElementById('conn-pill');
+      const on=isConnected();
+      pill.classList.toggle('on', on);
+      document.getElementById('conn-text').textContent = on ? 'Engine connected' : 'Not connected';
+      document.getElementById('live-banner').style.display = (on && rules.length) ? 'flex' : 'none';
+      refreshStepper();
     }
 
+    /* ============================================================
+       RULES (step 2)
+       ============================================================ */
+    function ruleFlow(r){
+      const tgt = r.target && r.target!==r.source ? r.target : r.source;
+      let op='';
+      if(r.type==='unit') op = `${esc(UNITS[r.fromUnit]?.sym||r.fromUnit)} → ${esc(UNITS[r.toUnit]?.sym||r.toUnit)}`;
+      else if(r.type==='math') op = esc(r.expression);
+      else if(r.type==='replace') op = `“${esc(r.find)}” → “${esc(r.replace)}”`;
+      else if(r.type==='advanced'){
+        const map={uppercase:'UPPERCASE',lowercase:'lowercase',titlecase:'Title Case',trim:'Trim spaces',prefix:'prefix “'+esc(r.text||'')+'”',suffix:'suffix “'+esc(r.text||'')+'”',regex:'regex /'+esc(r.pattern)+'/',lookup:(r.lookup||[]).length+' mappings'};
+        op = map[r.op]||r.op;
+      }
+      return `<span class="chip-attr">${esc(r.source||'?')}</span><span class="op">${op}</span><span class="ar">→</span><span class="chip-attr">${esc(tgt||'?')}</span>`;
+    }
     function ruleCard(r){
       const sample = sampleFor(r);
       const out = applyRule(sample, r);
       const same = String(out)===String(sample);
       return `<div class="rule ${r.enabled?'':'disabled'}" data-id="${r.id}">
         <div class="rule-top">
-          <label class="switch"><input type="checkbox" ${r.enabled?'checked':''} onchange="toggleRule('${r.id}')"><span class="track"><span class="knob"></span></span></label>
+          <div class="rule-ico ${r.type}">${TYPE_ICON[r.type]||'🔁'}</div>
           <div class="rule-title">
             <div class="name">${esc(r.name||'Untitled rule')}</div>
-            <div class="path"><span class="type-badge ${r.type}">${esc(TYPE_LABEL[r.type])}</span></div>
+            <div class="type">${esc(TYPE_LABEL[r.type])}</div>
           </div>
           <div class="rule-actions">
+            <label class="switch"><input type="checkbox" ${r.enabled?'checked':''} onchange="toggleRule('${r.id}')"><span class="track"><span class="knob"></span></span></label>
             <button class="btn small" onclick="openEditor('${r.id}')">Edit</button>
-            <button class="btn small ghost" onclick="deleteRule('${r.id}')" title="Delete rule">✕</button>
+            <button class="btn small ghost" onclick="deleteRule('${r.id}')" title="Delete">✕</button>
           </div>
         </div>
         <div class="rule-body">
-          ${ruleSummary(r)}
+          <div class="rule-flow">${ruleFlow(r)}</div>
           <div class="tester">
             <div class="cap">Try it</div>
             <div class="tester-row">
@@ -552,13 +611,8 @@
             </div>
           </div>
         </div>
-        <div class="webhook-field">
-          <label>Linked Bluestone webhook URL</label>
-          <input type="text" value="${esc(r.webhook||'')}" placeholder="Paste the webhook URL you created in Bluestone (optional)" onchange="setWebhook('${r.id}',this.value)">
-        </div>
       </div>`;
     }
-
     function sampleFor(r){
       if(r._sample!=null) return r._sample;
       if(r.type==='unit') return '12';
@@ -571,17 +625,16 @@
       }
       return 'sample';
     }
-
     function render(){
       const host=document.getElementById('rules');
       document.getElementById('rule-count').textContent = rules.length ? `${rules.filter(r=>r.enabled).length} active · ${rules.length} total` : '';
       if(!rules.length){
-        host.innerHTML = `<div class="empty"><h3>No rules yet</h3><p>Add a rule to start converting values automatically.</p><button class="btn primary" style="margin-top:14px" onclick="openEditor()">+ New rule</button></div>`;
-        return;
+        host.innerHTML = `<div class="empty"><div class="big">🔁</div><h3>No rules yet</h3><p>Add a rule to start converting values automatically.</p><button class="btn primary" onclick="openEditor()">+ Add your first rule</button></div>`;
+      } else {
+        host.innerHTML = rules.map(ruleCard).join('');
       }
-      host.innerHTML = rules.map(ruleCard).join('');
+      refreshConn();
     }
-
     function liveTest(input, id){
       const r=rules.find(x=>x.id===id); if(!r) return;
       r._sample=input.value;
@@ -590,20 +643,15 @@
       box.textContent=out;
       box.classList.toggle('same', String(out)===String(input.value));
     }
-
-    /* ============================================================
-       RULE CRUD
-       ============================================================ */
-    function toggleRule(id){ const r=rules.find(x=>x.id===id); if(r){ r.enabled=!r.enabled; persist(); render(); } }
-    function setWebhook(id,val){ const r=rules.find(x=>x.id===id); if(r){ r.webhook=val.trim(); persist(); } }
+    function toggleRule(id){ const r=rules.find(x=>x.id===id); if(r){ r.enabled=!r.enabled; persist(); render(); maybeAutosync(); } }
     function deleteRule(id){
       const r=rules.find(x=>x.id===id); if(!r) return;
       if(!confirm(`Delete rule "${r.name}"?`)) return;
-      rules=rules.filter(x=>x.id!==id); persist(); render(); toast('Rule deleted');
+      rules=rules.filter(x=>x.id!==id); persist(); render(); maybeAutosync(); toast('Rule deleted');
     }
 
     /* ============================================================
-       EDITOR
+       RULE BUILDER (editor)
        ============================================================ */
     function openEditor(id){
       editingId = id || null;
@@ -612,18 +660,13 @@
       populateUnitSelects();
       draftType = r ? r.type : 'unit';
       draftLookup = r && r.lookup ? JSON.parse(JSON.stringify(r.lookup)) : [{from:'',to:''}];
-      // base fields
       setVal('f-name', r?.name||'');
       setVal('f-source', r?.source||'');
       setVal('f-target', r?.target||'');
-      // unit
-      setVal('f-from', r?.fromUnit||'in'); setVal('f-to', r?.toUnit||'cm');
+      setVal('f-from', r?.fromUnit||'g'); setVal('f-to', r?.toUnit||'kg');
       setVal('f-dec-u', r?.decimals!=null?r.decimals:2); document.getElementById('f-appendunit').checked = !!r?.appendUnit;
-      // math
       setVal('f-expr', r?.expression||'x * 1.25'); setVal('f-dec-m', r?.decimals!=null?r.decimals:2);
-      // replace
       setVal('f-find', r?.find||''); setVal('f-replace', r?.replace||''); setVal('f-rmode', r?.mode||'substring'); document.getElementById('f-case').checked=!!r?.caseSensitive;
-      // advanced
       setVal('f-op', r?.op||'uppercase'); setVal('f-advtext', r?.text||'');
       setVal('f-pattern', r?.pattern||''); setVal('f-flags', r?.flags||'g'); setVal('f-rxreplace', r?.replace||'');
       setVal('f-webhook', r?.webhook||'');
@@ -637,7 +680,6 @@
       setTimeout(()=>document.getElementById('f-name').focus(),50);
     }
     function closeEditor(){ document.getElementById('editor-modal').classList.remove('open'); }
-
     function pickType(t, silent){
       draftType=t;
       document.querySelectorAll('.type-opt').forEach(el=>el.classList.toggle('sel', el.dataset.type===t));
@@ -654,11 +696,9 @@
     }
     function onSourceChange(){
       const src=document.getElementById('f-source').value.trim();
-      const sub=document.getElementById('target-sub');
-      sub.textContent = src ? `Leave blank to overwrite "${src}" in place.` : 'Leave blank to overwrite the source attribute.';
+      document.getElementById('target-sub').textContent = src ? `Leave blank to overwrite "${src}" in place.` : 'Leave blank to overwrite the source attribute.';
       livePreview();
     }
-
     function renderLookup(){
       const host=document.getElementById('lookup-rows');
       if(!draftLookup.length) draftLookup=[{from:'',to:''}];
@@ -672,7 +712,6 @@
     function addLookupRow(){ draftLookup.push({from:'',to:''}); renderLookup(); }
     function updLookup(i,k,v){ draftLookup[i][k]=v; livePreview(); }
     function rmLookup(i){ draftLookup.splice(i,1); renderLookup(); livePreview(); }
-
     function readDraft(){
       const r = { id: editingId||uid(), name: gv('f-name').trim(), enabled: editingId ? (rules.find(x=>x.id===editingId)?.enabled ?? true) : true,
         type: draftType, source: gv('f-source').trim(), target: gv('f-target').trim(), webhook: gv('f-webhook').trim() };
@@ -686,25 +725,17 @@
       return r;
     }
     function clampDec(id){ let n=parseInt(gv(id),10); if(isNaN(n)) n=2; return Math.max(0,Math.min(6,n)); }
-
     function livePreview(){
       const r=readDraft();
       const input=gv('pv-input');
       const outEl=document.getElementById('pv-output');
       const sample = input!=='' ? input : sampleFor(r);
       if(input==='') document.getElementById('pv-input').setAttribute('placeholder','e.g. '+sample);
-      let out;
-      try{ out=applyRule(sample, r); }catch(e){ out='—'; }
-      outEl.textContent = out;
-      outEl.classList.toggle('err', false);
-      // validation hints
-      if(draftType==='unit' && UNITS[r.fromUnit]?.dim!==UNITS[r.toUnit]?.dim){
-        outEl.textContent='⚠ units are different dimensions'; outEl.classList.add('err');
-      } else if(draftType==='math' && isNaN(evalMath(r.expression, 1))){
-        outEl.textContent='⚠ invalid expression'; outEl.classList.add('err');
-      }
+      let out; try{ out=applyRule(sample, r); }catch(e){ out='—'; }
+      outEl.textContent = out; outEl.classList.remove('err');
+      if(draftType==='unit' && UNITS[r.fromUnit]?.dim!==UNITS[r.toUnit]?.dim){ outEl.textContent='⚠ units are different dimensions'; outEl.classList.add('err'); }
+      else if(draftType==='math' && isNaN(evalMath(r.expression, 1))){ outEl.textContent='⚠ invalid expression'; outEl.classList.add('err'); }
     }
-
     function saveRule(){
       const r=readDraft();
       if(!r.name){ setEditorStatus('err','Give the rule a name'); return; }
@@ -714,99 +745,88 @@
       if(r.type==='replace' && r.mode!=='whole' && !r.find){ setEditorStatus('err','"Find" text is required'); return; }
       const idx=rules.findIndex(x=>x.id===r.id);
       if(idx>=0) rules[idx]=r; else rules.push(r);
-      persist(); render(); closeEditor();
+      persist(); render(); closeEditor(); maybeAutosync();
       toast(idx>=0?'Rule updated':'Rule created','success');
     }
-
     function setEditorStatus(kind,text){ const el=document.getElementById('editor-status'); el.className='modal-status'+(kind?' '+kind:''); el.querySelector('span:last-child').textContent=text; }
     function setVal(id,v){ const el=document.getElementById(id); if(el) el.value=v; }
     function gv(id){ const el=document.getElementById(id); return el?el.value:''; }
-
     function populateUnitSelects(){
       const groups={length:'Length',mass:'Weight / Mass',volume:'Volume',temp:'Temperature'};
       let html='';
-      for(const dim in groups){
-        html+=`<optgroup label="${groups[dim]}">`;
-        for(const u in UNITS){ if(UNITS[u].dim===dim) html+=`<option value="${u}">${esc(UNITS[u].label)}</option>`; }
-        html+='</optgroup>';
-      }
-      document.getElementById('f-from').innerHTML=html;
-      document.getElementById('f-to').innerHTML=html;
+      for(const dim in groups){ html+=`<optgroup label="${groups[dim]}">`; for(const u in UNITS){ if(UNITS[u].dim===dim) html+=`<option value="${u}">${esc(UNITS[u].label)}</option>`; } html+='</optgroup>'; }
+      document.getElementById('f-from').innerHTML=html; document.getElementById('f-to').innerHTML=html;
     }
 
     /* ============================================================
-       ENGINE ENDPOINT + SYNC
+       GO LIVE (step 3) — endpoint, secret, sync
        ============================================================ */
     function engineUrl(){ return settings.workerUrl ? settings.workerUrl + '/api/webhook' : ''; }
     function refreshEndpoint(){
-      const box=document.getElementById('engine-url');
-      const btn=document.getElementById('copy-engine');
-      const url=engineUrl();
+      const box=document.getElementById('engine-url'); const btn=document.getElementById('copy-engine'); const url=engineUrl();
       if(url){ box.textContent=url; box.classList.remove('empty'); btn.disabled=false; }
-      else { box.textContent='Set your Worker URL in ⚙ Settings to generate the endpoint'; box.classList.add('empty'); btn.disabled=true; }
+      else { box.textContent='Connect in step 1 to generate the URL'; box.classList.add('empty'); btn.disabled=true; }
       document.getElementById('event-list').innerHTML = EVENTS.map(e=>`<span class="ev-pill">${e}</span>`).join('');
     }
-    function copyEngineUrl(){
-      const url=engineUrl(); if(!url) return;
-      navigator.clipboard?.writeText(url).then(()=>toast('Engine URL copied','success'), ()=>toast('Copy failed','error'));
-    }
-    async function syncRules(){
-      if(!settings.workerUrl||!settings.workerSecret){ openSettings(); toast('Set Worker URL + secret first','error'); return; }
+    function copyEngineUrl(){ const url=engineUrl(); if(!url) return; navigator.clipboard?.writeText(url).then(()=>toast('Engine URL copied','success'), ()=>toast('Copy failed','error')); }
+    async function pushRules(silent){
+      if(!isConnected()) return false;
       try{
         const r=await fetch(settings.workerUrl+'/api/rules',{method:'PUT',headers:{'Content-Type':'application/json','X-Demo-Secret':settings.workerSecret},body:JSON.stringify({rules})});
         const j=await r.json().catch(()=>({}));
         if(!r.ok||j.success===false) throw new Error(j.error||('HTTP '+r.status));
-        document.getElementById('sync-state').innerHTML = `<b style="color:#0f9b6c">✓ ${rules.length} rules synced to the engine.</b>`;
-        toast('Synced '+rules.length+' rules to the engine','success');
+        const el=document.getElementById('sync-state'); if(el) el.innerHTML=`<b style="color:var(--green-d)">✓ ${rules.length} rule${rules.length!==1?'s':''} synced</b>`;
+        if(!silent) toast('Synced '+rules.length+' rules to the engine','success');
+        return true;
       }catch(e){
-        const legacy=/404|not found/i.test(e.message);
-        toast(legacy?'Worker has no /api/rules route yet — deploy the updated worker.js':'Sync failed: '+e.message,'error');
+        if(!silent){ const legacy=/404|not found/i.test(e.message); toast(legacy?'Worker has no /api/rules route yet — deploy worker.js':'Sync failed: '+e.message,'error'); }
+        return false;
       }
     }
+    function syncRules(){ if(!isConnected()){ goStep(1); toast('Connect the engine first (step 1)','error'); return; } pushRules(false); }
+    function maybeAutosync(){ if(isConnected()) pushRules(true); }
 
     /* ============================================================
-       SETTINGS  (from bluestone-pim-ui starter)
+       CONNECT (step 1)
        ============================================================ */
-    function openSettings(){ setVal('worker-url',settings.workerUrl); setVal('worker-secret',settings.workerSecret); setModalStatus(settings.workerUrl?'ok':'',settings.workerUrl?'Saved — click Test to verify':'Not configured'); document.getElementById('settings-modal').classList.add('open'); }
-    function closeSettings(){ document.getElementById('settings-modal').classList.remove('open'); }
     function saveSettings(){
       settings.workerUrl=gv('worker-url').trim().replace(/\/+$/,''); settings.workerSecret=gv('worker-secret').trim();
       localStorage.setItem('pim-workerUrl',settings.workerUrl); localStorage.setItem('pim-workerSecret',settings.workerSecret);
-      toast('Backend settings saved','success'); refreshEndpoint(); setModalStatus('ok','Saved — click Test to verify');
+      refreshEndpoint(); refreshConn();
     }
-    function setModalStatus(kind,text){ const el=document.getElementById('modal-status'); el.className='modal-status'+(kind?' '+kind:''); el.querySelector('span:last-child').textContent=text; }
+    function setStatus(kind,text){ const el=document.getElementById('modal-status'); el.className='connect-status'+(kind?' '+kind:''); el.textContent=text; }
     async function testBackend(){
       saveSettings();
-      if(!settings.workerUrl){ setModalStatus('err','Worker URL is empty'); return; }
+      if(!settings.workerUrl){ setStatus('err','Worker URL is empty'); return; }
+      setStatus('','Checking…');
+      const checksEl=document.getElementById('checks'); checksEl.style.display='flex';
+      const render=(items)=>{ checksEl.innerHTML=items.map(c=>`<div class="chk ${c.ok?'ok':'bad'}"><span class="ic">${c.ok?'✓':'✗'}</span><span>${esc(c.label)}</span></div>`).join(''); };
       try{
         const r=await fetch(settings.workerUrl+'/api/health'); const j=await r.json().catch(()=>({}));
-        if(!r.ok){ setModalStatus('err','HTTP '+r.status); return; }
-        const checks=[];
-        checks.push((j.mcpConfigured?'✓':'✗')+' MCP');
-        checks.push((j.authConfigured?'✓':'✗')+' shared secret');
-        checks.push((j.bluestoneConfigured?'✓':'✗')+' MAPI/PAPI creds');
-        checks.push((j.webhookConfigured?'✓':'✗')+' WEBHOOK_SECRET');
+        if(!r.ok){ setStatus('err','HTTP '+r.status); return; }
+        const items=[
+          {ok:!!j.mcpConfigured,label:'MCP connector'},
+          {ok:!!j.authConfigured,label:'Shared secret'},
+          {ok:!!j.bluestoneConfigured,label:'Bluestone MAPI / PAPI credentials'},
+          {ok:!!j.webhookConfigured,label:'Webhook signing secret (WEBHOOK_SECRET)'}
+        ];
         if(settings.workerSecret){
           const r2=await fetch(settings.workerUrl+'/api/rules',{method:'GET',headers:{'X-Demo-Secret':settings.workerSecret}});
-          if(r2.status===404||r2.status===405) checks.push('✗ rules API — deploy the updated worker.js (wrangler deploy)');
-          else if(r2.status===401) checks.push('✗ rules API (secret mismatch)');
-          else if(r2.status===500) checks.push('✗ rules store (bind the RULES KV namespace)');
-          else if(r2.ok) checks.push('✓ rules store');
-          else checks.push('✗ rules API (HTTP '+r2.status+')');
+          if(r2.status===404||r2.status===405) items.push({ok:false,label:'Rules API — deploy the updated worker.js'});
+          else if(r2.status===401) items.push({ok:false,label:'Rules API (shared-secret mismatch)'});
+          else if(r2.status===500) items.push({ok:false,label:'Rules store — bind the RULES KV namespace'});
+          else if(r2.ok) items.push({ok:true,label:'Rules store (KV)'});
+          else items.push({ok:false,label:'Rules API (HTTP '+r2.status+')'});
         }
-        setModalStatus(checks.some(c=>c.includes('✗'))?'err':'ok', checks.join('  •  '));
+        render(items);
+        const allOk=items.every(i=>i.ok);
+        setStatus(allOk?'ok':'err', allOk?'All systems go — your engine is ready.':'Some checks failed — see above.');
       }catch(e){
-        setModalStatus('err', /failed to fetch|cors/i.test(String(e.message))?'Network/CORS error — check Worker URL + ALLOWED_ORIGINS':'Unreachable: '+e.message);
+        setStatus('err', /failed to fetch|cors/i.test(String(e.message))?'Network/CORS error — check the Worker URL':'Unreachable: '+e.message);
       }
     }
 
-    function toast(msg,kind=''){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show '+kind; clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),2800); }
-
-    /* ============================================================
-       INIT
-       ============================================================ */
-    // ─── Webhook signing secret (generated client-side; set the SAME value
-    //     in Bluestone and on the Worker via `wrangler secret put`). ─────────
+    /* ── webhook signing secret ── */
     function genHex(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); return [...a].map(b=>b.toString(16).padStart(2,'0')).join(''); }
     function renderSecret(){
       const v=localStorage.getItem('conv-webhook-secret')||'';
@@ -817,10 +837,17 @@
     function regenSecret(){ localStorage.setItem('conv-webhook-secret', genHex(24)); renderSecret(); toast('Secret generated — set it in Bluestone AND on the Worker','success'); }
     function copySecret(){ const v=localStorage.getItem('conv-webhook-secret')||''; if(!v) return; navigator.clipboard?.writeText(v).then(()=>toast('Secret copied','success'),()=>toast('Copy failed','error')); }
 
+    function toast(msg,kind=''){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show '+kind; clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),2800); }
+
+    /* ============================================================
+       INIT
+       ============================================================ */
+    setVal('worker-url', settings.workerUrl);
+    setVal('worker-secret', settings.workerSecret);
     refreshEndpoint();
     renderSecret();
     render();
-    // Close modals on overlay click
+    goStep(isConnected() ? 2 : 1);   // skip Connect if already set up
     document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
   </script>
 </body>
