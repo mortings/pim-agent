@@ -434,9 +434,17 @@ function convertUnit(num, from, to) {
 function roundTo(n, d) { const f = Math.pow(10, d == null ? 2 : d); return Math.round((n + Number.EPSILON) * f) / f; }
 function firstNumber(s) { const m = String(s).match(/-?\d+(?:[.,]\d+)?/); return m ? parseFloat(m[0].replace(',', '.')) : null; }
 function escapeRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+// Safe arithmetic evaluator — NO eval/Function (Cloudflare Workers blocks
+// dynamic code generation). Supports numbers, x, + - * / and parentheses.
 function evalMath(expr, x) {
   if (!/^[-+*/().,\sxX0-9]+$/.test(expr || '')) return NaN;
-  try { return Function('x', '"use strict";return (' + String(expr).replace(/X/g, 'x').replace(/,/g, '.') + ')')(x); } catch (e) { return NaN; }
+  const toks = String(expr).replace(/X/g, 'x').replace(/,/g, '.').match(/\d+\.?\d*|\.\d+|[x()+\-*/]/g);
+  if (!toks) return NaN;
+  let i = 0; const peek = () => toks[i], eat = () => toks[i++];
+  function expr_() { let v = term(); while (peek() === '+' || peek() === '-') { const o = eat(), r = term(); v = o === '+' ? v + r : v - r; } return v; }
+  function term() { let v = fac(); while (peek() === '*' || peek() === '/') { const o = eat(), r = fac(); v = o === '*' ? v * r : v / r; } return v; }
+  function fac() { const t = peek(); if (t === '+') { eat(); return fac(); } if (t === '-') { eat(); return -fac(); } if (t === '(') { eat(); const v = expr_(); if (peek() === ')') eat(); return v; } if (t === 'x') { eat(); return x; } eat(); return parseFloat(t); }
+  try { const v = expr_(); return (i === toks.length && isFinite(v)) ? v : NaN; } catch (e) { return NaN; }
 }
 function applyRule(value, rule) {
   const v = value == null ? '' : String(value);
