@@ -253,7 +253,8 @@ async function handleWebhook(request, env, url, cors) {
   // 2. Load the saved rules from KV.
   if (!env.RULES) return json({ error: 'RULES KV namespace not bound' }, 500, cors);
   let rules = [];
-  try { const s = await env.RULES.get('rules'); if (s) rules = JSON.parse(s); } catch (e) {}
+  try { const s = await env.RULES.get('rules'); if (s) rules = JSON.parse(s); }
+  catch (e) { console.warn('[webhook] KV read/parse error: ' + e.message); }
   rules = rules.filter(r => r && r.enabled);
 
   // Optional single-rule routing (so one Bluestone webhook can map to one rule).
@@ -289,41 +290,36 @@ async function handleWebhook(request, env, url, cors) {
 }
 
 async function processProduct(env, productId, rules, isCreate) {
-  const prod = extractAttributes(extractText(await callMcpTool(env, 'get_product', { productId })));
-  console.log('[webhook] product ' + productId + ' attributes: ' + JSON.stringify(prod.attrs.map(a => a.name)));
-  const applied = [];
-  let defCache = null; // lazy list_attribute_definitions for target resolution
+  // get_product returns a summary line + the product JSON. attributes are
+  // [{ definitionId, values:[...] }] — identified by id, not name.
+  const product = parseMcpJson(extractText(await callMcpTool(env, 'get_product', { productId })));
+  if (!product) return [{ skipped: 'could not parse get_product response' }];
+  const attrs = Array.isArray(product.attributes) ? product.attributes : [];
+  const valOf = (defId) => { const a = attrs.find(x => x.definitionId === defId); return (a && Array.isArray(a.values) && a.values.length) ? String(a.values[0]) : ''; };
 
+  let defsMap = null; // definitionId/name/number map, fetched once per product
+  const applied = [];
   for (const rule of rules) {
-    const src = findAttr(prod, rule.source);
-    if (!src) continue;
-    const current = src.value == null ? '' : String(src.value);
+    if (!defsMap) defsMap = await getDefsMap(env);
+    const srcDef = resolveDef(defsMap, rule.source);
+    if (!srcDef) { applied.push({ rule: rule.name, skipped: 'source "' + rule.source + '" not in data model' }); continue; }
+    const current = valOf(srcDef.id);
+    if (current === '') { applied.push({ rule: rule.name, skipped: 'source attr "' + (srcDef.name || rule.source) + '" empty on this product' }); continue; }
 
     const inPlace = !rule.target || rule.target === rule.source;
     // Loop guard: in-place maths is not idempotent, so only run it on create.
     if (rule.type === 'math' && inPlace && !isCreate) { applied.push({ rule: rule.name, skipped: 'in-place math runs on create only' }); continue; }
 
     const next = applyRule(current, rule);
+    const targetDef = inPlace ? srcDef : resolveDef(defsMap, rule.target);
+    if (!targetDef) { applied.push({ rule: rule.name, skipped: 'target "' + rule.target + '" not in data model' }); continue; }
 
-    let targetDefId = src.definitionId, targetName = rule.source, targetCurrent = current;
-    if (!inPlace) {
-      const tgt = findAttr(prod, rule.target);
-      if (tgt) { targetDefId = tgt.definitionId; targetName = rule.target; targetCurrent = tgt.value == null ? '' : String(tgt.value); }
-      else {
-        if (!defCache) defCache = extractDefinitions(extractText(await callMcpTool(env, 'list_attribute_definitions', {})));
-        const def = defCache.find(d => eqName(d.name, rule.target));
-        if (!def) { applied.push({ rule: rule.name, skipped: 'target attribute "' + rule.target + '" not found' }); continue; }
-        targetDefId = def.definitionId; targetName = rule.target; targetCurrent = '';
-      }
-    }
+    // Loop guard: never re-write a value that's already there (keeps the write
+    // idempotent, so the resulting attribute event is a server-side no-op).
+    if (String(next) === valOf(targetDef.id)) { applied.push({ rule: rule.name, skipped: 'no change (already ' + next + ')' }); continue; }
 
-    // Loop guard: never write a value that's already there (also keeps the
-    // write idempotent so the resulting attribute event is a server-side no-op).
-    if (String(next) === String(targetCurrent)) { applied.push({ rule: rule.name, skipped: 'no change' }); continue; }
-    if (!targetDefId) { applied.push({ rule: rule.name, skipped: 'no definitionId for target' }); continue; }
-
-    await callMcpTool(env, 'set_product_attribute', { productId, definitionId: targetDefId, values: [String(next)], attributeName: targetName });
-    applied.push({ rule: rule.name, attribute: targetName, from: current, to: next });
+    await callMcpTool(env, 'set_product_attribute', { productId, definitionId: targetDef.id, values: [String(next)], attributeName: targetDef.name });
+    applied.push({ rule: rule.name, attribute: targetDef.name, from: current, to: next });
   }
   return applied;
 }
@@ -348,37 +344,34 @@ function extractText(result) {
   }
   try { return JSON.stringify(result); } catch (e) { return ''; }
 }
-function safeParse(text) { try { return JSON.parse(text); } catch (e) { return null; } }
-function extractAttributes(text) {
-  const data = safeParse(text);
-  const out = { attrs: [] };
-  if (!data) return out;
-  const root = data.product || data.data || data;
-  const arr = root.attributes || root.attributeValues || root.metadata || [];
-  const list = Array.isArray(arr) ? arr : [];
-  out.attrs = list.map(a => normalizeAttr(a)).filter(Boolean);
-  return out;
+// MCP tools return "<summary sentence>\n\n<JSON>". Grab the JSON body.
+function parseMcpJson(text) {
+  const i = text.indexOf('{');
+  if (i < 0) return null;
+  try { return JSON.parse(text.slice(i)); } catch (e) { return null; }
 }
-function normalizeAttr(a) {
-  if (!a || typeof a !== 'object') return null;
-  const name = a.name || a.attributeName || a.key || a.code || (a.definition && a.definition.name) || '';
-  const definitionId = a.definitionId || a.id || a.attributeId || (a.definition && a.definition.id) || '';
-  let value;
-  if (Array.isArray(a.values)) value = a.values[0];
-  else if (a.value !== undefined) value = (Array.isArray(a.value) ? a.value[0] : a.value);
-  else if (a.values !== undefined) value = a.values;
-  if (value && typeof value === 'object') value = value.value ?? value.text ?? value.label ?? JSON.stringify(value);
-  return { name, definitionId, value };
+// Build { lowercased name|number -> { id, name, dataType } } from the data model.
+async function getDefsMap(env) {
+  const dj = parseMcpJson(extractText(await callMcpTool(env, 'list_attribute_definitions', {})));
+  const list = (dj && Array.isArray(dj.definitions)) ? dj.definitions : [];
+  const map = {};
+  for (const d of list) {
+    const def = { id: d.id, name: d.name || d.number || '', dataType: d.dataType };
+    if (d.name) map[String(d.name).trim().toLowerCase()] = def;
+    if (d.number) map[String(d.number).trim().toLowerCase()] = def;
+  }
+  return map;
 }
-function extractDefinitions(text) {
-  const data = safeParse(text);
-  const arr = Array.isArray(data) ? data : (data && (data.definitions || data.attributes || data.data)) || [];
-  return (Array.isArray(arr) ? arr : []).map(d => ({ name: d.name || d.label || '', definitionId: d.id || d.definitionId || '' })).filter(d => d.definitionId);
-}
-function eqName(a, b) { return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase(); }
-function findAttr(prod, nameOrId) {
-  const q = String(nameOrId || '').trim().toLowerCase();
-  return prod.attrs.find(a => eqName(a.name, q) || String(a.definitionId).toLowerCase() === q) || null;
+// Resolve a rule's attribute label to a definition. Tolerates the UI's
+// "Name [unit]" format and matches by display name or machine number.
+function resolveDef(map, source) {
+  if (!source) return null;
+  const s = String(source).trim().toLowerCase();
+  if (map[s]) return map[s];
+  const stripped = s.replace(/\s*\[[^\]]*\]\s*$/, '').trim();
+  if (map[stripped]) return map[stripped];
+  for (const k in map) { if (k && (s.startsWith(k) || stripped === k)) return map[k]; }
+  return null;
 }
 
 // ════════════════════════════════════════════════════════════════════════
