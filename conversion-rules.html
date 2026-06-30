@@ -73,6 +73,10 @@
     .setup-note{margin-top:14px;font-size:11px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:12px}
     .setup-note b{color:var(--text)}
     .setup-note code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:10px;font-family:'Menlo','SF Mono',monospace}
+    .secret-block{margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
+    .secret-label{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
+    .secret-label .opt{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
+    .url-box.secret{font-size:12px;letter-spacing:0.3px}
 
     /* rule card */
     .rules{display:flex;flex-direction:column;gap:12px}
@@ -220,7 +224,23 @@
       </div>
       <div class="events" id="event-list"></div>
       <div class="setup-note">
-        <b>Setup:</b> in Bluestone, create a webhook → delivery URL = above → subscribe to these events → set its <code>secret</code> as the engine's <code>WEBHOOK_SECRET</code>. Then <b>Sync rules</b>. <span id="sync-state"></span>
+        <b>Setup:</b> in Bluestone, create a webhook → delivery URL = above → subscribe to these events → set its <b>Secret</b> (see below). Then <b>Sync rules</b>. <span id="sync-state"></span>
+      </div>
+
+      <div class="secret-block">
+        <div class="secret-label">Webhook signing secret <span class="opt">— must be the same value in Bluestone and on the Worker</span></div>
+        <div class="url-row">
+          <div class="url-box secret empty" id="webhook-secret">Click “New” to generate a secret →</div>
+          <button class="btn" onclick="regenSecret()" title="Generate a new random secret">↻ New</button>
+          <button class="btn primary" id="copy-secret" onclick="copySecret()" disabled>Copy</button>
+        </div>
+        <div class="setup-note" style="margin-top:10px">
+          Put this <b>exact value in two places</b> so the signatures match:
+          <b>1)</b> the Bluestone webhook’s <b>Secret</b> field, and
+          <b>2)</b> the Worker — run <code>wrangler secret put WEBHOOK_SECRET</code> and paste the same value.
+          The page can’t read the Worker’s secret (it’s server-side), so it just helps you set both the same.
+          <br><b>Don’t want a secret?</b> Leave Bluestone’s blank <i>and</i> remove the Worker’s <code>WEBHOOK_SECRET</code> — the engine then accepts unsigned calls (simpler, less secure).
+        </div>
       </div>
     </div>
 
@@ -785,7 +805,20 @@
     /* ============================================================
        INIT
        ============================================================ */
+    // ─── Webhook signing secret (generated client-side; set the SAME value
+    //     in Bluestone and on the Worker via `wrangler secret put`). ─────────
+    function genHex(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); return [...a].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+    function renderSecret(){
+      const v=localStorage.getItem('conv-webhook-secret')||'';
+      const box=document.getElementById('webhook-secret'); const btn=document.getElementById('copy-secret');
+      if(v){ box.textContent=v; box.classList.remove('empty'); btn.disabled=false; }
+      else { box.textContent='Click “New” to generate a secret →'; box.classList.add('empty'); btn.disabled=true; }
+    }
+    function regenSecret(){ localStorage.setItem('conv-webhook-secret', genHex(24)); renderSecret(); toast('Secret generated — set it in Bluestone AND on the Worker','success'); }
+    function copySecret(){ const v=localStorage.getItem('conv-webhook-secret')||''; if(!v) return; navigator.clipboard?.writeText(v).then(()=>toast('Secret copied','success'),()=>toast('Copy failed','error')); }
+
     refreshEndpoint();
+    renderSecret();
     render();
     // Close modals on overlay click
     document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
